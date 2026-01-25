@@ -78,7 +78,7 @@ def run_simulation_24h(
     # Attack/fault magnitude configs
     attack_cfg: AttackConfig | None = None,
     fault_cfg: FaultConfig | None = None,
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], float, float, Dict[str, Any], Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
     """
     Run full 24-hour simulation cycle with all framework components.
     

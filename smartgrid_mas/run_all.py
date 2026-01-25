@@ -323,8 +323,8 @@ def load_lstm_model(logger: logging.Logger) -> LSTMInferencer:
         "✓ LSTM model loaded: %s (input_size=%s, hidden_size=%s, layers=%s, window=%s)",
         LSTM_MODEL_PATH,
         getattr(inferencer, "input_size", "?"),
-        getattr(inferencer, "model", None).hidden_size if hasattr(inferencer, "model") else "?",
-        getattr(inferencer, "model", None).num_layers if hasattr(inferencer, "model") else "?",
+        getattr(inferencer.model, "hidden_size", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
+        getattr(inferencer.model, "num_layers", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
         getattr(inferencer, "window", "?"),
     )
     return inferencer
@@ -425,7 +425,7 @@ def run_all_simulations(
     config: Dict[str, Any],
     logger: logging.Logger,
     ablation_mode: str = 'HYBRID',
-) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
     """
     Run both dynamic (RL+gradient) and baseline (f=1) simulations.
     
@@ -516,7 +516,9 @@ def run_all_simulations(
     )
     logger.info(f"✓ Baseline run complete: {len(base_metrics)} timesteps, {len(base_events)} events")
     
-    return dyn_metrics, dyn_events, base_metrics, base_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn
+    return (dyn_metrics, dyn_events, base_metrics, base_events, 
+            y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, 
+            initial_risk_dyn, final_risk_dyn, conv_info_dyn)
 
 
 # ============================================================================
@@ -563,7 +565,9 @@ def compute_evaluation_metrics(
         sev_scores = [e.get("severity_score") for e in dyn_events if "severity_score" in e]
         sev_levels = [e.get("severity_level") for e in dyn_events if "severity_level" in e]
         if sev_scores:
-            summary["avg_severity_score"] = float(np.mean(sev_scores))
+            valid_scores = [s for s in sev_scores if s is not None]
+            if valid_scores:
+                summary["avg_severity_score"] = float(np.mean(valid_scores))
         level_counts: Dict[str, int] = {}
         for lvl in sev_levels:
             level_counts[str(lvl)] = level_counts.get(str(lvl), 0) + 1
@@ -746,8 +750,14 @@ def print_compact_sweep_table(run_summaries: List[Dict[str, Any]], logger: loggi
     add_row("Risk Mitigation", [pct(get(n, "risk_mitigation", 0)) for n in order], lines)
     add_row("Mean Risk Dyn/Base", [f"{fmt(get(n,'mean_global_risk_dynamic',0),4)}/{fmt(get(n,'mean_global_risk_baseline',0),4)}" for n in order], lines)
     add_row("Risk Reduced per $", [fmt(get(n, "risk_reduced_per_cost", 0), 6) for n in order], lines)
-    add_row("CLSI", [pct(get(n, "cross_layer_stability", {}).get("index", 0)) for n in order], lines)
-    add_row("Deviation Slope", [fmt(get(n, "deviation_trend", {}).get("deviation_slope", 0), 6) for n in order], lines)
+    def get_nested(n: int, key: str, nested_key: str, default: float = 0.0) -> float:
+        val = by_n.get(n, {}).get(key, {})
+        if isinstance(val, dict):
+            return float(val.get(nested_key, default))
+        return default
+    
+    add_row("CLSI", [pct(get_nested(n, "cross_layer_stability", "index", 0)) for n in order], lines)
+    add_row("Deviation Slope", [fmt(get_nested(n, "deviation_trend", "deviation_slope", 0), 6) for n in order], lines)
     lines.append("-" * 70)
 
     add_row("Audit Coverage Dyn/Base", [f"{pct(get(n,'coverage_cycle_dynamic', get(n,'coverage_dyn',0)))}/{pct(get(n,'coverage_cycle_baseline', get(n,'coverage_base',0)))}" for n in order], lines)
@@ -768,63 +778,7 @@ def print_compact_sweep_table(run_summaries: List[Dict[str, Any]], logger: loggi
 
     for line in lines:
         logger.info(line)
-    
-    # Key metrics table
-    metrics_table = [
-        ("Metric", "Value"),
-        ("-" * 40, "-" * 20),
-        ("Attack Rate (Dynamic)", f"{summary.get('attack_rate_dyn', 0):.2%}"),
-        ("Attack Rate (Baseline)", f"{summary.get('attack_rate_base', 0):.2%}"),
-        ("Attack Rate Reduction", f"{summary.get('attack_rate_reduction', 0):.2%}"),
-        ("-" * 40, "-" * 20),
-        ("Precision (Dynamic)", f"{summary.get('precision', 0):.3f}"),
-        ("Recall (Dynamic)", f"{summary.get('recall', 0):.3f}"),
-        ("F1-Score (Dynamic)", f"{summary.get('f1', 0):.3f}"),
-        ("TPR/Sensitivity (Dynamic)", f"{summary.get('tpr', 0):.3f}"),
-        ("TNR/Specificity (Dynamic)", f"{summary.get('tnr', 0):.3f}"),
-        ("FPR (Dynamic)", f"{summary.get('fpr', 0):.3f}"),
-        ("FNR (Dynamic)", f"{summary.get('fnr', 0):.3f}"),
-        ("Accuracy (Dynamic)", f"{summary.get('accuracy', 0):.3f}"),
-        ("-" * 40, "-" * 20),
-        ("Risk Mitigation", f"{summary.get('risk_mitigation', 0):.2%}"),
-        ("Mean Global Risk (Dynamic)", f"{summary.get('mean_global_risk_dynamic', 0):.4f}"),
-        ("Mean Global Risk (Baseline)", f"{summary.get('mean_global_risk_baseline', 0):.4f}"),
-        ("Risk Reduced per $ (Dynamic)", f"{summary.get('risk_reduced_per_cost', 0):.6f}"),
-        ("Cross-Layer Stability (CLSI)", f"{summary.get('cross_layer_stability', {}).get('index', 0.0):.2%}"),
-        ("Deviation Trend Slope", f"{summary.get('deviation_trend', {}).get('deviation_slope', 0.0):.6f}"),
-        ("-" * 40, "-" * 20),
-        ("Audit Coverage (Dynamic)", f"{summary.get('coverage_dyn', 0):.2%}"),
-        ("Audit Coverage (Baseline)", f"{summary.get('coverage_base', 0):.2%}"),
-        ("-" * 40, "-" * 20),
-        ("Total Cost (Dynamic - executed)", f"${summary.get('executed_cost_dynamic', summary.get('cost_dyn', 0)):.2f}"),
-        ("Total Cost (Baseline - executed)", f"${summary.get('executed_cost_baseline', summary.get('cost_base', 0)):.2f}"),
-        ("Intended Cost (Dynamic)", f"${summary.get('intended_cost_dyn', 0):.2f}"),
-        ("Intended Cost (Baseline)", f"${summary.get('intended_cost_base', 0):.2f}"),
-        ("Cost Efficiency", f"{summary.get('cost_efficiency', 0):.2%}"),
-        ("-" * 40, "-" * 20),
-        ("RL Iterations", f"{summary.get('rl_iterations', 0)}"),
-        ("RL Converged", f"{'Yes' if summary.get('rl_converged', False) else 'No'}"),
-        ("Gradient Iterations", f"{summary.get('gradient_iterations', 0)}"),
-        ("Gradient Converged", f"{'Yes' if summary.get('gradient_converged', False) else 'No'}"),
-        ("-" * 40, "-" * 20),
-        ("Chain Attack Pairs", f"{summary.get('chain_attack_pairs', 0)}"),
-        ("Chain Attack Agents", f"{summary.get('chain_attack_agents', 0)}"),
-        ("-" * 40, "-" * 20),
-        ("Events (Dynamic)", f"{summary.get('dynamic_events', 0)}"),
-        ("Events (Baseline)", f"{summary.get('baseline_events', 0)}"),
-    ]
-    
-    for metric, value in metrics_table:
-        print(f"{metric:<40} {value:>20}")
-    
-    print("\n" + "="*70)
-    print("Outputs saved to: logs/")
-    print("  - dynamic_metrics.csv")
-    print("  - baseline_metrics.csv")
-    print("  - events_dynamic.csv")
-    print("  - events_baseline.csv")
-    print("  - summary.json")
-    print("="*70 + "\n")
+    # Compact sweep table printed above; no single-run duplicate here.
 
 
 # ============================================================================
@@ -855,6 +809,8 @@ def main() -> None:
             seeds = [SEED]
     else:
         seeds = [SEED]
+    
+    current_seed = SEED  # Initialize to ensure it's always defined
     
     # Support ablation mode: RL_ONLY, GRADIENT_ONLY, or HYBRID (default)
     ablation_env = os.environ.get("SMARTGRID_ABLATION", "").strip().upper()
@@ -1179,7 +1135,7 @@ def main() -> None:
                         results['dyn_metrics'], results['dyn_events'],
                         results['base_metrics'], results['base_events'],
                         results['y_true_dyn'], results['y_pred_dyn'],
-                        results['y_true_types_dyn'],
+                        results['y_pred_types_dyn'], results['y_true_types_dyn'],
                         results['initial_risk_dyn'], results['final_risk_dyn'], results['conv_info_dyn'],
                         logger,
                         failure_cost_coeff=10.0,
