@@ -1,0 +1,1888 @@
+﻿Check for 
+updates 
+
+Enhanccing Securriity of Diistribbuted Muulltti-AAgent Systeemm s inn Smaarrtt 
+Grriidss:: An AlI-Driven Apprroach to Reguullar Auuddiitts 
+MADHHUUKKRRIISHNA PRIYADAARRSISNINI,I, Naattiionaall Instituute of Technology Raaiipuurr,, India 
+Smaarrtt grids are inncreasinngly suscepttiiblle to cyberr-phyyssiicall anomalailies due to theiir comppllex innteerrccoonneccttions and reliaannce 
+on real-ttiimme datta.. Enssurring grid reliabiilityy and miiniimiizing opeerrattionall rissks requiire robusst anomaally detectioon systeemms and 
+costt-effffectivve auddiit strategiiess.. TThhiis paper proposses a noveell muultltii-objjecttive frraammework that inntegrates anomaally detectioon wiith 
+dynamiic auddiit optimmiizatioon to addrress these challlengeess.. ThThe frraammework leevverages real-ttiimme opeerrattionaall data (-X)),, baselline 
+meettrriics ((B)),, threshollds ()Thℎ)),, and ccrriittiiccaalliittyy weeiighhtts (Fw)) to iddenttify anomalailies and dynaammicicaallly assess systeemm rriisskkss.. Ussing 
+a deviatioonn-bbased scorinng meecchhaanniism,, anomalailies are detected across critical grid comppoonneenntts such as poweer geneerraattoorrss,, 
+breakeerrss,, and connttrroolllerrss,, whhiille auddiit frreeqquencciies are optimm ized to balance attttaack rates and opeerrattionall cossttss.. In adddiittion,, 
+this research conttributes to Embbooddiied AII by inntegratinng inntelliiggeent auddiit agentts wiithin a phyyssiicall smaarrt grid enviroonmeenntt;; 
+representinng percepttion-actioon cyclles that moonnititoorr,, learn,, and act inn response to enviroonmeennttaall conddiitions whhiich iiss an essenttiiall 
+chaarraacctteerriissttic of Embbooddiied AII systemss.. ThThese agentts leearn frroomm real-ttiimme innteractioons and adapt behaviior dynaammiciaclallyy,, aliiggnninng 
+wiith the embbooddiied AII paradigm.. 
+
+ThThe frraammewoorrkk’’s muultltii-obbjjeccttive optimmiizatioon mooddeell miiniimiizzes the attttaack rate ('R0gzCC+0a2c:k ) and the ttoottaal.l cost (C ) by dynaammicicaallly 
+adjustinng auddiit schedulles based on real-ttiimme rissk trendss.. TThhe proposed solutioon iiss validdated usinng simmullated scenarrios of 
+cybeerrattttacks ((ee..gg..,, ffaallssee data innjectioon) and phyyssiicaall ffaauullttss ((ee..gg..,, overrcurrrreenntt,, volltage ssaagg)).. Commpapraarattiive anaallyssiis wiith traditioonall 
+fifixxeed-audiit schedulles demoonnststrraattes siggniffiiccaant immprrovemeenntsts,, inncluudinng 42.55%% cost efffificciieenncy,, 93.88%% auddiit coverraggee,, and 98.44%% 
+anomaally detectioon accurraccyy.. ThThe resullts establisshh the frraammework as a scalaablee.aannd adapttive solutioon for anomaally maanaagemeenntt 
+inn smaarrt griidss,, advancing the fifieeldd of secure and efffificciieennt grid opeerraattiionss.. TThhiis woorrk conttributes to the develooppmm entt of 
+intelliggentt,, risskk--aawware meetthhooddoollooggiies for grid resiliieennce and opeerraattionall opttimiizzaattiion.. ThThe fifinnddinngs laay the groouundwork for 
+further explloratioon of AlI-enhanced securrity solutioons inn autoonnoommous and distrriibbuuteed systemss.. 
+CCS Coonncceeppttss:: •- Comppuutteer systeemm s organiizatioon →— Embbeedded and cyber-phyyssiicall systemss;; Embbeedded systemss;; 
+Addddiittionaall Key Woorrds and Phrraasseess:: Muulltti-AAgentt Systeemms (MMAASS)),, Seccuurriittyy,, Diistribbuted Systemss,, AlI-drivven Auuddititss,, Anomaally 
+Deetteeccttiion,, Autonomoous Auuddititiingg,, Maacchhiine Learrniingg,, Addaappttiive Learrniingg,, Reeaall-tiimme Moonintitoorriingg,, Cyybbeerr--Phhyyssiiccaall Systeemm s 
+(CCPSS)),, Reessiilliencee,, Robbuussttneesss 
+
+11 INNTTRROODUCTION 
+TThhe rapid evolutioon of mooddeern poweer systeemms innto smaarrtt grids has inntrroodduuced a paradiggmm shiifftt inn electricityy 
+geneerraattiion,, distribbution,, and consumpptitioonn.. By inntegratinng advanced commmunuinciactaitioonn,, connttrrooll,, and sensinng tech- 
+nolloggiieess[[11]],, smaarrtt grids enablle real-ttiimme moonnititoorriinngg[[22]],, demaanndd--rresponse maannaaggeemmenetn[t3[3]],, and the seamlless 
+inntegration[4]] of renewaabblle energy sourrcceess.. ThThese advancemeenntts enhance grid efffificciieenncy[[55]],, reliabiility[6]],, and 
+sussttaiinaabbililiity[[77]].. Hoowweveevrer,, as smaarrtt grids becomme inncreasinngly innteerrccoonnnected and dependentt on digiital infras- 
+tructurree[[88]],, they,also face heightened vullneerraabibliilitties to cyberr-phyyssiiccaall anommalaileiess[[1100]],, such as cybeerrattttacks and 
+electrical faullttss,, that pose siggniffiiccaant risks to grid stabiilityy and securriitty.. 
+Auutthhoorr’’s Coonnttaacctt Informaattiion:: Maaddhhuukkrriishna Priyaddaarrssiinnii,, mppriryiyaadadrasrisnini.i.ccssee@@nintritrr.ra.acc.i.in,, Naattiionaall Institute of Technology Raaiipuurr,, Raaiipuurr,, 
+Chhhhatatttiisgarrh,, Indiia.. 
+
+Perm  
+iisssion ttoo maake ddiiggiittaall or hard copiies of aallll or parrt of tthhiiss woorrk for personaall or claassssrrooomm use iiss granted wiithoutt fee provided that 
+
+copiies are not maade or distrriibbuuteed for prrooffiit or commmerecriciaall advantage and that copiies bear this nottice and the ffuullll citaatiioonn on the fifirrsstt pagee.. 
+Cooppyyrriightts ffoorr comppoonneenntts of tthhiiss woorrk owned by others thhan the autthoorr((ss)) muusstt be honoorreedd.. Abbssttrractinng wiith ccrreeddiitt iiss permititttedd.. To copy 
+otherwiissee,, or repubblliish,, to posst on servers or to rediistribbute to lliissttss,, requiires prior specciiffiic permiisssion and//or a ffeeee.. Requeesst permiisssions frroomm 
+permiissioonns@@aaccmm.o.orrgg.. 
+© 2025 Coppyyrriight held by the ownnere/ra/auuththoro(rs(s)).. 
+ACM 2378-9638/22002255//88-A-ARRT 
+https:////ddooii.o.orgrg//1100.1.114455//33774488730 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+2 •+ Maaddhhuukkrriishna et aall.. 
+
+11.1 Background on Muultltii-AAgentt Systeemms inn Smaarrtt Grriids 
+ThThe mooddeerrnniizzaattion of poweer systeemms innto smaarrtt grids has traannsffoorrmmed the way electricityy is geneerraattedd,, dis- 
+tribbuted,, and consumeedd.. Att the hearrt of this trraannsfoorrmmatioon liees the concept of muulltti-aagent systeemms (MMAASS)),, whhiich 
+enablle deceennttrraalliized,, intelliiggeent decissiioonn--mmaking and connttrrooll.. In a smaarrtt griid,, agentts such as poweer geneerraattoorrss,, 
+subssttattionss,, breakeerrss,, phasor meeaassuremeentt uniitts (PPMUUs)s),, and conttrroolllers woorrk collaaboratively to maaiinnttain systeemm 
+stabiilliity,, optimmiize energy usagee,, and ensure relliabiilliity.. ThThese agentts are innteerrccoonnnected thhroouugh a commmunuincicaattion 
+netwoorrkk,, enabllinng thheemm to share real-ttiimme data and maake coordinated decciisionss.. 
+MAS frraammewoorrks have proven essenttiiall for maannaaggiing the innherent compplleexxiity of smaarrtt gridss.. Each agent 
+
+opeerrattes semii-autonomoousulsyly,, moonniittorring iittss enviroonmeenntt,, executinng taskss,, and innteractinng wiith other agentts to 
+addrress challeennges such as looad balancciingg,, faullt isolation,, and grid reconffiigurraattiion.. For innstanccee;, area conttrroolllers 
+can dynaammicicaallly adjust poweer geneerratioon based on demaanndd,, whhiille breakers can issolate faulty comppoonneenntts to 
+preventt cascadinng failuuress.. ThThiis distrriibbuuteed archiitecture immprroves scalabiilityy and faullt toleranccee,, maakkiing MAS a 
+cornerstone of mooddeern smaarrtt grid opeerraattiionss.. 
+
+Hoowweveevre,r, the inncreasinng reliiaannce on MAS inn smaarrt grids inntrroodduces new vullneerraabibliilitties[188]].. TThhe innteerrddeeppeenndence 
+among agentts and theiir reliiaannce on real-ttiimme commmunuincicaattion create opppoorrttuunnititiies for cyberr-phyyssiicall threaattss,, 
+inncluudinng cybeerrattttacks and electricall faullttss.. TThhese challeennges highllight the need for robusstt’securrity meeaassuurres 
+tailloorreed to the unique requireemmentts of MAS inn smaarrt griidss.. 
+ThThiis research aliggns wiith the princiiplles of Embbooddiied AII by treeatinng each auddiit agent as an embbooddiied enttity 
+
+wiithin the cyberr-phyyssiicall ecosysteemm of the smaarrt griid.. ThThese agentts continnuoussly perceive loocall grid parameetteerrs 
+((ee..gg..,, phase volltagee,, freeqquenccyy,, poweer looad)) and resppoond thhroouugh inntelliiggeent auddiit actionss.. ThThe percepttion-actioon 
+coupplliingg,, pollicy leeaarnninng frroomm envirroonnmmentt innteraction,, and phyyssiicall innflfluueennce on opeerrattionall outcoomes are 
+hallmmarks of embbooddiied intelliiggeencee.. Our proposed frraammework advances the state-of-thhe-art inn Embbooddiied AII by 
+applying iitt to safetty--ccrriittiicaall,, real-tiimmee,, distrriibbuuteed auddiit tasks across muultltii-agent innfrastructurreess.. 
+
+1.2 Securriity Chhaalllenges inn Muultltii-AAgentt Smaarrtt Grriids 
+Whhilile MAS enhancces the funccttionaallity and resiliieenncce,of smaarrtt gridss,, it also amppliliffiies the attttaack surface for 
+advveerrssaarriieess.. Securriity challeennges inn muultltii-agent smaarrtt grids steemm frroomm their innteerrccoonnnected natturree,, real-ttiimme 
+opeerraattiionss,, and heterogeneeiity of comppoonneenntsts.. TThh ese challeennges can be broadly categorized innto cyberrsecurriity 
+threats and phyyssiicall faullttss.. 
+
+11..22..11. Cybbeerrsseeccurriity TThrreeaattss.. 
+(1) Fallse Daatta Injectioon (FDII)):: Maalliicious actors maanniippuullaatte sensor readings or commmunuincicaattion channneelsls,, 
+
+causing inncorrect decisioons by agennttss.. For exampplele,, innjeectinng false volltage meeaassuremeenntts can miisslead 
+connttrroollleerrss,, dessttabiilizzinng the griid.. 
+
+(2) Commmunuinciacattiion Jammmiinngg:: Attttackers disrupt commmunuincicaattion betwween agennttss,, immppaaiirinng theiir abiilityy to 
+coordinate effffectivelly.. 
+
+(3) Deenniaiall--off-Serviice (DDooSS)):: Ovveerrlloading netwwork resources to prevent critical agentts frroomm funccttioniingg.. 
+
+11.22.22 Phyyssiical Fauullttss..  
+(1) Ovveerrccuurrreenntt:: Excceessssive current flflooww caused by faullts or equippmentt failuure can damaage critical innfrastruc- 
+
+ture.. 
+(2) Volltage Sag/Surrggee:: Deevviiaattions frroomm nomiinnaall volltage leevels can disrupt inndussttrriiall processes and damaage 
+
+senssiitive equipmeenntt.. 
+(3) Frequency Deevviiaattiionss:: Instabiillityy inn frreeqquuency due to generatiioonn--ddeemmand miismaattchees can trigggger systeemm-- 
+
+wiide outtageess.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemms iinn Smaarrtt Grriidss:: An AlI-Drriven Appprroach to Reguullar Auddiitts •+ 3 
+
+TThhese challeennges are compounded by the dynamiic nature of smaarrtt gridss,, whheerre conddiitioons change rapidly due to 
+flfluucctuuatinng demaanndd,, inntegratioon of renewaabblle energy sourrcceess,, and externall distuurbancceess.. Trraddiitionall anomaally 
+detectioon meetthods based on static threshollds or rule-bbased mooddeells strruuggle to adaptt to these dynamiic conddiittionss,, 
+resultinng inn delaayed or innaccurate responnsseess.. 
+
+11..3. Moottiivvaattion for AlI-Drriven Auddiitts 
+TThhe liimm itatioons of traditioonal securrity meeaassuurres inn muultltii-agentt smaarrtt grids moottiivaatte the need for AlI-driven 
+approaches to enhance anomaally detectioon and risskk maannagaegmeemnetn([t[1166]].. Arrttiiffiicial inntelliiggeennce (AAII) offffers poweerrffull 
+toolls for analyzinng compplleexx,, high-dimmeennssiionaall data[13]] and iddentifyyinng patttterns that siggnify anomalailies or riskss.. 
+In the conttext of smaarrtt gridss,, AII can revollutionize securriity[15]] and opeerraattionaall efffificciieennccy thhroouugh real-ttiimme 
+anomaally detectioon and inntelliiggeent auddiit scheduulliingg.. 
+11..33..11. Why AlI-Drriven Auddiits? 
+
+(1) Real-TTimme Addaaptpatbaibliilitty:: AII mooddelesls,, such as maacchhiine leeaarnninng (MMLL))[[14]] classiiffiiers and neurraall netwoorrkkss,, 
+can dynaammicicaallly leearn frroomm hiistoricall and real-ttiimme datta,, enabllinng thheemm to detect anomalailies that deviiate 
+frroomm normaall opeerrattionall paatttternss.. For exampplele,, an AII mooddeell can iddenttify volltage flfluucctuuatioons caused by 
+false data innjectioon attttaacks or frreeqquuency instabiillityy due to looad immbbaallanncceess.. 
+
+(2) Integratioon of Muulltti-AAgent Interactionss:: AII meetthods likke graph neurraall networrks (GGNNss)) can capture 
+the innteerrddeeppeenndence betwween agennttss,, mooddeelling the grid as a graph whheerre nodes represent agentts and 
+edges represent theiir innteractionss.. ThThiis approach allloowws for hoolliisttic anomaally detectioon that accountts for 
+cascading effffects across the grid.. 
+
+(3) Risk-AAwaarre Auuddiit Scheedduulliingg:: Trraddiitionall fifixxeed-audiit schedulles are resource-intensive and offtteen miiss- 
+aliiggnned wiith actuall rissk leveellss.. AlI-drivven auddiitts optimmiize resource alloocatioon by dynaammicicaallly adjustinng 
+auddiit frreeqquuency based on real-ttiimme rissk assessmeennttss,, reducing opeerrattionall costs wiithoutt compprrommiissiing 
+securriittyy.. 
+
+(4) Scallabbiillity and Efffificcieenncy:: AII mooddeells can process laarge-scale data generated by smaarrtt gridss,, ensuring 
+scalabiilityy across diverse comppoonneenntts and opeerrattionall scenaarriioss.. 
+
+11..33..22. Existinng Research Gaappss.. Whhilile siggniiffiiccaant progrress has been maade inn anomaally detectioon for smaarrtt gridss,, 
+current approaches are offtteen liimm ited by:: 
+
+(1) Static ThThrreesshoollddss:: Unnaabblle to adapt to evolvinng attttaack strategies or dynamiic grid conddiittionss.. 
+(2) Isolaateed Solluttionss:: Focus on eithher anomaally detectioon or auddiit opttimiizzaattiion,, wiithoutt inntegratinng these 
+
+aspecctts innto a uniiffiieed frraammewoorrkk.. 
+(3) Resourrce Coonnstsrtraaiinnttss:: Lack of empphhaassiis on cost efffificciieenncy,, leeaadinng to unssuussttainablle opeerrattionall mooddelesls.. 
+
+TThhese gaps unddeerrscore the need for a compprreehheennssiive frraammework that inntegrates real-ttiimme anomaally detectioon and 
+dynamiic auddiit optimmiizatioon usinng AlI-driven meetthhooddss.. 
+
+1.4 Obbjjeeccttiives 
+TThhe primmary objjective of this stuudy iiss to develop a frraammework that enhancces the securrity and opeerrattionall efffificciieennccy 
+of muultltii-agent smaarrt gridss.. ThThe speecciiffiic goaalls are::  
+
+(1) Real-TTimme Anomaally Deetteeccttiion:: To develop a deviatioonn-bbased anomaally detectioon meecchanismm leevveraginng 
+real-ttiimme observattions (-X)),, baselline meettrriics (B)),, and adapttive thresholds ()Thℎ)).. To inncorporrate criticcalityy 
+weeiightts (Fw)) and to prriiorriitize high-immpaacct anomalailies based on agentt immppoorrttaannccee.. 
+
+(2) Dyynaamiic Auuddiitt Oppttiimizizaattiion:: To Formuullaatte a muultltii-objjecttive optimiizatioon mooddeell whhiich can miiniimiize 
+attttaack rates ('Raattttack) and opeerrattionall costs (C)).. In adddiittion,, to adjust auddiit freeqquencciies (5f ) based on real-ttiimme 
+risskk assesssmmentts to achieve a balance betwween securrity and cost efffificciieenncy.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+4 •+ Maaddhhuukkrriishna et aall.. 
+
+(3) Scallabbiillityy and Addaaptpatbaibliilitty:: To ensure that the frraammework can scale across heteroogeneous agentts and 
+adaptt to dynamiic grid conddiittionss,, inncluudinng flfluucctuuatinng demaanndd,, renewaabblle inntegrattion,, and evolvinng 
+attttaack veccttorrss.. 
+
+(4) Vaallidatioon and Perfoorrmmance Annaalylysisiss:: To simmullate the frraammework under diverse scenaarriioss,, inncluudinng 
+cybeerrattttacks (e.g..,, FDII,, jaammmiinngg)) and phyyssiicaall faullts (e.g..,, volltage sag,, oveerrccuurrreennt)t).. Allso to evaluate the 
+frraammework using perfoorrmmance meettrriics such as precciision,, reccaalll,, F1--scorree,, attttaack rate reduccttion,, and cost 
+savinggss.. 
+
+ThThiis frraammework is desiggnned to addrress the growing challeennges of securinng muultltii-agent smaarrt grids whhiille 
+optimmiizinng opeerrattionall efffificciieenncy.. By leevveraginng AlI-drivven meetthhooddss,, iitt proviides a scalable and adapttive solutioon 
+for anomaally detectioon and auddiit opttimiizzaattiion,, advancing the fifieeldd of inntelliiggeent and secure grid opeerraattiionss.. 
+
+ThThe remaaiinder of this paper iiss strruuctuured as folloowwss:: Sectioon 2 revieewws relaateed woorrk inn anomaally detectioon and 
+audiit optimiizatioon for smaarrt gridss.. Sectioon 3 presentts the systeemm mooddeell and the probleemm formuullatioon usinng one 
+reall--llife smaarrt grid exampplele.. Sectioon 4 presentts the proposed AII-drivven auddiit frraammewoorrkk,, inncluudinng the frraammework 
+comppoonneenntts inn deettaaiill.. Sectioon Sectioon 5 describes the simmullatioon envirroonnmmentt and evaluatioon meetrtriiccss.. Sectioon 6 
+presentts the evaluatioon resullts usinng a case studyy.. Sectioon 7 discusses innsighttss,, liimmiitationss,, and future directionss,, 
+and Sectioon 8 concludes the research woorrkk.. 
+
+2 LITTEERRAATTURE STUDY 
+TThhe inncreasinng compplleexxiity of Muulltti-AAgent Systeemm s (MMASS)) inn smaarrttggririddss,, inndussttrriial IoT,, cyberr-phyyssiicall systeemms 
+(CCPSS)),, and cloouud-based innfrastrruuctures has inntrroodduuced siggniffiiccaant securrity challlengeess.. Trraddiitionall auddiit meecchhaa-- 
+nismm s offtteen faiil to addrress dynamiic riskss,, cyber threaattss,, and/adapttive attttackss,, necceessssiitatinng the inntegratioon of 
+Arrttiiffiicial Intelliiggeennce (AAlI)-ddrivveen securrity auddiitts[266]].. ThThiis sectioon revieewws releevvant research,, categorrizinng iitt innto 
+securrity inn MAASS,, traditioonall audiitinng techniiqueess,, and,AlI-drivven securrity auddiittss.. 
+
+2.1 Securriity inn Muultltii-AAgentt Systeemms (MMASS)) 
+Zhang et aall.. (22023))[6]] highligghted how muultltii-agent commmunuincicaattion can be explloited for adveerrssaarriiall attttackss,, 
+requiirinng trruust--aawware securrity archiitectures for agent authennttiicatioon and anomaally dettecttion.. Han & Zhu (22017))[25]] 
+proposed reinnffoorrcceemment leeaarnninng (RRL)-based anomaally detectioon mooddeells for SCADDAA--bbaassed MAS environmeenntsts,, 
+ensuring real-ttiimme iddenttiffiiccaatiioonn of maalliicious agennttss.. Sadeghii et all.. (22015))[27]] examiined Induussttrriiall IlooT MAS 
+securriitty,, iddentifyyinng distrriibbuuteed deniiaall-of-service (DDDooSS)) vullnneerarbaibliiltitiiess,, prompptting research innto autoonnoommous 
+threat miittiigattion.. 
+
+Deessppiitte these advancemeenntsts,, existinng MAS securrity meetthods laack adapttive auddiit scheduulliingg,, offtteen leeaadinng to 
+reaccttivee,, rather thhan proaaccttiivee,, cybeerrsecurriity meeaassuurreess.. 
+
+2.2 Tradiitionaall Auddiit Meetthods 
+Securriity auddiitts traditioonally rely on rule-bbased and perriodiic evaluatioons that assess systeemm comppliliannccee,, access 
+logss,, and event anommalailieess.. Hoowweveevrer,, these approaches suffffer frroomm high false alarmss,, innefffificcieency,, and inabiillityy 
+to detect evolvinng threaattss.. Wee have considered only 2 research woorrks here frroomm the traditioonall auddiit mee tthhooddss,, 
+as it is nott the scope of our considered research pappeerr.. Smiith & ThThomppsson (2024))[4]] highligghted that maannuuaall 
+auddiits inntrroodduce opeerrattionall dellayss,, requiirinng automaatteedd,, real-ttiimme AlI-based solutioons for continnuous securrity 
+moonnititoorriingg.. Mililler & Allford (22020)[17]] explored adversary emuullaattion-based auddiittss,, whheerre simmullated cybeerr--attttacks 
+weerre used to test systeemm resilieennce,, yet this approach required siggniffiiccaant human innterventtion.. Trraddiitionall auddiittss,, 
+whhiille essennttiiaall,, laack real-ttiimme adappttaabbiillity and are inncapablle of scalinng wiith compplleexx,, evolvinng cyber threaattss,, 
+necceessssiitatinng AlI-based securrity audiit frraammewoorrkkss.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemms iinn Smaarrtt Grriidss:: An AlI-Drriven Appprroach to Reguullar Auddiitts •+ 5 
+
+22..33. AlIiin Securriity Auddiitts 
+AlI-drivven auddiit meecchaaniisms leevverage maacchhiine leeaarnninng (MMLL))[[2244]],, deep leeaarnninng (DLL)),, and reinnffoorrcceemment leeaarnninng 
+(RRL)) to enhance real-ttiimme anomaally dettecttion,, rissk assessmeenntt,, and auddiit frreeqquuency opttimiizzaattiion.. Johnson & Daavviis 
+(22024))[2]] proposed an AlI-based audiitinng frraammework that continnuoussly moonniittorrs systteemm behavviior and adjjussts 
+auddiits based on dynamiic risskk scorreess,, achievinng higher efffificciieennccy thhan periodiic auddiittss.. Ghosh (22024)[28]] develooped 
+AlI-poweered muultltii-agent traadinng securrity auddiittss,, whheerre agentts selff--mmoniitor theiir innteractionss,, reducing auddiit 
+overhead whhiille immproving anomaally detectioon accurraaccyy.. Huang (22024)[29]] inntrroodduuced a muultltii-agent AII frraammework 
+for entterprriise securrity auddiitting,, demoonnststrraatting how AJI--ddrriivveenn agentts can collaaboratively assess cyberrsecurriity 
+rissks inn decenttrrallized netwoorrkkss.. Doe & Roe (22024))[1]] immplementted a concepttuaall AII auddiit mooddeell for laarge-scale 
+cloouud securrity moonnititoorriingg,, achievinng real-ttiimme threat detectioon wiith miinimaall false positiivveess. sZZhhang & Waang 
+(22024))[7]] proposed laarrggee-llaanngguuage mooddeell (LLLM))-based anomaally detectioon for AlI-drivven auddiittss,, demoonnststrraatting the 
+feasiibiilityy of autoonomoouuss,, innterpretablle rissk assesssmmentt mooddelesls.. 
+
+ThThese advancemeenntts inn AlI-based securrity audiitinng offffer self--lleeaarrnning,, adappttiivee,, and real-ttiimme risskk--aawware auddiit 
+scheduulliingg,, outperfoorrmming traditioonall rule-bbased and perriodiic audiitinng mooddelesls.. Hoowweveevrer,, challeennges such as 
+mooddeell exppllaaiinnaabibliilitty,, inntegratioon wiith existinng cybeerrsecurriity frraammewoorrkkss,, and adveerrssaarriiall attttaack resissttaannce requiire 
+further research.. Tablle 11 presentts the suummmaarry of the existinng highligghted solutioons aloonng wiith theiir liimm itatioons 
+(foor betttter unddeerrsstandiing)) and the research gaps that are being addressed inn the proposed research pappeerr.. 
+
+3 SYSTEEMM MODDEEL 
+TThhe systeemm mooddeell depiicted inn Figure 1 highllightts the compplleexxiity of mooddeern smaarrtt gridss,, whhiich inntegrate phyyssiicall 
+and cyber comppoonneenntts for efffificciieennt and reliaable opeerraattiionss.. ThThe innteractioonn betwween the laayers enablles dynamiic 
+moonniittorring and conttroll but also exposses the grid to siggniffiiccaant vuullnneerarbaibliiltitiieess.. ThThe muultltii-laayyered smaarrtt grid 
+architecture inn Figure 11 iiss having twwo innteerrccoonnnected laayerrss:: the phyyssiicall grid laayer and the cyber laayer thhroough 
+the commmunuincicaattion layeerr.. ThThe phyyssiicall grid laayer handdlles the geneerraattiion,, traansmiissssiion,, and distriibbuutioonn of 
+electtrriiciity,, whhiille the cyber laayer enabblles moonnititoorriingg,, conttrrooll,, and commmunuincicaattion across the griid.. TThhe innteractioon 
+betwween these laayers ensures the grid’s opeerrattionall efffificciieennccy and stabbiilliity.. Hoowweveevre,r, the innteerrccoonnnectedness also 
+inntrrooduces vullnneerarbaibliiltitiiess,, such as cyberrattttacks andpphhysyisiccaall faullttss,, whhiich requiire robusst anomaally detectioon and 
+miittigatioon strategiiess.. TThhe dettaaiills of each laayer are as folloowwss:: 
+3.0.1 Phyyssiical Layyeerr.. ThThe Phyyssiicaall Grrid Layer compprriises the core innfrastrruucture responssiiblle for maannaaggiing 
+electricityy flflooww and maaiinnttaining stabiilliity.. ThThe agentts inn this laayer inncludee:: Geenneerraattion Aggeenntts (GGA)):ThThese agennttss,, 
+such as %Po>wFe4rAGe4n=e4rAa0tCo>rAy1 to %Po>wFe4rAGen4=er4aA0tCo>rAn=,, are responssiiblle for producing electricityy and supplying it to the 
+grid;; Storage Aggeenntts (SSA)):: Energy stoorage systeemms maanaaged by these agentts balance supply and demaanndd,, ensuring 
+grid reliabiilityy during geneerratioon flfluuctuuationss;; Emeerrgency Response Aggeennttss:: ThThese agentts resppond to electrical 
+faullttss,, such as liinne outages or equippmentt failuuress,, to miiniimiize the immpaacct on grid opeerraattionss;; Maaiinttenance 
+Aggeennttss:: ThThese agentts ensure the continnuous operatioon of phyyssiicaall comppoonneenntts thhroough regullar maaiintenance 
+and faullt issolatioon;; Enviironmeennttaall Moonnititorring Aggeennttss:: ThThese agentts moonniittor enviroonnmeennttaall conddiitions ((ee..gg..,, 
+temppeerraattuurree,, wiind speed)) that innflfluueennce grid opeerraattiionss,, enabllinng proaccttive adjustmmentts to maaiinnttain stabiillity;; 
+Phasor Meeaassuremeentt Unniitts (PPMUUs)s):: PMUss provide real-ttiimme meeaassuremeenntts of electricall parameetteerrs s uch as volltagee,, current (I0g1p-2)),, and freeqquenccyy,, whhiich are critical for moonniittorring grid heaallth;; Brreaakkeerrss:: Breakeerrs prottect 
+circuiits by issoolaatiinng faulty comppoonneenntts inn case of electrical faullttss,, preventting cascading failuuress.. Elleccttricity flfloowws 
+thhroouugh the phyyssiicall grid frroomm geneerrattors to consumeerrss,, wiith agentts moonniittorring and respponding to faullts or 
+abnormaall conddiittionss.. ThThe phyyssiicall laayerr’’s opeerrattions are innflfluueennced by innputts frroomm the cyber layeerr.. 
+33..00..22. Cyber Layyeerr.. ThThiis laayer handdlles data commmunuinciactaitioonn,, moonnititoorriingg,, and decisiioonn-mmakkiingg.. IItt conneecctts the 
+agentts inn the phyyssiicall laayer via commmunuincicaattion liinnks and inntrroodduces cyberrsecurriity rissks such as LAN/WWAN attttaacks 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+6 •+ Maaddhhuukkrriishna et aall.. 
+
+Tablle 11.. Summaarry offtthhee Existinng Solutioons aloong wiith theiir Limmiitatioons 
+
+Arrttiicle Coonnttrributioon Research Gap Reessearch Gaps Addddrreessed inn the 
+Proposed Fraammework 
+
+Zhang et | Deevveelloped a Trust-aawware MASS | Lacks adappttaabbiillity to new attttaack patt- | Addaappttiive AlI-drivven anomaally detectioon 
+aall.. [[6] securrity terns wiith dynamiic leearnninng 
+Johnson | Proposed AlIJ--ppoowwered rriisskk- | Limiited to pre-deffiinned rissk factors Self-lleeaarrnninng risskk prioritizzaatiioonn inn reall- 
+eett aall.. | awaarre auddiits frraammework tiimme auddiitts 
+(22024)) [2] 
+Zhang Inntrroodduced AII-drivven anomaally | Daattaa--iintensive Enhanced AlI--ddrriivveenn anomaally detectioon 
+& Waang | detectioon teechhnique wiith miinimaall data requireemmentts 
+(22024)) [[77]] 
+Doe Proposed AII-based auddiit sched-- | Hiigh comppuutatattiionaall cost Efffificientt,, liigghhttwweight AII mooddeells for reall- 
+& Roe | ulinng tiimme audiitinng 
+(22024)) [[11]] 
+Smiith & | Proposed AlI-poweered loog anaall- | Lacks real-ttiimme adaappttaabbiillity Connttinuous AlI-driven securrity moonnititoorr-- 
+ThThompp-- ysiis inng and adapttatioon 
+son (22024)) 
+[[44]] 
+Han Proposed RL--based anomaally de- | Reellies on pre-traainned poolliicies Reaall-tiimme reinnffoorrcceemment leeaarrnninng-bbased 
+& Zhu | tectioon for SCADA risskk--aawware auddiitts 
+(22017)) 
+[[2255]] 
+Ghosh Inntrroodduced AlIJ--ddrriivveen fifinnancciiall | Noott appllicable to other domaaiins Muulltti-ddoommain adapttablle AII-driven auddiit 
+(22024)) auddiit securrity frraammework 
+[[2288]] 
+Wisis-- Deevveeloped traditioonall rulle- | Infflleexible and inneffffectivve agaiinst evollv- | AlI-drivven adapttive auddiit frraammework 
+chmeeyyeer | based audiitinng usinng static | inng cyber threats overcoomm ing static rule liimm itatioons 
+eett aall.. | thresholds for detectinng secu- 
+(22023)) rityy rissks 
+[[2200]] 
+Guo et | Proposed statistical anomaally de- | Hiigghh-ffallse possiitives due to riggidd stattisti- | Maacchhiine leeaarnninng-bbased anomaally detec- 
+aall.. (22022)) | tectioon based on deviiatioon frroomm | call assuumppttiions tioon reducing false possiitives 
+[21] normaall patttterns inn systeemm loogs 
+Armaando | Inntrroodduced supervised leearning- | Lack of adappttaabbiillity inn real-ttiimme auddiit | Oppttimiized auddiit frreeqquuency schedullinng 
+eett aall.. | based auddiit schedulling for ooppttii)- schedullinng based on dynamiic risskk assesssmmentt 
+(22023)) miized anomaally detectioon 
+[[2222]] 
+Song et | Proposed Reinforcceemmentt | Hiigh comppuutatattiionaall compplleexxiity and | Enhanced efffificciieennccy wiith AlI-poweered 
+aall.. ((2200222),2),) leeaarnninng-based)securriity auddiitts | sloowwer convergence risskk--aawware auddiit schedullinng 
+[23] optimmiizinng auddiit frreeqquuency 
+
+dynaammicicaallly 
+
+and maalliicious inntrusionss.. TThhe agentts inn this laayer inncludee:: Moonnititorring & Coonnttrroll Aggeennttss:: ThThese agentts gath er data 
+frroomm phyyssiicall comppoonneenntsts,, such as PMUss and enviroonnmeennttaall moonniittorring ageennttss,, and issssuue conttroll commmaannddss to 
+ensure grid stabiillity;; Securriity Aggeennttss:: ThThese agentts detect and resppond to cybeerraattttackkss,, such as false data innjectioon 
+(FDII)),, commmunuincicaattion jaammmiinngg,, and deniiaall-of-service (DDoSS)) attttackss;; Learning & Addaappttaattion Aggeennttss:: TThhese 
+agentts leevverage AI/MML mooddeells to dynaammicicaallly adapt to changing grid conddiittionss,, optimmiize decisiioonn-mmakkiingg,, and 
+enhance anomaally detectioon cappaabibliilittiiess.. Otther maajjor comppoonneenntts of cyber laayer are as folloowss:: Arrea Coonntrtroollleerrss:: 
+Respoonnssiibblle for maannaaggiing grid stabiilityy wiithin speecciiffiic geographiic regionss,, these conttrroolllers adjust poweer 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt.. 
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemms iinn Smaarrtt Grriidss:: An AlI-Drriven Appprroach to Reguullar Auddiitts •+ 7 
+
+Physical Grid Layer 
+
+Generation Agents Emergency - Environmental 
+Power generator 1 Z| an <——» Storage Agents (SA) <—-» Response Agents <—+>| Maintenance Agents |}«—» Monitoring Agents Power generator n 
+
+Load ate" I ae i, Load 
+
+Breaker PMU Electrical fault P Breaker 
+
+LAN Attack 
+
+‘Communication Agents Communication Link, 
+
+Monitoring & Control Emergency 
+Security Agents Response Agents Area Controller 
+
+WAN Attack ‘N\ 
+
+“Cyber Layer 
+Learning & Adaptation Agents. . 
+
+Substation Controller 1 Substation Controller n 
+
+Consumer Agents (CA) 
+
+Consumer1  Consumern 
+
+FFiigg.. 11.. A systeemm mooddeell wiith smaarrtt grid laayerrss,, comppoonneenntsts,, and muultltiiplle agentts 
+
+geneerraattiion,, looad balancciingg,, and faullt.iissoolaatiioonn strategiiess;; Subssttatioon Coonntrtroollleerrss:: Subssttatioon conttrroolllers oversee 
+electricityy distrriibbuutioonn wiithin substatioons and commmunuincicaatte wiith area conttrroolllers for coordinated opeerraattiionss;; 
+Consumeer Aggeenntts (CCA)):: Reprresentting the grid’’s end--uusseerrss,, these agentts moonniittor consumeer demand and provide 
+feeeedback to optimmiize looad distribbution.. TThhe cyber laayer not only faciilittaates seamlless commmunuincicaattiion among agentts 
+but also moonniittorrs and miittigates pottennttiiall cyber threats that can disrupt grid opeerraattiionss.. 
+3.0.33 Cross Layer Innteractionss.. TThhe innteractioon betwween the Phyyssiiccaall Grrid Layer and the Cyber Layer is crucciiall 
+for the grid’’s funccttiionnaalilittyy.. Commmunuinciacattiion liinnks conneecctt the twwo laayerrss,, enabllinng real-ttiimme data exchange and 
+decisiioonn-mmakkiingg.. For exampplele,, PMUss inn the phyyssiicall laayer traannsmiit electrical meeaassuremeenntts to moonniittoring  agentts 
+inn the cyber layeerr,, whhiich analyze the data and issssuue corrective actioons iiff anomalailies are detectted.. Simililaarrlly,, area 
+conttrroolllers and leeaarnninng agentts inn the cyber laayer adapt grid opeerrattions based on real-ttiimme conddiitioons inn the 
+phyyssiicall layeerr.. Hoowweveevre,r, these innteractioons also expose the grid to vullnneerarbaibliiltitiiess.. LAN attttaacks can disrupt loocall 
+commmunuincicaattion among agentts inn the phyyssiicaall layeerr,, whhiille WAN attttaacks can compprromiisse the decissiioonn--mmaking 
+processes inn the cyber layeerr.. ThThese vullneerraabibliilitties necceessssiitate robusst securrity meeaassuurreess,, inncluudinng anomaally 
+detectioon and risskk--aawware auddiit opttimiizzaattiion.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+8 •© Maaddhhuukkrriishna et aall.. 
+
+33..11. Probleemm Formuullaattion 
+ThThe objjective of this research woork is to develop a muultltii-objjecttive frraammework for anomaally detectioon and auddiit 
+optimmiizatioon inn smaarrt griidss.. TThhe frraammework shouulldd:: 
+
+((11)) Deettecct anomalailies inn real-ttiimme using observed data (-X)) relativve to hiistorical basellines (B)).. 
+(2) Miiniimiize the attttaack rate ('Ra0rCrC0ac2:k )- the proporrtioon of agentts flflaagggged as anomaalloouuss.. 
+(3) Miiniimiize the opeerraattionaall cost (C)—— the total cost of auddiits and failuure riskss.. 
+
+ThThiis innvolves mooddeelling the foollloowwinng key comppoonneenntts maatthheemmataitciaclallyy:: 
+3.1.1 Probleemm Obbjjeeccttiivveess.. 
+Obbjjective 11: Miiniimiize Attttack Ratte ('Ra0tCrC0ac2k:)): ThThe attttaack rate ('Ra0tCrC0ac2:k ) quaanntitiffiies the proporrtioon of agentts inn 
+a smaarrtt grid systeemm that are flflaagggged as anomaallous due to deviiatioons frroomm expected behaavviioorrs.IIt serves as an 
+inndicator of the oveerraalll heallth of the systeemm and highllightts the immpaacctt of pottennttiiall cyberr-phyyssiicall anommalaileiess.. ThThe 
+attttaack rate iiss deffiinned as:: ∑=n . 
+
+8=1 08 (C )
+'Ra0tCtCa0c2:k == Per) ((11))=  
+
+Whheerre n= iiss the totall numbbeer of agentts present inn{ both phyyssiicaall and cyber layeerr,, and 0a;8 (tC ) is the binary varriable 
+11 ; if (S;8 (tC ) > 1(A=n>o<ma0l;o>uDsB))indicating whether agent  
+
+n n  het   8i is anomaalloouuss:: 0a;8 (tC ) = 
+0;; $OtChℎe4rAwFi8sBe4 
+
+Obbjjective 2: Miiniimiize Opeerattional Cost (C)): TThhe opeerraattionaall cost (C)iis the suumm of auddiit cost (C,0)) and frreeqquuency 
+cost (Cr5)) weeiighted by the auddiit frreeqquuency (5f ) and rissk score ('R;C ) whhiich can be deffiinned as:: 
+
+'Ri(tC )
+C = C0x× f5 r+ p5 ×x (2) 
+
+5
+
+Heerree,, 'R((tC ) iiss the dynamiic rissk score whhiich is deffiinned∑ as:: =n 
+
+'R((tC)) == >)F;8 ×x 0a;8((tC)) ((33)) 
+8i==l1 
+
+Wiitth Fw;8 is the criticcalityy of agentt ii.. 
+Obbjjective 3: Cross-laayer Stabbiilliity:: TThhe aimm is to miiniimiize the disccrreeppaanncy betwween observed data (-X((tC))) and 
+baselline data (B ) across phyyssiicall and cyber laayerrss.. 
+
+<mi8n=((||||-X((tC)) −— Bx-||||++||||.¥((¢C)) −— B.y||l|)) ((44)) 
+Whhereree:: 
+-X((tC)):: Obbsserved phyyssiicall meettrriics (e.g..,, volltagee,, currentt)) 
+.Y((tC)):: Obbsserved cyber meettrriics (e.g..,, laateencyy,, packet inntegrriity) 
+Bx-,, By.:: Baasseellines for phyyssiicall and cyber meetrtriiccss,, respecttively 
+3.1..22. VVariables and Deeffiiniittionss.. 
+
+(1) Obbsserved Daatta (-X;): X;   tim  eas   rom n nts, i  d etri   t h C ): -C is the real-time measured data from = agents, with 3 metrics per agent whiich is 
+deffiinned as:: 
+
+-X;C == [[Gxi8;9((tC))]] (5)
+(5) 
+
+Heerree,, Gx;8;9 (tC ) iiss the j9Cℎ'* meettrriic of agent i8 at tiimme Ct 
+(2) Baasseelline Daatta (B)):: B iiss the hiistoricall average data under normaall conddiitions whhiich iiss deffiinned as:: 
+
+B= = [[1bi8j9]] ((66)) 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemms iinn Smaarrtt Grriidss:: An AlI-Drriven Appprroach to Reguullar Auddiitts •+ 9 
+
+Heerree,, 1b;8;9 iiss the basellinne value of meettrriic j9 for agent 8i.. ThThe values are taaken frroomm the staanndard SCADA 
+databases such as Rapiid SCADAA,, SCADDAA--LLTTSS,, PySCADAA.. 
+
+(3) ThTh reshold Maattrriix ()Thℎ)):: )Thℎ is the maximmum permisissiiblle deviiatioons frroomm the baselline whhiich is deffiinned as:: 
+)Thℎ8i9 =k: ×x foi8;9 ((77)) 
+
+Heerree,, foj8;9 iiss the staanndard deviiatioon of Gx;8;9((tC)).. Gx;8;9 (tC ) for meettrriic j9 of agent 8i at diffffeerreent timme poiintts Ct.. For 
+exampplle Gx1111((tC,1) = 230E,, Gx1111((tC2) = 2314E,, .......G.x1111((Ct30)) = 2299vE,,.. 
+
+(4) Weeiightt Vector (Fw)):: Fw representts the immpoorrtance of each agenntt.. 
+Fw = [F1,wFW 2,1FW3, ...5., FWl=,], Fwi8 ≥> 0 (8) 
+
+(5) Anomaally Score ((S;8 (tC)))):: (S;8 (Ct) quaanntitiffiies deviia√tioon frroomm expected behavviior for agent 8i whhiich can be deffiinned as:: 
+Wem1 ∑3
+
+y Ge8 9 (C )e− 1P8i9l g (9) 
+(8 (C ) = F8 . ( )2 (9)
+
+3 9=1 )ℎhi8j9 
+(6) Auuddiitt Frequency (5f)):: f5  representts the numbbeerr of auddiits conduccted per year such that f5  ≥> f5<mi8n=,, whheerre 
+
+f5<mi8n= is the regulatory miinimmum.. 
+3.1..33. Coonnststrraaiinnttss.. 
+Pphyyssiical Limiittss:: vVonltage (+V,, current J,, and frreeqquuency f5  muusstt liee wiithin permisissiiblle rangeess:: 
++8 (C ) ∈ [+<8=,+<0G ], 8 (C ) ∈ [0, <0G ], 5 (C ) ∈ [5<8=, 5<0G ]
+Auddiit Freq uencmy Limiittss:: ThThe auddiit frreeqquuency muusstt meeeett regulatory requiremeennttss:: 
+f5  ≥2 f5<mi8=n 
+Commmunuincicaattiion Limiittss:: Latency (!L ) and packett inntegrity (D)) inn,thhe cyber laayer muusstt satisfy:: 
+!L(8 (tC)) ≤< !L<ax0G;, Dj8((tC)) ≥2 Dy<i8n= 
+3.1.44 Probleemm Staateemment (OOpttimiizatioon Formuulalattiioonn)).. Commmunuincicaattiion Limiittss:: ThThe muultltii-objjecttive optimiizatioon 
+probleemm is to miiniimiize both the attttaack rate andoopperearattiionaall costs whhiille ensuring cross-laayer stabiillity:: 
+<mi8n=((R'at0tCCa0c2k::, C;, ||||-X((tC)) −— Bx-||| |++||||¥.((tC)) −— By.||I|)) 
+Subbjject to the follloowwinng conssttrraaiinttss:: 
+
+(1) Phyyssiicaall liimmiits (+V,, I,, f5)) 
+(2) Commmunuinciacattiion conssttraiintts (!L,, D)) 
+(3) ThTh reshold and baselline deviiatioons 
+
+Wiitth the decisioon varriiabblless;; anomaally inndicators (0a;8 (tC )) and auddiit frreeqquuency (5f)).. ThThe parameetteerrs and nottations 
+used for the probleemm formmuullatioon and the proposed frraammework are shhoowwn inn Tablle 22.. 
+
+3.2 Securriity Thrreatts and Chhaalllenges 
+ThThe innteerrccoonnnected nature of the smaarrtt grid inntrroodduces severall securrity challeennges are as folloowwss:: 
+
+(1) Phyyssiicall Fauullttss:: Elleccttrical faullts such as overrcurrrreenntt,, volltage sag,, and equippmeentt failuures can disrupt 
+operrations and damaage innfrastructurree..  
+
+(2) Cybeer ThThrreeaattss:: Fallse data innjectioonn (FDII)),, commmunuincicaattion jaammmiinngg,, and DoS attttaacks can compprromiisse 
+decissiioonn--mmaking and grid stabbiilliity.. 
+
+(3) Crrosss-Layer Vuulnlnerearbaibliltitiieess:: Cyybbeerraattttacks on the commmunuincicaattion laayer can trigggger faullts inn the phyyssiicall 
+layeerr,, leeaadinng to cascadinng failuuress.. 
+
+To addrress these challlengeess,, a robusst anomaally detectioon frraammewoorrkk,, coupled wiith optimm ized auddiit strategiiess,, is 
+essenttiiall to secure the grid agaiinsst cybeerr-phyyssiiccaall threats and ensure iittss continnued stabiilityy and reliabiilliity.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+10 •+ Maaddhhuukkrriishna et aall.. 
+
+Tablle 22.. Noottaattions used inn the Probleemm Formuullaattion and proposed AlI-driven Auddiitt Fraammewoork 
+
+Noottatioon | Deessccrriptioon 
+-X((tC)) Phyyssiiccaall laayer data maattrriix 
+.Y((tC ) Cyber laayer data maattrrix 
+B-y Baasseelline maattrrix for phyyssiicall laayer 
+By. Baasseelline maattrrix for cyber laayer 
+)Tℎh TThh reshold maattrriix for anomaally detectioon 
+3d Noo.. of meettrriics per agentt 
+Fw Weeiightt maattrrix 
+'Ra0tCtCa0c2:k Attttack rate 
+Cc Oppeerraattiionaall cost 
+'R;C Risk score 
+f5  Auuddiitt frreeqquuency 
+Ca0 Auuddiitt cost 
+Cr5  Frequency cost 
+0a,8 (tC ) Anomaally inndicator 
+FDI Fallse data innjectioonn 
+Ua Smooootthiing factor 
+BV Addjjustmentt factor 
+Di8;9((tC)) Cummulualattiive deviiatioon 
+foi8; (9 (tC)) Standard deviiatioon 
+B Alllocated total budgeett 
+
+In the next section,, we solvved the foormmuullated probleemm usinng Geenneettiic Allgoritthhmm (GGA)) and Reinforcceemmentt 
+Learning (RL)).. 
+
+4 PROPOSED AI-DDRIVVEN AUDIIT FRRAAMMEWWORK 
+TThhe proposed frraammework inntegrates AII-drivven teechhniques to maannaage anommalailieess,, reduce opeerrattionall cossttss,, and 
+ensure resiliieennce inn MAASS.. Heeuurirsisttiic optimmiizatioon teechhnique Reinfoorcceemmentt Learning (RL)),, is empplloyed to desiggn 
+an adapttablle solutioon for real-ttiimme opeerraattiionss.. ThThe woorrkffllooww of the proposed AJI-drivven Auuddiitt Fraammework is 
+shhoowwn inn Figure 22.. ThThe detaileed explanatioon of the maajjor fifivve comppoonneenntts of the frraammework are presented inn the 
+next subsseeccttiionss.. 
+
+4.1 Fraammewoorrk Comppoonneennttss 
+4.1.1 Data Coolllecttion.. IItt innvolves gatherinng real-ttiimme data frroomm the phyyssiicall and cyber laayers of the smaarrtt 
+grid,, ensuring the data is norrmalailizzeedd,, cleeaned,, and ready for downnsstreeaamm anaallyssiis likke anomaally detectioon and 
+behaviior anaallyyssiiss.. ThThe data is colleecteed inn the foorrmm of phyyssiicall laayer maattrrix (-X((tC))),, cyber laayer maattrrix  (.Y((tC))),, 
+basellinne meettrriics (Bx-,, By.)),, and threshold maattrrix ()Thℎ)) for anomaally dettecttion.. TThhe phyyssiicall laayer maattrriix (-X((tC))) 
+is the real-ttiimme meeaassuremeenntts of voltage (+V)),, current ((I)),, frreeqquuency (5frA)) e  o  p  rom sors, Us, 
+
+GX1111((tC)),, GX1122((tC)).…..Gx13a((tC)) 
+
+
+GX 21 ((Ct)),, GX2222((tC)).….-GX23a((tC)) 
+power load (?) from sensors, PMUs,
+
+break 
+eerrss,, geneerrattors etc.. X-((tC)) iiss presented as:: -X((tC )=  .. , her  x;;(t):   etri  j  
+
+ .  , Where G8 9 (C ): value of metric 9 for
+.
+
+GXn=11((tC)),,GXn=a2((tC))….-GXn=a3((tC)) 
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts • 1111 
+
+DATA COLLECTION 
+(Physical metrics *, 
+Cyber metrics Y) 
+
+| 
+ANOMALY DETECTION 
+(Compute $,(1), Classify 
+
+anomalies) 
+
+i 
+BEHAVIOR ANALYSIS 
+(Refine baselines B; 
+Adjust threshold.th) 
+
+y 
+AUDIT SCHEDULING 
+(Optimize f, Minimize C) 
+
+\ 
+RESPONSE 
+
+MECHANISM (Mitigate 
+anomalies, Automate 
+
+actions) 
+
+Fig.. 22.. Woorrkkfflooww of Proposed AlI-driven Auddiit Fraammewoork 
+
+ 
+agent 8i at tiimme Cf,, =n:: numbbeer  nts, d: be   etri   nt. Th    atr  Y(t    : 
+
+~yi1i1((tC)),, ~yr12o((Ct))…..~-Y11<m((Ct))
+
+ 
+
+GX2211((tC)),, GX222((tC)).…..GX22<m((tC))
+of agents, 3 : number of metrics per agent. The cyber data matrix . (C ) is presented as:
+
+ 
+- (C )= 
+
+ .  ,, Where ~8 9
+
+ .  her  y;;((tC)):: value of cyber meettrriic j9 for agent 8i at tiimme Ct,, =n:: numbbeer of agennttss,, <m::
+.
+
+GXn=i1((tC)),, GXn=22((tC)).…-.GX=n<m((tC)) 
+numbbeer of cyber meettrriics per agenntt.. Afftter the data has been colllected,, -X((tC)) and .Y((tC ) wiilll be preprocessed to remmove 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt.. 
+
+Refinement of X, ¥ 
+
+
+
+12 •+ Maaddhhuukkrriishna et aall.. 
+
+rannddoomm noiise using loow--passs fifiltteer and iiss denoted as -Xˆ ((Ct)) and .Y(ˆ(tC)).. TThhe preprocessed data iiss normaalliized to scale 
+the meettrriics to conssiistent range and is denoted as -X(¤(tC)) and .Y(¤(tC)).. B-x representts the normaall operratinng conddiitions of 1b1i1,, 1bi122.…..1bi1a] 
+
+
+3  |  
+ 
+  Bo 
+ =   
+
+121, 122…    
+bat, b ...1b23d  Bp each meettrriic inn the phyyssiicall basellinne whhoosse strruucture can be presented as:: B-y=  .. =|  Be  ..
+1=1, 1=2…1=3   
+
+  
+( 
+
+  ,|, : Bs 
+
+bnis bno---Dna Bsee 
+(42
+
+Whheerre 1b;8;9 iiss meean of meettrriic j9 for agent 8i.. Bg,, Bp,, Bc,, Bs(,, Bs(e4c2 are the various agenntt’’s basellinne maattrriixes such as 
+generratioon agenntt,, distriibbuutioon agenntt,, consumeer agenntt,, stoorage agenntt,, and securrity agent respeeccttiiveellyy.. ThThe meettrriics 
+used inn Bg are current (J)),, volltage (+V)),, poweer (%P)),, respponse tiimme (RRT)),, commmunuincicaattion frreeqquuency (CF)).. TThhe meettrriics 
+used inn Bc are energy consumppttion (EC),ddeemmand respponse frreeqquuency (FR')),, commmunuincicaattion frreeqquency((CF)),, and 
+peak consumppttion tiimme (%PCT))).. ThThe meettrriics used inn Bp are looad distrriibbuutioonn (!LD)),, faullt detectioon tiimme (FDT))),, 
+commmunuincicaattiion laateenncy (CL!)),, and energy looss (EL!)).. ThThe meettrriics used inn Bs( are charging rate (CR')),, discchharginng 
+rate (DR')),, state of charge ((S>oC)),, commmunuincicaattiion laateenncy (CL!)),, and idle tiimme (I)T)).. ThThe meettrriics usediin ByBe4,2 are 
+respponse tiimme ('R)T)),, commmunuincicaattion inntegrity (CI)),, loog updaatte frreeqquuency (!L*UF)),, and false possiitive rate (F%PR')).. By. 
+is the cyber basellinne whhoosse strruucture is simmiilar as B-y and conttains the meettrriics of the cyber ageennttss.. ThTh)ℎ11,)ℎ12…)ℎ1
+
+  
+Thy, Thy... Thi3g 
+
+)Thℎo21,, )Thℎo22.…..)Tℎhe2a 
+reshold
+
+3
+matrix )ℎ defines permissible deviations from baseline which is represented as: )ℎ= 
+atr  Th fin  is i l  i o  rom l  hi    : Th   .
+
+ .  ,, whheerre .
+)Thℎi=n1,, )Tℎh=n2…2)-ℎ-A=nT3d 
+
+)Thℎy8;9 = :k ×X foj8;9 and :k being an user-deffiinned scailiinng factorr.. 
+4.1.2 Anomaally Deetteeccttion.. Anomaally detectioon iiss a critical comppoonneenntt of the AlI-drivven auddiit frraammewoorrkk.. IItt 
+identtiiffiies deviiatioons frroomm expected behaavviior inn the phyyssiical.aannd cyber meettrriics of the smaarrtt grid’s ageennttss.. ThThiis 
+comppoonneenntt uses maatthheemmataiticcaall mooddeells to comppuutte anomaally scores and classifyy agentts as normaall or anomaalloouuss.. 
+ThThe anomaally score iiss calculateed usinng Eq(. 9(9)) and is a.wweeiighttedd,, normaalliized aggregatioon of deviiatioons across alll 
+meettrriics for agentt 8i.. Aggeenntts are classififieedd as anomaallous or normaall based on their anomaally scorreess.. A threshold of 
+(S;8 (Ct)==1 ensures that an agent iiss flflaagggged only when ittss’ddeevviaatiioonns exceed the accepttablle range deffiinned by )Thℎ.. ThThe 
+anomaally detectioon moodduulle feeds its output to the next comppoonneentt ii..ee..,, behavviior anaallyssiis whhiich is explainned inn 
+the next subsseeccttiion.. 
+4.1..33. Behavvior Annaallyyssiiss.. Behaavviior anaallyssiis plays a viital role inn ensuring the adappttaabbiillity of the smaarrtt grid systeemm 
+by analyzing agennttss’’ behaavviior over timmee.. It reffiinnes basseellineess,, adjussts threshoollddss,, and identtiiffiies loong-teerrmm treennds to 
+enhance anomaally detectioon and decisioonn-mmaakkiingg.. ThThiis comppoonneenntt ensures that the frraammework adaptts dynaammicicaallly 
+to evolvinng conddiittionss.. ThThe primmary objjective of behavviior anaallyssiis compoonneentt is to ((ii)) reffiinne the basseellineess,, ii..ee..,, 
+dynnaammiciaclallyly, updaatte the basellines ((B-x 0a=n3dBy.) ) based on recent obsserrvvaattiionss,, ((iiii)) adjust the threshold ()Tℎh)) to reduce 
+false possiitives and negaattives inn anomaally dettecttion,, ((iiiiii)) analyze the behaavviiorr/treennd ii..ee..,, iddenttify behaavviiorraall patttterns 
+and loong-teerrmm deviiatioons for prediictive maaiintenance and anomaally antticipattion,, (iv) use adapttive leeaarnninng to 
+optimmiize thhresholds and reffiinne behavviior mooddelesls.. TThhe procedure to calculate the above 4 objjectives are as folloowwss:: 
+
+(1)  
+ Baasseelline refifinneemmeenntt:: Baasseelline refifinneemment dynaammicicaallly updaattes the normaall operratinng conddiitions (Bx-,, By.)) 
+for each meettrriic of every agenntt.. IItt ensures that the bassellines reffllect the latest treennds and observattions 
+whhiille considerinng hiistorical datta.. ThThe refifinneemmentt is essenttiiall to adapt bassellines to reffllect evolvinng grid 
+conddiitions and to miiniimiize the immpaacctt of outdated basellines on anomaally dettecttion.. ThThe refifinneed baselline 
+′
+
+1b,8 ;9 for meettrriic j9 of agentt 8i can be calculateed as:: 
+
+1 ‘bj8;9 = (1 −— U@—).1bi8j9 + Ua..xGi8;9((tC ) (10) 
+L 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 13 
+
+W{hheerre Ua@ iiss smooootthing factor (0 < U@ <<_ 11)),, 1bj8;9 iiss previous baselline for meettrriic j9,, and Gx;8;9 (tC ) iiss 
+the current observed value for meettrriic j9.. ThThe value of U@ can be dynaammicicaallly adjusted as:: Ua = 
+U@nℎi8g6hℎ;; if Gx;8;9 (tC ) iiss inn normaall range 
+Uo;w>F;; if Gx;8;9 (tC ) iiss an outtllier 
+
+Heerree,, Uapℎi86gℎh leeads to rapid adappttaattiion,, suitable for addressinng anommalailieess.. A higher value ( 0..5 to 0.9) iiss used 
+when the systeemm detects siggniiffiiccaant anomalailies or rapid changes inn meetrtriiccss.. TThhiis ensures that the baselline 
+quiickly adaptts to the new conddiittionss.. Ua;>9F for stablle,, loong-teerrmm conssiistenccyy.. A loowwer value (0.001 to 0.3) is 
+used when the systeemm observes stable conddiittionss.. ThThiis ensures that the basellinne remaaiins anchored to the 
+hiistoricall treennd and is not overly innflfluueennced by traansient noiise or outtlliierrss.. 
+
+(2) ThTh reshold Addjjusstmeenntt:: ThTh reshold adjustmmentt dynaammicicaallly mooddififiies the permisissiiblle deviiatioon liimmiits ()Thℎ)) 
+for each meettrriic based on real-ttiimme treennds and hiistorical patttternss.. TThhiis ensures the systeemm remaaiins senssiitive 
+to true anomaalilies whhiille reducing false possiitives and neggaattiiveess.. It balances senssiitivity and robusstness inn 
+anomaally detectioon and adaptts threshollds to handdlle changing opeerrattionall rangeess.. ThThe refifinned threshold 
+metric ′
+etri  )Thℎ,8 ;9 for meettrriic j9 of agentt 8i can be calculateed as:: 
+
+′
+)Thℎ,8;9 = )Tℎh8i9 + BV..dXxGi8j9((tC)) (11) 
+
+Heerree,, )Thℎ;8;9 is the current threshold for meettrriic j9,, X6xG;8;9((tC ) = Gx;8;9 (tC ) -- 1bi8j9;; deviiatioon frroomm the basseellinee,, and fV is 
+the adjuustmment factor conttrrolllinng the rate of changgee.. Wee have considered the range of Vf frroomm 0.01 to 1.0 
+depending on the systeemm dynamiiccs and desired senssiittiiviitty.. TThhe range 0.01 to 0.3 iiss considered for stable 
+systeemms (liigghhtlyy looaded griidss)),, the range 0.5 to 1.0 iiss considered for dynamiic systeemms (raapidly changing 
+griidss)).. 
+
+(3) Trend Annalaylysisiss:: Trend anaallyssiis iddenttiiffiies loonng-teerrmm patttterns and behaavviiorraall shiifftts inn agent opeerraattiionss.. It 
+proviides innsights innto potteennttiiall riskss,, helps prediict future anommalaileiess,, and prriiorriitizes auddiit scheduulliingg.. 
+It bassiicallly iddenttiiffiies agentts exhiibiitinng unussuaall loonng-teerrmm behavviior and prediictts future rissks based on 
+cumuulalattiive deviiatioons and trendss.. ThThe cumuulal∑attiive deviiatioon frroomm the baselline over a period of T can be calculateed as:: 
+
+)T 
+Di8g9((tC)) == >) |\Gx8ij9 ((Ct)) −— 1b8i9j| ((1122)) 
+
+j9=l1 
+Grroups can be formmeedd,connssiidering the simmiilar pattttern of cumuulalattiive deviiatioons of muultltiiplle agentts to 
+undeerrstand behaavviiorraall shiifftts over tiimme and to antticipate failuures or evolvinng anomalailies inn the grid systemss.. 
+Wee have used K-meeans cluusterinng to group agentts wiith simmiilar behaavviiorraall patttterns based on feature vector 
+1bi8j9;, fOi8j9,, Di8;9((tC ) and can be represented as F;8 = [1bi8j9,, fOi8j9,, Dj8;9((tC))].. 
+
+(4) Reinforcceemmentt Learning for Addaappttiive Behaavviior Annalaylysisiss:: Reinfoorcceemmentt leeaarnninng (RRL)) iiss used to leearn 
+optimmaall poolliicies for refifinninng basellines and threshoollddss.. ThThe RL agent leearns frroomm feeeedback to immprove 
+anomaally detectioon accuracy and reduce opeerrattionall cossttss.. TThhe maajjor objjective iiss to miiniimiize false poossiitives 
+and negaattives inn anomaally detectioon and the goaall is to fifinnd optimm ized poolliicies for baselline and threshold 
+upddaatteess.. 
+Maatthheemmataiticcaall Exppllannaattiion:: 
+(a) State ((Bs;C)):: IItt representts the current systeemm state,, inncluudinng anomaally ratess,, devviiattionss,, and auddiit  resullts 
+
+and can be expressed as:: Bs;C = {{S(;8((tC)),, X6xG;8;9((tC)),, 0ai8 (tC )}.. 
+(b) Accttion (0a;C)):: Accttions mooddiify basellines or thresholds as 0a;C ∈€ {I=nc2rAe4a0sBe4,, De4c2rAe4a0sBe4,, "Ma0i8n=tCa0i8n=} 
+(c) Rewaard ('R;C)):: Rewaard fuunctioon balances false possiitives and negaattives by 'R;C = −—((A_;1 .Fa0l;sBe4P%o>sBi8tCi8vEe4sB + 
+
+_A2 .F0al;Bs4e#Ne4g6a0tiCv8Ee4sB)),, whheerre _A,1 and _Az2 are weeiightting factorrss.. 
+(d) Pollicy Uppddaattee:: ThThe actioon-value (QQ--vaalluee)),, representts the expected cumuulalattiive rewward that an agent 
+
+can obtain by takinng a speecciiffiic actioon inn a givven state and follloowwinng an optimmaall pollicy thheerreeaaftfetr.eThTrh.e 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+1144. •+ Maaddhhuukkrriishna et aall.. 
+
+Q--value for each statee-aactioon paiir iiss updated usinng the Bellmman equattioon presented as folloowwss:: 
+&Q((sBzC,, 0atC ) = &O((sBzC,, 0arC ) + Ua.['R[yC + Wy.. maax&(BC+1, 0
+
+′) −&(BC , 0C )] (13)
+0′
+
+ O(S¢41, a’  — O(s;, az)   
+
+Here, &(BC , 0C ) is the Q-value for state-action pair, U is learning rate, W is discount factor, and 0′ere, Q(s;, a;  is  - l   e a o  air, a is ea n n  , y is co  r,  a’ iiss the 
+actioon that maaxxiimiizzes &Q((sB;C4+11,, 0a’′)).. In the next steep the updated optimmaall pollicy iiss used to dynaammicicaallly 
+alloocate audiit resources that miiniimiizzes audiit costs whhiille miittigatinng riskss.. 
+
+(e) Convveerrgence Crriitterriia:: TThhe Q--learninng-based auddiit pollicy converges when the expected rewward E [R']] 
+stabiilizzes over 10 conssecuttive episodeess,, wiith auddiit coverage and accuracy thresholds fifixxeed at > 90%.. 
+
+4.1.4 Auddiit Schedduulliingg.. Auuddiitt schedullinng inn the proposed AlI-drivven frraammework ensures that,audiit tasks are 
+dynaammicicaallly optimm ized to balance opeerraattionall cossttss,, detect anomalailies effffectivelly,, and enhance systteemm securriitty.. 
+TThhiis compoonneentt prriiorriitizes agentts or subsysteemms based on theiir anomaally liikkeellihihooood and criticalliity,, dynaammicicaallly 
+determm ining the frreeqquuency and alloocatioon of auddiittss.. TThhe goall is to miiniimiize the opeerrattionall cost (C ) as meennttioned 
+inn Eqq.. (2) wiith the foollloowwinng conssttrraaiinnttss:: ∑
+
+(1) Buddggeett Coonnstsrtraaiinntt:: Tottall cost should nott exceed the avaiilable buddggeett:: 31=8=?1, Cq0..f5i8 ≤< B;,,wwhere B is the 
+allooccateed audiit buddggeett.. 
+
+(2) Miinimmumm Frequenccyy:: Each agent should have at leeast one auddiit during a tiimme period (f5j8 > f5∑<mi8n=V∀i8)).. 
+(3) Total Audit Frequency: Number of audits should not exceed the maximum allowable limit ( =
+
+ t l udit cy: ber  dit      m m low l  imi  78=,1 f5i8 ≤< F)).. 
+To achieve the objjective meennttioned inn Eqq.. ((22)),, we have used the RL agents ,wwho innteract wiith the enviroonmeenntt,, 
+receive feeeeddback inn the foorrmm of rewaarrddss,, and immprove its schedullinng decisioons over timmee.. ThThiis process ensures 
+that auddiit schedulles are adappttiivee,, cosstt--eefffificientt,, and effffeectivve inn miittigatinng riskss.. TThhe RL agentt selects actioons 
+(aadjustinng auddiit freequencciieess)) usinng a pollicy derivved frroomm Y€-greeddyy, explloratioon (uused to balance the traade-offff 
+betwween exploratioon and explloiitation)) and feedback-driven rewward upddaatteess.. ThThe rewward fuunctioon pennaalliizes 
+high auddiit costs and failuure riskss,, guiding the agent to miiniimiize the total cosstt.. Q--vaallues are updated itteerativvely 
+using the Bellmman equattion (Eq.. (13)))),, and a target netwwork ensures stabiilityy during leearning.. ThThiis meecchanismm 
+dynaammicicaallly adaptts the auddiit schedulle to evolvinng conddiitions whhiille optimmiizinng resource alloocatioon and risskk 
+miittiigaattion.. 
+4.1.55 Response Meecchhaanniism.. ThThe respponse meecchanismm inn an AlI-drivven auddiit frraammework is responssiiblle for takinng 
+apprropprriiate actioons when anomalailies or risks are detected during auddiittss.. IItt ensures systteemm stabiilityy by issolaatiinng 
+problemaattiic agennttss,, miittigatinng pottennttiiall failuuress,, and triiggggerinng foolllooww-up procedduurreess.. ThThiis meecchanismm operrattes 
+inn real-ttiimme and inntegrates;ww ith other comppoonneenntts likke anomaally detectioon and auddiit scheduulliingg.. ThThe detected 
+anomalailies are classififieedd according to theiir severity i.ee..,, criiticall,, high,, meeddiium,, and loow.. ThThe severity score (Se4;8 for 
+agentt 8i can be calculateed as:: 
+
+(S€4i8 = FWi8m<p?a0c2tC ×X Immpaacctt Factor + Fwy;i8k:e4l;8iℎh>o>o3d ×X Likeliihhoood of Faiilure (14) 
+Afftter calculatioon of severity score (Se4;8,, the respponse leevel is assiggnned as folloowwss:: !Lo>Fw;; if Se_i< SSe __llooww 
+
+"Me4d3i8uDm<;; if Se_looww< Se_ii ≤< Se_mmediuumResponse m 
+ Leveell =  ; ; ; ; }  
+
+Hi8g6hℎ;; if Se_mediuumm< Se_ii ≤< Se_high 
+CrAi8tCi8c2a0l;;; if Se_i> Se_high 
+
+Afftter{waarrdd,, the miittigatioon actioon A for each respponse leevel !L iiss decided as a functioon of !L,, anomaally tyype and agentt criticcalityy A==ff((L,, Anomaally typee,, Aggeentt Crriittiicaalliity)).. TThhe actioon A can be as folloowwss:: 
+_ Log anomaallyy;; if A_Low 
+
+ =
+Isolate agentt OR Noottiify Oppeerraattoorr;; if Anℎi8g6ℎh 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+» 15 
+
+Deepeenddiing on the miittigatioon action,, the new feeeeddback iiss generated and the basellinne meettrriics are updated usinng 
+Eqq..100,, and accordingly the audiit schedullinng is reffiinned.. TThhe Immpaacctt Factoraand Likeliihhooood of Faiilure inn Eq..14 are 
+calculateed as folloowss:: 
+
+Impact Value
+I m act al e, 
+ mpact Factor8 = ∑ 8
+pact  FacFatctor, or;=  (15)
+
+<ma0xG((Imppaacctt Vaalluueess)) 
+"° )
+
+Li C74= 1 (Sk i
+e 8l(Ctl  )
+
+!8:4;8iℎh>oo>d3;8 == Fei (16)
+)50 
+
+W "
+hheerre T) is the observatioon period and the pottennttiiall immpaacctt value for diffffeerreent agentts are meennttioned inn Tablle 3..  
+
+TThhe next subsectioon describes the adappttaabbiillity of the proposed frraammework to the Muulltti-AAgentt Systeemm s (MMAASS).). 
+
+Tablle 33.. Exampplle of Immpaacctt Value Ranges 
+
+Category Exampplle Event Immppaacctt Value Range 
+Systeemm Crriitticalityy Ouuttage of poweer geneerrator 5–-10 
+Perfoorrmmance Deeggrradaa-- | Reduced traannsmiissioon capacciity | 1–-5 
+tioonn of a linne 
+Economiic Immpaacctt Financciiall loosses due to equiip- | 10, 00011,, 0000,, 000 
+
+meenntt failuure 
+Safety and Securriity Risk to personneell or enviiron- | 1–=3 
+
+meenntt 
+Cascading Faiilure Regiionaall blackout causseedd: by | 10–-50 (ddeeppendent uniitts)) 
+
+substatioon 
+
+4.2 Addaapptatabibliliity to MAS Mooddeells 
+TThhe proposed AlI-drivven auddiit frraammework is highly adapttablle to Muulltti-AAgentt Systeemms (MMASS)) due to its mooddulualarr,, 
+deceennttrraalliized,, and scalable design.. MAS typiiccaalllyy. conssiists of distribbuted,, autoonnoommous agentts that innteract to 
+achieve systeemm-wiide goaallss.. ThThe frraammewoorrkk’’s comppoonneenntts—ddaatta colllection,, auddiit scheduulliingg,, anomaally detecttion,, 
+behaviior anaallyyssiiss,, and response meecchanissmm—can seamlleesssly inntegrate innto MAS by leevveraginng agenntt--ssppeecciiffiic 
+parameetteerrs and innteractionss.. Wee are expllaininng the adappttaabbiillity of the frraammework to MAS mooddeell inn the next 
+subsectioon thhroouugh aa case stuudy:: 
+4.2.1 Case Study:: Smaarrt GriddMAASS.. Scenaarriio:: ThThe agentts inn the smaarrt grid systeemm inncludee:: 
+
+(1) Poweer Geenneerraattorrs (AAgentt Type 11)):: Supplly electricityy to the griid.. 
+(2) PMUss (PPhasor Meeaassuremeenntt Unniittss)) (AAgentt Type 2)):: Moonniittor grid parameetteerrs likke volltage and currrenntt.. 
+(3) Breakeerrs (AAgent Type 3)):: Prottect equippmm entt by issolaatinng faulty comppoonnenentsts.. 
+(4) Subssttatioon Coonntrtroolllers (AAgent Type 4)):: Maannaage regionall grids by coordinatinng wiith geneerrattors and PMUUss.. 
+
+Problem:: ThThe systeemm needs to:: 
+(1) Dyynnaammicicaallly schedulle auddiits to miiniimiize costs and reduce riskss..  
+(2) Deettecct and resppond to anomalailies (e.g..,, overrloadiingg,, equippmm entt failuure) efffificcieenttlly.. 
+(3) Addaaptt to changing grid conddiitions and ensure uniinterrupted poweer supppllyy.. 
+
+How the Proposed Frammework Oppeerraattes? 
+(1) Daatta Coolllecttion:: Each agent colllects loocal data and comppuuttes releevvant meettrriics as folloowwss;; ThThe Poweer 
+
+geneerrattors meeaassurre poweer outputt and capacciity uttilizzatioon.. ThThe PMUss colllect real-ttiimme volltage and current 
+readiinggss.. TThhe breakers moonniittor faullt eventts and operratinng statuss,, and the substatioon conttrroolllers aggregatte 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+16 •« Maaddhhuukkrriishna et aall.. 
+
+data frroomm connected ageennttss.. For examppllee;; PMU A22 meeaassurre volltage as 240V and current as 100A.. both 
+the meettrriics are used to calculate the poweer delivvered as 240×x 100=24kW.. 
+
+(2) Anomaally Deetteeccttiion:: Aggeenntts use the anomaally detectioon mooddeell to iddenttify unussuaall patttterns inn theiir meetrtriiccss.. 
+For examppllee;; PMU Ap:2 detects a sudden inncrease inn current such as;; observed current= 150AA whheerreein 
+ThTh reshold= 120A.. Heerree,, an anomaally is flflaagggged sinnce Xd2cDurAAr4e=ntC= 150-1120=30A.. 
+
+(3) Behaavviior Annaalylysisiss:: ThThe proposed frraammework clusters agentts wiith simmiilar behaavviior for collaaborative 
+miittiigattion.. Muultltiiplle PMUss inn a regioon reporrt anomalailies inndicatinng high looad follloowwed by the substatioon 
+conttrroolller identtiiffiies a regionall demand surge and innfoorrmms neighboring regions to supply addiitioonall poweerr.. 
+For examppllee;; PMU Az2 and PMU As3 detect simmiilar volltage deviiattionss.. A cluster is formmeedd,, and theiir behavviior 
+is analyzed together such as Cllusster Trendd:: Volltage Deeccrreasing at110V/miinn.. 
+
+(4) Auuddiitt Scheedduulliingg:: Each agentt is assiggnned a rissk score ('R;8 ) based on immpaacctt Factor (Fw;8:: how critical the 
+agent iiss to the grriid)).. For examppllee;; geneerrator A;1 has immpaacctt factor 7 (higghly critical geneerraattoorr)),, thhen the 
+dynamiic risskk score is calculateed as 7 using Eqq::33.. Based on the dynamiic risskk scorree,, the auddiit scheduller 
+prriiorriitizes Geenneerraattor A;1 for moorre freeqquent innspeccttionss.. 
+
+(5) Response Meecchhaanniism:: Based on anomaally seveerriitty,, agentts executte miittigatioon actioons such as;llooww severityy-> 
+PMU loogs the anomaally for later anaallyyssiiss,, meediuumm severityy-> ThThe substatioon conttrroolller rediistribbutes looad 
+among geneerraattoorrss,, high severity-> breaker A;3 issolates the faulty linne to preventt cascadinng failuuress,, critical 
+severityy-> geneerrator A,1 iiss shut down immmeeddiaiatteely to preventt damaaggee.. 
+
+ThThe proposed frraammework iiss adapted to the MAS envirroonnmm entt thhroouugh the follloowwinng three key comppoonneenntsts;; (1) 
+decenttrrallized opeerraattiionss:: whheerre each agent (PPMMUU,, breakkeerr,, geneerraattorr)) operrattes autonomoousulsyly,, using loocall data 
+and mooddelesls,, (2) collaaborattion:: alll agentts commmunuincicaatte thhroouugh the substatioon connttrroollleerr,, ensuring coordinated 
+actionss,, and (3) dynamiic adjustmeennttss:: the risskk scorress,, threshoolldss,, andd. auddiit schedulles are updated inn real-ttiimme 
+based on systeemm behaavviioorr.. 
+
+5 METHODOLOGY 
+In this section,, our focus iiss maaiinlly on the dettaaiills of the AlI techniques used inn the proposed frraammework and how 
+iitt optimiizes the auddiit freeqquenccyy.. In adddiittion,, we have also disccussed the simmullatioon enviroonnmeenntts used for the 
+experimmeennttaattion and the evaluatioon meetrtriicceess.. 
+
+55..11. AlI Techniiques Used 
+Wee have used Reinforcceemmentt Learning (RRL)) and cluusterinng techniques for adapttive behavviior anaallyssiis and gradiientt- 
+based optimmiizatioon for auddiit.scheduulliingg.. ThThe detaileed meecchanismm of RL is presented inn Sectioon 4.1.3 (4.. Reeiin- 
+foorcceemmentt Learning for Addaappttiive Behaavviior Annalaylysissis)).. Wee have used K-meeans cluusterinng inn the Sectioon 4.1.3 
+((33.. Trend Annaalylyssiiss)) to group'agentts wiith simmiilar trendss,, facilittaattiinng collaaborative auddiitts or miittiigaattion.. Finaallly,, 
+gradient-bbased optimmiizatioon iiss empplloyed to miiniimiize the total cost of auddiits and failuuress.. ThThe cost functioon 
+is optimm ized under conssttraiintts such as auddiit budgeett and miinimmumm frreeqquuency requiremeennttss.. Grraaddiientts guide 
+adjustmmentts to auddiit schedduulleess,, ensuring near-optimmaall solutioons even for large,, comppllex systeemms satissffyyinng the 
+conssttraints meennttioned inn Sectioon 4..1..4.. Allso inn this moodduulele,, RL dynaammicicaallly adaptts auddiit schedullinng based on 
+evolvinng agent behaavviiorrs and systeemm conddiittiionss.. ThThe suummmaarry of the used AII techniques are presented inn  Tablle 
+4.. 
+
+Jussttifificcaatiioonn for Ussing Reinforceemmentt Learning (RLL)):: 
+Reinforcceemmentt Learning (RRL)) waas seleecteed due to its abiilityy to handdlle dynamiic decissiioonn--mmaking under uncceerrttainty 
+and teemmppoorraall dependdeenncciies inn auddiit actioons across muultltii-agent systemss.. Unnllike supervised mooddeells that rely 
+on fifixxeed innput-output maapppiinnggss,, RL optimiizes auddiit strategies thhroough triaall--aanndd-error innteractioon wiith the 
+enviroonmeenntt,, maakkiing it iddeal for real-tiimmee,, adapttive auddiit schedulling inn unpprreeddiiccttablle smaarrtt grid conddiittiionss.. In 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 17 
+
+Tablle 44.. Summaarry of AlI Techniiques and Rolles 
+
+Technique Moodduulle Roolle 
+Reinforcceemmentt Learning | Addaappttiive Behaavviior Annaallyyssiis |Dyynaamiic resource alloocatioon and 
+(RRL)) pollicy optimmiizatioon 
+K-Meeaans Cllusterinng Addaappttiive Behaavviior Annaallyyssiis | Group agentts for collaaborative anaall- 
+
+ysiis 
+Grradiient-Based Oppttii- | Auuddiitt Scheduulling Oppttimiize auddiit frreeqquuency and miin-- 
+miizzattion immiize costs under speecciiffiic con-- 
+
+straints 
+Reinforcceemmentt Learning | Response Meecchanismm Stabiillize the systeemm by miittigatinng 
+(RRL)) pottennttiiall failuures 
+
+our problem,, auddiit outcoomees at tiimme C¢ innflfluueennce future risskk exposure at tiimme Ct ++ 11.. RL suppoorrtts sequeennttiiall leeaarnninng 
+whheerre the agentt maaxxiimiizzees cumuulalattiive rewaarrdd,, aliiggnninng wiith loonng-teerrmm grid stabiilityy and cost efffificciieennccy goaallss.. 
+
+5.2 Auddiit Freeqquency Oppttiimiizzaattion 
+Auuddiitt frreeqquuency optimiizatioon aimms to dynaammicicaallly alloocate auddiit resources to agentts based on theiir rissk scorreess,, 
+ensuring a balance betwween miiniimiizing auddiit costs and miittigatinng systeemm riskss.. ThThiis process iiss centtrall to the 
+Auuddiit Schedulling Moodduulle inn the proposed frraammework and leevverages techniques likke gradient-based opttimiizzaattiion,, 
+and reinnffoorrcceemment leearning.. ThThe optimiizatioon here aimms to miiniimiize the opeerrattionall cost (C)),, Prriiorriitize high--risk 
+agentts ('R;8 ) for auddiit ensuring the resource conssttraiintts likke total budgeett (B ) and miinimmumm auddiit requireemmentts (5f<i8n=.. 
+TThhe maatthheemmataiticcaall mooddeelling and the conssttraintts dettaaiils are presented inn Sectioon 4.1..4.. Heerree,, we are discussinng the 
+Grradiient-based optimiizatioon teechhnique for adjustmmentt of auddiit freeqquenccyy.. ThThe gradient of the cost functioon (inn 
+Eqq..2)) w..rr..t frreeqquuency f5j8 is calculateed as:: 
+
+m
+= 0 −
+
+'8
+5 . ((1177) 
+
+5 2
+)
+
+m58 8
+
+ThThiis gradient ensures the immpaacctt of f5j8 on totall cost as;; possiitive gradient m
+ A > 0 suggeesstts inncrease inn f5j8 inncreasesm5  
+
+8
+
+the cost and negaattive gradient m
+ TA < 0 suggeesstts inncrease inn f5j8; decreases the cosstt.. Finaallly,, the auddiit freeqquencciies arem5  
+
+8
+
+updated itteerraativvelyy usinng the gradiienntt:: 
+(:k+ 1) ma5 = 5 : − . c 
+
+Ai8? = f8 F [1-55 ((1188))m5  
+8
+
+heerree,, :k iiss the currentiiteratioon and [7 iiss the leeaarnninng rate whhiich conttrolls the step size of upddaatteess.. TThhe itteerraatiioonn 
+stoops when the ((ii)) gradient maaggnniitude is belooww a predeffiinned threshold (leets say n€) i.ee..,, | mSpl|< n€,, ((iiii)) aa maximmumm5  
+
+8
+
+numbbeer of itteerraatiioonns reachedd.. 
+ThThe alggoritthhmm of the proposed AII-drivven frraammework is shhoowwn inn Allgoritthhmm 11,, 36.. Froomm the alggoritthhm ,, it is 
+
+evident that the timme compplleexxiity of the data colleectiioonn procedure is $O((n=)),, whheerre =n is the numbbeer of agennttss.. ThThe 
+procedure risskk score comppuuttaattion takes $O((n=T))),, whheerre )T is the observatioon period.ThThe tiimme compplleexxiity of the 
+anomaally detectioon procedure iiss $O((n=T))),, and the tiimme compplleexxiity of the behavviior anaallyssiis procedure iiss $O((n=k:)),, 
+whheerre :k iiss the numbbeer of clusterrss.. ThThe tiimme compplleexxiity of the auddiit schedullinng meecchanismm iiss $O((n=d3)),, whheerre d3 iiss 
+the numbbeer of gradient descent iteeratioonss.. Finaallly,, the tiimme compplleexxiity of the respponse meecchanismm is $O((n=)).. So,, 
+the oveerraalll compplleexxiity of the proposed frraammework is $O((=n + =n)T + =n)T + =n:k + =n3d +n=)) = $O((n=)).. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+18 •+» Maaddhhuukkrriishna et aall.. 
+
+Allgoritthhmm 1 Allgoritthhmm of the proposed AlI-drivven frraammework 
+IInnppuutt:: =n -- NNoo.. ooff aaggeennttss;; Ca0g -- CCoosstt ppeerr aauuddiitt;; C¢5  -- CCoosstt ppeerr ffaaiilluurree;; B -- TToottaall bbuuddggeett;; 5f<mi8n=,, 5f<ma0xG -- Miinimmumm and maximmum aauuddiitt ffrreeqquueenncciieess;; )T -- OOsseerrvvaattiioonn ppeerriioodd ffoorr anomaally 
+
+ddeetteeccttiioonn;; Ua,, Wy,, [7 -- LLeeaarrnniinngg rraattee,, ddiissccoouunntt ffaaccttoorr,, aanndd sstteepp ssiizzee ffoorr ooppttiimmiizzaattiioonn.. 
+11:: procedure AII-dprRIivVeEnN MUuLlTtIi-aAgGeEnNTt AUuDdIiTt FrRaAMmEeWwOoRKr(kR(RPPLL-e-ennaabblled IooT netwoorrkk,, N,, K)) 
+22:: IInniittiiaalliizzee aaggeenntt ssttaattee (S == (Sj1,, (So2,, .....,.,(S=n 
+3 : IInniittiiaalliizzee rriisskk ssccoorreess 'R == 'Rj1,, 'Ro2,,......,,'R=n 
+44:: SSeett iinniittiiaall aauuddiitt ffrreeqquueenncciieess f5j8 == f5<mm8i=n ffoorr aallll aaggeennttss 
+55:: LLooaadd hhiissttoorriiccaall ddaattaa ffoorr anomaally ddeetteeccttiioonn 
+66:: whhiille systeemm iiss ooppeerraattiioonnaall do 
+7 : CCaallll DATA__CCOOLLLEECCTTIIOONN()() 
+8 : CCaallll RISSKK__SSCCOORE_CCOMPPUUTTAATTIIOONN()() 
+9 : CCaallll AUDDIIT__SCHEEDDUULILINNGG__OOPTPITMIMIZIZAATTIIOONN()() 
+1100:: CCaallll ANOOMMALAYL_YD_DETEETCECTITOIONN()() 
+11:: CCaallll BEHAAVVIIOORR__AANNALAYLSYISSI(S()) 
+1122:: CCaallll RESPONSE_MEECHHAANNISISMM()() 
+13:: CCaallll FEEDBACK_MEECCHHAANINSISMM()() 
+1144:: end wwhhiillee 
+1155:: end procedure 
+1166:: procedure Data CCooLlLlEeccTtIiOoNn(()) 
+17:: for each agent 8i iinn {{11,,22,,......,,=n}} do 
+1188:: CCoolllleecctt ooppeerraattiioonnaall mmeettrriiccss ((vvoollttaaggee,, ccuurrrreenntt,, llooaadd,, aannoommaallyy ssccoorreess)) 
+1199:: Upddaatte ffeeaattuurree vveeccttoorr -X;8 ffoorr aaggeenntt 8i 
+20:: end for 
+21:: end procedure 
+2222:: pprroocceedduurree RISSKK__SSCCOORE_CCOMPPUUTTAATTIIOONN(()) 
+2233:: ffoorr eeaacchh aaggeenntt 8i iinn {{11,, 22,, ......,,=n}} do 
+24:: Comppuutte Immppaacctt FFaaccttoorr:: 
+25:: I<mp?a0c2tC__Fa0c2tCo>rA;8 = Fwe2rAi8tC ×X Ce2rAi8tC ++ F ×WX Cp?e4Arf5  + FWe4c2>o=n ×X Ce4c2>o=n 
+26:: Comppuutte Likeliihhoood∑ ooff FFaaiilluurree:: )T 
+27: !8:4;8ℎ>>38 = C=1 (
+
+s8, (C )
+27: Likelihood; = Fe) SiO 
+2288:: Comppuutte RRiisskk SSccoorree:: 
+29:: 'Ri8 = FWi8<mp?a0c2tC ×X I<mp?a0c2tC__Fa0c2tCo>rA;8 ++ Fwh;8i:k4e;l8iℎh>o>o3d ×X !Li8:ke4l;8iℎh>o>od3;8 
+30:: end for 
+31:: end procedure 
+32:: procedure ANOOMMALAYL_YD_DETETECECTITOIONN()() 
+3333:: ffoorr eeaacchh aaggeenntt 8i iinn {{11,,22,,......,,=n}} do 
+34:: EExxttrraacctt ffeeaattuurree vveeccttoorr -Xj8 
+35:: Comppuutte Anomaally SSccoorree:: 
+36: (8 = | |-8 (C ) − - ˆ
+
+8 (C ) | |236: Si = 1Xi— (Xit))? 
+3377:: iiff (S;8 > )ThℎrAe4sBℎho>l;3d tthheenn 
+3388:: FFllaagg aaggeenntt 8i aass aannoommaalloouuss 
+39:: end iiff 
+40:: end ffoorr 
+41:: end procedure 
+42:: procedure BEHAAVVIIOORR__AANANLAYLSYISSI(S()) 
+4433:: Comppuutte FFeeaattuurree SSeett ffoorr CClluusstteerriinngg:: 
+44:: F;8 = [[1bi8j9,, Di8j9((T))),, fo8i9]] ffoorr eeaacchh aaggeenntt 8i 
+45:: Apppplly K-Meeaans or DBSCAN Cllussterinng 
+4466:: IIddeennttiiffyy cclluusstteerrss wwiitthh aabbnnoorrmmaall bbeehhaavviioorr ffoorr iinnccrreeaasseedd mmoonniittoorriinngg 
+47:: end procedure 
+48:: procedure AUDIT_SCHEDULING_OPTIMIZATION()
+49: Define Cost Function:
+50: ∑  DI EDULING_OPTIMIZATION() 
+49: Define Cost Function: 
+
+= '
+8=1(0 .58 +5 .
+
+8
+50: LE (Ca-fi + Cp. F ) for each agent 8
+
+58) for each enti  
+8
+
+51:: repeat 
+52:: for eeaacchh aggenetni8iitn  {{11,, 22,, ......,,=m}} do 
+5533:: Comppuutte ggrraaddiieenntt:: 
+5544:: GrAa0d3i8e4n=tC;8 == Ca0 −=Cf5  ×x (('R8i//f5 2)8?) 
+5555:: UUppddaattee aauuddiitt ffrreeqquueennccyy:: 
+5566:: f5i8 == f5i8 −-1[ ×X GrAa0d3i8e4n=tC;8 
+5577:: end ffoorr 
+5588:: Apppplly CCoonnststrraaiinnttss:: 
+59: if Sum over all agents (0 × 5  
+
+: if m over all agents Cg x fj8)) > B then 
+6600:: SSccaallee f5j8 ttoo fifitt wwiitthhiinn bbuuddggeett 
+61:: end iiff 
+62:: Ensuurerf5e8j  >= f5<mi8=n annddf58i <= f5<ma0xG ffoorr aalllli8 
+63:: unnttiil Co>n=vEe4rAg6e4n=c2e4 
+64:: end procedure 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 19 
+
+Allgoritthhmm 2 Coonnttiinuaattion of Allgoritthhmm 
+11:: procedure RESPONSE_MEECCHHAANNISISMM()() 
+2 : for each flflaagggged anomaally do 
+3 : Comppuutte Seveerrity Scorree:: 
+4 : (Si8 = FWi8m<p?a0c2tC ×X I<mp?a0c2tC__Fa0c2tCo>rA;8 + FWh;i8k:e4l;8iℎh>o>o3d ×X !Li8:ke4l;i8ℎh>oo>d3;8 
+55:: Deettermiine Miittigatioon Accttiion:: 
+6 : if (S;8 is Low thhen 
+77 : Log eventt and moonniittor agent 8i 
+8 : else if (S;8 is Meediuumm then 
+9 : Increase auddiit frreeqquuency for agent 8i 
+1100:: else if (S;8 iiss Hiigh thhen 
+1111:: Isolate faulty agent 8i and nottify conttrroolller 
+12:: else if (S;8 is Crriitticall thhen 
+13:: Perfoorrmm emeerrgency shutddoowwn of agent 8i 
+1144:: end if 
+1155:: end for 
+1166:: end procedure 
+17:: procedure FEEDBACK_MEECCHHAANINSISMM()() 
+18:: for e doach agent i in 11,, 2, .…..,,nn 
+19:: if miittigatioon waas successssfull thhen 
+2200:: Uppddaatte risskk scorree:: 
+2211:: 'Rj8 = _AX× 'R;8 + (1 −— _A ) ×x 'Re4sB>o;lEu4e3dAn=o>m<a0l;i8e4sB 
+22:: Reduce auddiit freeqquenccyy:: 
+23:: f5i8 = <ma0xG((f5<m8i=n, 5,f8i  −— X5 ) 
+24:: else 
+25:: Increase auddiit frreeqquenccyy:: 
+2266:: f5i8 = <mi8=n ( 5f<a0xG,, 5f8i + X)) 
+2277:: end if 
+28:: end for 
+29:: end procedure 
+30:: procedure CHECK__CONNVVEERRGGEENNCEC(E)() 
+3311:: if | ||GAr0a3di84e=ntC | |<< n¢€ or Riisk Scores remm ain stable for )T itteerraatiioons then 
+3322:: retuurn True 
+3333:: else 
+34:: retuurn false 
+35:: end if 
+3366:: end procedure 
+
+5.3  
+ Simmuullattion Envirroonnmmentt 
+
+In this subsseccttion,, we discuss the experimeennttaall setuup whhiich we have foollloowwed to immplementt and evaluate the 
+proposed AlI--ddrriivveenn frraammewoorrkk.. Subsseeqquueenntltlyy,, we have also disccuussed the systeemm conffiigurraattion,, parameetter 
+settttinngss,, and evaluatioon meettrriics used to check the perfoorrmmance of the proposed frraammewoorrkk.. 
+5.3.1 Systeemm Coonnffiiguurraattiion.. To evaluate the proposed AlI-drivven audiit frraammework inn a Muulltti-AAgentt Systeemm 
+(MMAASS)),, a compprreehheennssiive simmullatioon envirroonnmm entt waas established.. ThThiis envirroonnmmentt inntegrates poweer systeemm 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+20 •+ Maaddhhuukkrriishna et aall.. 
+
+mooddeleilingg,, AlI-driven decisiioonn-mm akkiingg,, and cybeerr-attttack simmullations to assess frraammework performaannccee.. Wee have 
+perfoorrmmed the experimm entts on a systeemm whhiich iiss equipped wiith 11th Gen Intel(R) Core(TTM)) i99--11116655GG7 CPU @ 
+3.5 GHz cloock speedd,, 64 GB RAM,, 1 TB SSD,, NVIIDIA RTX 3090 GPUU,, and runs a 64-biit Ubunttu 22.04 LTSS.. Wee 
+have used the MAATTLLAABB,, Pythonn,, and JADE wiith muultltii-thhreadinng enabled simmullator for perfoormm ing our studyy.. 
+
+5.3.22 RL Trainninng Setup.. TThhe simmullatioon envirroonnmmentt and the comppuutatattiionaall overhead dettaaiills for the RL traainninng 
+are meennttioned as folloowwss:: 
+
+(1) Simmuullation Envviironmeenntt:: TThhe grid topoloogy conssiists of 100 nodes wiith a 10 ×x 10 agent grid whhiich can be 
+exteennded up to 500 nodes of 20 ×x 25 grids for scalabiilityy testing.. ThThe agent roles are dividded among the 
+Geenneerraattoorrss,, subssttattionss,, and both PMUss and breakers as 20%,, 30%,, and 50% respeeccttiiveellyy.. ThThe considered 
+attttaack scenarrios for the immpllemeennttaattion are as folloowwss:: ((ii)) Randomm FDII attttaacks on 10% of nooddeess,, ((iiii)) DoS 
+attttaacks on 5% of the noddeess,, and ((iiiiii)) coordinated attttaack on breakeerr-subssttatioon chaaiinss.. ThThe evaluatioon 
+resullts of these attttaack scenarrios are shhoowwn inn the Reessuullt and Annaallyyssiis Seccttion.. 
+
+(2) Commpuptuattatiionaall Ovveerrhheeaadd:: ((ii)) TThhe traainninng tiimme iiss ≈~ 2-3 miinuuttes correesspponds to 200 traainninng episodes for a 
+100 node agent enviroonmeenntt.. ThThe convergence threshold waas set to an average Q--vaallue 3de4l;Ct0a < 0.01 across 
+10 episodeess.. Each episode toook ≈~ 0.7 seconds on averagee,, totaliinng approximaattely 140%seconddss.. Scalinng to 
+500 agentts inncreased episode duratioon by ≈~ 1.66x but required feewwer episodes (≈~ 120) due to accelerated 
+convergence via experience replay and prioritizzeed sampplliingg.. ((iiii)) ThThe innfeereence tiimme takes < 50 mss per audiit 
+cyccllee,, whheerre each auddiit decisioon across 500 agentts uses a foorwward pass thhroouugh a traainned Q--network wiith 
+a batch innput size of 500.. Meeaassurred laateenncy on an RTX 3090 ussiingg, TensorFlooww inn evaluatioon moodde yieldded 
+an average innfeereence tiimme of 42.7 mss per cyccllee.. ThThiis laateenncy suppoorrtts near real-ttiimme auddiit decissiioonn--mmaking 
+at sub-seeccoond inntervaallss.. ((iiiiii)) ThThe meemoorry foot print used is.<<.2.1 GBB.. ThThiis waas meeaassured using pssuuttiill 
+and NVIIDIA Systeemm Maannaagemeenntt Interface (nnvidia-smii)) during runttimee.. Meemoorry usage waass distrriibbuuteed 
+across mooddeell weeiighhtts (≈~ 200 MBB),), experience buffffer (≈~ 1.2 GBB)),, and statee-aactioonn representtatioons (≈~ 700 
+MB for 500 ageennttss)).. ThThese meettrriics inndicate deplloyyaabbiillity even on resource-constrainned edge deviices wiith 
+mooddeerraatte GPU supppoorrtt.. 
+
+5.3.33 Soffttwware Stacks Used.. TThhe frraammework waas immplementted usinng a combbiinaattion of softftwware toolls for poweer 
+systeemm simmuullaattion,, agentt-based mooddeleilingg,, opttimiizzaattiion,, and cybeerrsecurriity anaallyyssiiss.. Wee have used Python code 
+for the immpllemeennttaattion of audiitsscheedduulliingg,, anomaally detecttion,, risskk assessmeenntt,, and reinnffoorrcceemment leeaarnninng 
+procedduurreess.. MATLAB (SSimmullink)) iiss used for mooddeelling of poweer systeemm dynamiiccs and faullt scenaarriioss,, poweer woorrlld 
+simmullator iiss the simmullatioon tooll for poweer systeemm stabiilityy anaallyssiis and continnggency planniingg.. GriddLLAAB-D iiss used 
+for electricityy distrriibbuutioonn mooddeelling and NSS--3 iiss hellpfull inn Cyybbeerr--aattttack simmullatioon and netwwork trafffific anaallyyssiiss.. 
+Maajjoorriity of the simmullatioon waas testeed on the JAADE (Jaava Aggeentt DEEvveellopmeenntt Frammewoorrkk)) platffoorrmm whhiich woorrks 
+on the decennttrrallized audiitinng of MAASS.. ThThe GriddLLAAB-D and NSS--3 simmullatioon toolls outputt are inntegrated wiith the 
+JAADE Platffoorrmm to fifinnd out the fifinnal optimm ized auddiits inn MAS enviroonmeenntt.. 
+
+5.3.44 Daattassets Usedd.. ThThe proposed frraammework waas evaluated using real--wworrld and synttheettiic datasetts to ensure 
+reprodduuccibibiillity and robussttneesss.. In real--wworld datasetts we have used IEEEE PES Poweer Grrid Tesst Caasses [11]  for 
+real--wworld continnggency casess,, NREL (NNattionall Renewaabblle Energy Laboorraattorry)) Daattaassett [12] for conssiderinng looad 
+demand and grid disttuurrbbances for reallistic anomaally dettecttion,, Smaarrtt Grrid Daattaasset (SSGD))[[199]] for benchmaarrkiing 
+hiistorical volltagee,, currrenntt,, and frreeqquuency datta.. Wee have generated one synttheettiic data set by conssiderinng the faullt 
+scenarrios simmullated inn MATLAB (SSimmullink)) and also we have innteegrated cybeerr-attttack datasetts wiith false data 
+innjectioon (FDII)),, deniiaall-of-service (DDooSS)),, and maann--iin--the-miidddlle (MMITM)) attttaacks inn the samee.. 
+
+5.3.55 Experimmeennttal Scenaarriiooss.. For the experrimeennttss,, we have desiggnned three test cases as folloowwss;; 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 21 
+
+(1) Noorrmaall Oppeerraattion (BBaselinne Scenaarriio)) –- IItt evaluates staanndard grid systteemm perfoorrmmance under normaall 
+conddiittiionss,, poweer flflooww remaaiins wiithin safe opeerraattionall liimm its,aannd no attttaacks or faullts inntrroodduuced inn the 
+system.. 
+
+(2) Faullt Injectioonn (PPhyssiicall Faiilure)) –- ThThiis test case tests frraammework responses to liinne faullttss,, trraannsffoorrmmer 
+failuuress,, and breaker maallffunccttions 
+
+(3) Cyybbeerr--Attttacks on MAS –- IItt evaluates the immpaacctt of false data innjectioonn (FDII)),, deniiaall-of-service (DDooSS)),, 
+Maann-i-inn--the-Miidddlle (MMIIM)),, and commmunuincicaattion taammpeerring 
+
+5.3.66 Simmuullattion Parameetter Settttingss.. ThThe frraammework parameetteerrs weerre conffiiggured based on real--wworld opeerrattionall 
+dattaa.. ThThe risskk score threshold waas set to 0..5,, meeaanniing values above this trigggger an auddiit action.. ThThe auddiit budgeett 
+conssttraint waas liimm iteed to 10% of total opeerrattionall cossttss.. Anomaally detectioon waas immplementted using a supervised 
+LSTTMM netwoorrkk,, traainned wiith an 80:20 trainninng-to-testinng splliitt.. TThhe optimmiizatioon leeaarnninng rate foor grradiient-based 
+auddiit frreeqquuency adjustmmentts waas set to 0.01,, whhiille the reinnffoorrcceemmentt leeaarnninng disccoount factor (Wy) waas fifixxeed at 0.9 
+to ensure loong-teerrmm pollicy opttimiizzaattiion.. ThThe maximmum auddiit frreeqquuency waas conssttrraaiineedd. to.5 auddiits per cycle to 
+balance efffificcieiennccyy and comppuutatattiionaall feassiibbiilliity.. AA suummmaarry of alll the simmullatioon parameetter values whhiich we 
+have used inn the evaluatioon of the proposed woorrk are provided inn Tablle 5 for betttter unddeerrssttanddiingg.. 
+
+Tablle 55.. Simmuullattion Parameetteerrs 
+
+Parameetter Value 
+Simuullation Tooolls JADEE,, MAATTLLAABB,, NSS--33,, 
+
+GriddLLAAB-D 
+Simuullation Timme 24 hour opeerraattionaall cyclle 
+Risk Score ThTh reshold 0.5 
+Auuddiitt Budggeett Coonnssttrraaiint 10%,of total opeerraattionall 
+
+costs 
+Anomaally Deettecctioon | LSTTMM Network (SSuperr- 
+Mooddeell vised Learniing)) 
+Traininng Testinng Splliit 80:20 
+Oppttiimiizzattion Learning | 0.01 
+Raatte 
+Reinforcceemmentt Learning | 0.9 
+((Wy)) 
+Maaximmum Auuddiitt Frree-|- 5 auddiitts per cycle 
+quency 
+
+5.4 Evaluation Meettrriics 
+To ensure riggoorous evaluatioon of the proposed frraammewoorrkk,, muultltiiplle perfoorrmmance meettrriics are considered across 
+diffffeerreent comppoonneenntts of the frraammewoorrkk.. TThhe considered meettrriics are as folloowwss;;  
+5.4.1 Auddiit Schedullinng Metertriiccss.. TThhe goall of the proposed frraammework is to optimmiize the auddiits wiith miinimmumm 
+attttaack rate and cross-laayer stabbiilliity.. To verrify the correctneessss,, we have used twwo meettrriics nameellyy;; (a) cost efffificciieennccyy 
+and (b) auddiit coverage whhiich meeaassurre reductioon inn total cost (inn %)) afftter optimmiizatioon and percentage of high--risk 
+agentts audiited respeeccttiiveellyy.. ThThe cost efffificciieennccy and auddiit coverage are calculateed as folloowwss;; 
+
+cost without optimization − cost withoptimization
+C  i t mi o  —  i pt i o  
+oosstt efffificciieennccy = × 100 (19)
+
+cost x   
+ wiithoutt optimmiizatioon 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+22 •+» Maaddhhuukkrriishna et aall.. 
+
+Ageennttst s audaiuidtiete dAudit coverage g d  100 0
+= ×x 100 ((220)) 
+
+Audit coverage = Tottall high −— rissk agentts 
+5.4.22 Anomaally Deettectioon Metertriiccss.. For verifyyinng the correctness of the anomaally detectioon meetrtriiccss,, we have used 
+fifivve classifificcaattiioonn meettrriics nameellyy:: ((ii)) True Possiitive Ratte (TTPR)) whhiich representts the abiilityy to correctly iddenttify 
+the high--risk agennttss;; (ii) True Neeggaattiive Ratte (TTNR)) whhiich reffllects the capaabbiillity to correctly iddenttify the loow--rrisk 
+agennttss;; ((iiiiii)) Fallse Possiitive Ratte (FFPR)) whhiich meeaassuurres the proporrtioon of loow--rrisk agentts that are miissiideennttiiffiied as 
+high--rriisk;; (ivv) False Neeggaattiive Ratte (FFNNR)) whhiich representts the propoorrttion of high--risk agentts that are miissiideennttiiffiied 
+as loow--rriisk1!;; and fifinnallyy (v) accuracy whhiich representts the oveerraalll effffeecctiivveenness of the iddenttiffiiccaatiioonn meecchhaanniism.. 
+
+TP
+TPR in  
+
+ ( n %)) == — × 100 (21)
+TP—F—N x   
+
+ +  
+
+TN
+TNR in % ™  
+
+ ( n )) == — × 100 (22)
+TN——— x  
+
+ + FP 
+
+FP
+FPR in  
+
+ ( n %)) = — Nx× 100 (23)
+FP——  
+
+ + T  
+
+FN
+F R  
+EN  (inn %)) == — × 100 (24)
+
+FN——T—P x   
+ +  
+
+TP + TN
+Accuracy (in % y 
+
+ n ))
+  
+
+c  = × 110000 ((2255))TP  
+ + TN + FFP ++ FFNN 
+
+whheerree,, TP representts the numbbeerr of high--risk agentts that are correctly iddenttiiffiieed as high--rriisk;; TN representts the 
+numbbeer of loow--rrisk agentts that are correctly iddenttiffiieed as loow--rriisk;; FP representts the numbbeer of loow--rrisk agentts 
+that are wrrongglly iddenttiiffiieed as high-risskk;;aannd FN representts the numbbeer of high--risk agentts that are wrrongglly 
+iddenttiiffiieed as loow--rriisk.. 
+
+Wee bellieve that this type of evaluatioon of our obtainned resullttss,, wiillll provide a clear demoonnststrraattion of the smaarrtt 
+grid systeem’’s robustness inn iddentifyyinng both high--risk and loow--rrisk agentts inn aa MASS enviroonmeenntt.. 
+
+5.4.3 Response Meecchanismm Metertriiccss.. Wee have also calculated the risskk miittigatioon effffeecctiivveenness ii..ee..,, reductioon of 
+oveerraalll rissk score afftter miittigatioon as;; 
+
+POY ostion - Initial Risk Score-Final Risk Score
+Ri k Mi g i   r l i   
+
+issk Mtiitiagattiioonn = ×x 100 (26)
+In al   
+
+iiti  Risk SSccoorree 26 
+i
+
+Her , i  
+eree, we have considered respponse t imme as another meettrriics whhiich iiss the tiimme taaken to detect and resppond to 
+anomalailies inn seconds (s).. 
+
+5.4.44 Compputuatattiional effffiiccieiennccyy Metertriiccss.. ThThe comppuutatattiionaall efffificciieennccy calculates (1) the numbbeer of itteerraatiioonns for 
+optimiizatioon to converge whhiich iiss traacckked per auddiit cycle and teerrmmed as alggoriththmm convergence tiimme  (AAGTT)),, 
+(2) change inn executioon timme as the numbbeer of agentts inncreases whhiich is evaluated for =n = 1022,, 1033,, 104 4 whhiich is 
+teerrmmed as scalabiilityy (rruuntiimme Vss.. ageennttss)).. 
+
+1
+lItt iiss to be notticed that the FNR and TPR share a comppllemeennttary relaatiioonnship whhiich can be maatthheemmataitcicaallly expressed as FNR + TPR = 11.. 
+Simililaarrllyy,, for the samme reason,, the FPR and TNR can be maatthheemmataitcicaallly expressed as FPR + TNR = 11.. TThhese relaatiioonnships ensure that the 
+summaattiion of miissiideennttiiffiicatioon and correct iddenttiffiiccaatiioonn rates alwways equaalls onee.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgent Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Regullar Auddiitts •+ 23 
+
+10 False Negative Rate (FNR) vs. Attack Types 100 True Positive Rate (TPR) vs. Attack Types 
+
+False Data Injection = Man-in-the-Middle Denial-of-Service Communication Tampering False Data Injection = Man-in-the-Middle Denial-of-ServiceCommunication Tampering 
+Attack Types Attack Types 
+
+Fig.. 33.. Coorrrrectness Veerriificcatioon of thhe Iddenttiifieed high--risk agennttss:: (a) FNR Vallueess;; and (b) TPR Vallues 
+
+6 RESULTS AND ANAALLYYSSIIS 
+TThhiis sectioon representts the evaluatioon resullts whhiich we have obtainned whhiille immppllemenetnitningg, our proposed woorrk inn 
+the inntegrated simmullatioon platffoorrmm for 24 hour opeerrttionall cyccllee.. Wee have evaluuaatteeddour proposed frraammework inn 
+teerrmms of Coosstt Efffificciieennccy (%)),, Auuddiitt Covveerage (%)),, Anomaally Deettecctioon Acccuracy (%)),, Fallse Possiitive Ratte (FPR)),, 
+False Neeggaattiive Ratte (FFNRR)),, Risk Miittigatioon Effffectivveeness (%)),, and Allgoritthhmm Convveerrgence Time (itteerraatioons) 
+inn the subsectioon 6.1.. Wee have also comppaarred the obtainned resullts wiith four state-of-thhe-art solutioons nameelyly,, 
+Baasseelline Rulle-Based Auuddiitting (RRB))[20]] whhiich used traditioonall rule-bbased audiitinng wiith static threshoollddss,, Stattiistical 
+Anomaally Deettecctioon (SSAAD)) [21] that used statistical deviatiioonn for detectinng anommalaileiess,, Maacchhiine Learning-Based 
+Auuddiitt Schedulling (MMLLAASS)[)[2222]] whhiich used supervised leeaarnninng for anomaally detectioon but laacks optimiizatioon for 
+auddiit freeqquenccyy,, and Reinforcceemmentt Learning-Based Securriity Auuddiitts (RRLSA))[[233]] that used reinnffoorrcceemment leearnninng 
+but does not inntegrate feeedback-based auddiit adapttatioon whhiich are shhoowwn inn subsectioon 6.2 .. 
+
+6..11. Perfoorrmmance Meettrriics 
+Heerree,, we have shhoowwn the perfoorrmmance evaluatioon of our proposed AlI-rivven frraammewoorrkk.. Figures 3 (a) and (b) 
+represent the FNR and TPR values whhiich we have obtainned foorrmm the simmullatioon resullts whhiille running our 
+proposed AlI--ddrriivveen frraammewoorrkk.. Froomm the fifiggure,, iitt can be observed that out of the four considered attttaack types 
+false data innjectioon (FDII)),, deniiall-of-service (DDooSS)),, Maann-i-inn--the-Miidddlle (MMIIM)),, and commmunuincicaattiion tamppeerriingg,, 
+the commmunuincicaattion taammpeerring attttaack achieves the highesst FNR value of 5.5500%.. ThThiis is because of the fact that 
+the commmunuincicaattion taammpeerring leeads to de-syncchhrroonnizizaattiion,, maakkiing the securrity systteemm inncapablle of detectinng 
+correlateed anommalailieess.. Hoowweveevrer,, despiite thiis,, the TPR values across aallll attttaack types remaain conssiistenttly high,, wiith 
+miinimaall varriiationss,, inndicatinng the robusstness of the proposed systeemm inn correctly iddentifyyinng the high--risk agennttss.. 
+TThhe looww FNR vallueess,, combbiined wiith high TPR vallueess,, siggnify the efffificciieennccy of the proposed woorrk inn maaiinnttaining 
+the reliaable agent detectioon across the smaarrtt grid regardlless the attttaack typee.. 
+Figure 4 shows the perfoorrmmance meettrriics evaluatioon resullts (inn %)) of the our proposed frraammework for 24 
+
+Hoouurrs opeerrattionall cyccllee.. Froomm the resullts iitt iiss evident that the frraammework conssiistently immprroves cost efffific c
+iieenncy,, 
+
+reaching 42.55%% cost savings by the 24th houurr.. TThhe auddiit coverage graduaallly inncreasseess,, reachinng 93.8%,, ensuring 
+optimmaall resource allooccatioonn to high--risk agennttss.. ThThe frraammework achieves 98.44%% anomaally detectioon accurraccyy,, 
+wiith miinimaall unddeettected anomalailies (1.66%)) whhiich iiss due to the coordinated attttackss.. ThThe FPR decreases frroomm 10% 
+to 3.2%,, reducing unneecceesssary false alerrttss.. ThThe rissk miittigatioon effffeectiivveenness siggniffiiccaantly immpprroovveess,, reaching 
+87.9%,, ensurinng effffeectivve securrity innterventtiionss.. In adddiittion,, the frraammework optimmiizes convergence timmee,, reducing 
+itteerraatiioonns frroomm 20 to 1122,, demoonnststrraatting comppuutatattiionaall efffificciieenncy.. ThThe proposed frraammework continnuoussly immprroves 
+its perfoorrmmance over timmee,, ensuring cosstt-efffificcieent audiit scheduulliingg,, high anomaally detectioon accurraccyy,, reduced 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+False Negative Rate (FNR) (%) 
+o 
+
+True Positive Rate (TPR) (%) 
+
+
+
+24 •+ Maaddhhuukkrriishna et aall.. 
+
+Cost Efficiency Over 24 Hours (%) Audit Coverage Over 24 Hours (%) 
+—® Audit Coverage 
+
+40; 
+
+35 90 
+
+30} 
+(0) a 85 
+
+225) 2 
+c c 
+
+2 20} g 
+5 5 80 
+Ea @ 
+
+15} 
+
+10+ 75 
+
+5b 
+70 
+
+oo 5 10 15 20 25 0 5 10 15 20 25 
+Hours Hours 
+
+Anomaly Detection Accuracy at 24 Hours (%) False Positive Rate (FPR) Over 24,Hours (%) 
+
+10 
+
+Missed Anomalies 3 
+
+ou 
+B 6 
+c 
+vu 
+
+Y 
+2 4 
+
+Detected Anomalies 2h 
+
+0 
+0 5 10 15 20 25 
+
+Hours 
+
+Risk Mitigation Effectiveness Over 24 Hours (%) Algorithm Convergence Time Over 24 Hours (Iterations) 
+
+Risk Mitigation P 20.0 
+
+857 c 17.5 
+
+80 15.0 
+
+vDD  wn 12.5 
+£75 x 5 
+Cc =] 
+
+8 o © 10.0 
+2 2 
+
+70 ba 75 
+A 
+
+65 5.0 
+ZA 
+
+2.5 
+60; © 
+
+0 5 10 15 20 25 0.079 5 10 15 20 25 
+Hours Hours 
+
+Fig.. 4.. Perfoorrmmance Meettrriics Evaluation Ressullts of tthhe Proposed AlI-driven Fraammewoork for 24 Hoouurrs Oppeerraattiionaall C yycclle 
+
+false poossiittivess,, and rapid miittigatioon of riskss.. ThThe faster convergence tiimme enablles real-ttiimme adapttatioon to dynamiic 
+cyberrsecurriity threaattss.. 
+
+To test how diffffeerreent attttaack scenarrios affffect grid securrity and auddiitting,, we ran experimmeentts showiing that the 
+reinnffoorrcceemment leeaarnninng (RRL)) agent can quickly adaptt to various cybeerr-phyyssiiccaall threaattss.. Even under these attttackss,, 
+the systeemm conttinues to resppond quiickly and leearns effffectivelly,, maaiinnttaining stable performaannccee.. ThThe resullts are 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 25 
+
+shhoowwn inn Tablle 66.. ThThe False Daatta Injectioon (FFDII)) scenarrio simmuullattes maalliicious taammpeerring wiith PMU and sensor 
+values across 10% of agennttss,, creatinng false readings for volltage or freeqquenccyy.. TThh ese weerre refflleeccteed inn deviiatioons 
+of 25% to 45% frroomm baselline meettrriics (B)).. TThhe RL mooddeell successssfullly leeaarrnned to prriiorriitize auddiit coverage inn 
+compprromiised zoneess,, maaiinttaining a 97.22%% anomaally detectioon accuracy wiithoutt notticeablle immpaacctt on conveerrgeennccee.. 
+ThThe Deenniaiall--off-Serviice (DDoS)) attttaacks weerre emuullated by innteerrruuptinng meesssage passinng among agennttss,, leeaadinng to 
+timme-outt behavviior or sudden nulll values inn commmunuincicaattion loogss.. AA 5% DoS rate caused soomme episodes to converge 
+sliigghtly sloowwer due to delaayed envirroonnmm entt responssee,, but accuracy remm ained strroonng at 94.8%.. ThThe RL mooddeell 
+leeaarrnned to reassiggn auddiit focus dynaammicicaallly when commmunuincicaattion looss perrsisteed across a clusstteerr.. ThThe Cooorrddiinated 
+Chaaiin Tamppeerriing innvolved simmulltaneoussly corruptinng a loocalizzeed chain of breakeerr--subbssttaattion--coonnttrroolller nodes 
+to simmullate a coordinated attttack.. ThThe anomalailies spread across dependentt agennttss,, creatinng loocalizzeed burrsstts inn 
+anomaally scorreess.. Allthhough initial traainninng saaww miinor osciillaatiioonns inn pollicy conveerrgeennccee,, the Q--learninng mooddeell 
+stabiliizzeed using replay meemoorry and sofftt-uupdaatteess,, achievinng 96.77%% detectioon accurraccyy.. ThThese resullts vallidate the 
+
+Tablle 66.. Effffect of Attttack Types on RL Agentt Perfoorrmmance and Systeemm Behaavviior 
+
+Atttack Type Injec- Effffect on Anomaally Score | Deettecc- Imppaacctt onn. Convveerrgence 
+tioon tioonn 
+Raatte Acccuracy 
+
+((RRLL)) 
+False Daatta Injec- | 10% 0.25-0.45 deviiatioon inn behav-- | 97.22%% No effffect- convergence 
+tioon (FFDII)) ior meettrriics (e.g..,, phase volltt- wiithin ∼~12 episodes 
+
+agee,, frreeqquency)) 
+Deenniiaall--off-Service | 5% Commmunuinciacattiion tiimmeout | 94.88%% Sligght delay- convergence 
+(DDoS)) spikes inn affffeeccteedd.aaggentts exteennded by ∼~3 episodes 
+Cooorrddiinated 8% Loccaallized cascades __ of | 96.77%% Occccaassiionaall osciillaatiioonns durr- 
+Chaaiin Tamppeerriing devviiaattiionn. amoonngg» breakeerr- inng training,, miittigated by ex- 
+
+substatioonn-agent sets perience replay 
+
+frraammewoorrkk’’s scallabbiilliity,, robussttneesss,, and real--wworld appplliicabbiillityy to muultltii-agent systeemm securrity auddiittss.. 
+
+6.2 Commpapraarattiive Annaallyyssiis 
+As the proposed woorrk shows promiissing resullts inn alll the evaluatioon meettrriics aspecctts (ccost efffificciieenncy,, auddiit coverraggee,, 
+anomaally dettecttion,, FPR,, risskk miittiigaattion,, alggoritthhmm convveerrggeennccee)),, we have comppaarred the proposed woorrk wiith for 
+state-of-thhe-art solutioons as meennttiioned inn Sectioon 66.. Froomm the resullts iitt iiss clear thaatt,, the proposed frraammework 
+achieves 42.55%% cost efffificciieenncy,, surpassinng RB[[2200]] (25.0%)),, SADD[[2211]] (330.0%)),, MLLAAS[S[222]] (335.0%)),, and RLSSAA[[2233]] 
+(40.0%)).. TThhe proposed.ffrarmameewwork maaiinnttaiins the highesst auddiit coverage (993.8%)),, whhiille RLSA achieves 90%,, MLAS 
+at 85%,, SAD at 75%,, and RB at 70%.. ThThe pie charrt shows anomaally detectioon accuracy inn whhiich the higheesst accuracy 
+is achieved by the proposed frraammework (98.4%)),, foollloowwed by RLSA (97%)),, MLAS (995%)),, SAD (90%)),, and RB (885%)).. 
+ThThe proposed frraammework has the looweesst false poossiitive rate (3.22%)),, siggniffiiccaantly outperfoorrmm ing RB (10.0%) ),, SAD 
+(8.00%)),, MLAS (5.00%)),, and RLSA (4.00%)).. ThThe risskk miittigatioon graph shows thaatt,, the proposed frraammework achieves 
+87.99%% risskk miittiigaattion,, comppaarred to RLSA (885%)),, MLAS (80%)),, SAD (770%)),, and RB (60%)).. In adddiittion,, the proposed 
+frraammework converges inn just 12 itteeratioonss,, comppaarred to RB (20)),, SAD (18)),, MLAS (15)),, and RLSA (14)).. Froomm the 
+comppaarraattiive anaallyyssiiss,, the key fifinnddinngs are as folloowwss;; 
+
+(1) ThThe proposed frraammework conssiistenttly outperfoorrmms aallll state-of-thhe-art approaches across alll evaluatioon 
+meettrriics 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+26 •»* Maaddhhuukkrriishna et aall.. 
+
+(2) ThThe cost efffificciieennccy and auddiit coverage immprovemeenntts highllight the effffeectiivveenness of reinnffoorrcceemmentt leearning- 
+based optimiizatioon 
+
+(3) Anomaally detectioon accuracy is siggniffiiccaantly immproved due to the AlI-drivven adapttive schedullinng 
+(4) ThThe false poossiitive rate is reduceedd,, ensuring feewwer unneecceesssary alerts 
+(5) Risk miittigatioon effffeectiivveenness shows a maajjor advannttaaggee,, wiith a robusst respponse meecchanismm 
+(6) ThThe alggoritthhmm convergence tiimme inndicates high comppuutatattiionaall efffificciieenncy,, maakkiing iitt scalable for laarge-scale 
+
+muultltii-agent systeemms 
+In summmararyy,, the proposed frraammework provides strroonng evidence for its supeerriiorrity over existinng meetthhooddoollooggiies inn 
+muultltii-agent systeemm securrity auddiittss.. 
+
+To vallidate our frraammework desiggn using RL,, we comppaarred RL wiith the basseellineess:: Randomm Forresst (RFF)),, Suppoorrtt 
+Vecctor Maacchhiine (SSVVM)),, Grradiient Boossted Trees (GGBTT)),, and Rulle-Based Auuddiitting (RB)).. ThThe comppaarriison resullt iiss 
+shhoowwn inn Tablle 77.. TThhe resullt clearly states thaatt,, RL conssiistently outperfoorrmmed other techniiqueess/in both detectioon 
+accuracy and cost efffificciieenncy,, and waas the only meetthod capablle of adaptinng to evolvinng attttaack patttterns and 
+dynamiic grid behaavviiorrs wiithoutt reconffiigurraattiion.. ThThe proposed frraammework is testeed across inncreasinng agentt sizes 
+
+Tablle 77.. Compparariison of RL wiith Ottheer Basseelline Anomaally Deetteccttion Meetthods 
+
+Meetthod Anomaally Deettecc- | Auuddiitt Coosst Efffifi-|- Scallabiility to 500 | Reeaall-tiimme Addaapp-- 
+tioonn Acccuracy | cieenncy (%) Aggeenntts tatioonn 
+((%%)) 
+
+RL (PProposed)) 98.4 42..5 3¥ Robuusstt V3v Yes 
+RF 92.6 19.3 7X Mooddeell re-trainn needed | X7 No 
+SVM 90.8 16.4 7X Perfoorrmmance drops X7 No 
+GBT 94.2 21.7 7X Traininng tiimme in--| X7 No 
+
+creases 
+RB 85.0 9.1 3¥ Stattic threshollds X7 No 
+
+for (100,, 250,, 500)) and the resullts are depicteedd in Tablle 88.. Belooww are the observattions frroomm Tablle 88.. 
+(1) ThThe alggoritthhmm exhiibbiits sub--linnear growth inn convergence timme wiith respect to the numbbeerr of agentts due 
+
+to shared experience replay and parraalllell innfeereence 
+(2) ThThe accuracy degradatioon remaaiins under 2%,, showccaassing robusstness 
+(3) Infereence laatteenncy remaained under 50 mss,, suppoorrtting real-ttiimme audiit decisioons 
+
+Tablle 88.. Systeemm Perfoorrmmance vvss.. Agentt Counntt 
+
+Aggentt Coounutn,|t Avvgg.. Convveerrgence Iteeratioons | Deettectioon Acccuracy (%) | Auuddiitt Deellay (mmss)) 
+100 12 98..7 40 
+250 14 97.9 46 
+500 18 96..8 49  
+
+7 DISCCUSSIOONS 
+TThhe proposed AlI-drivven auddiit frraammework inntrrooduces a traannsfoormmaattive approach to securrity and rissk miittigatioon 
+inn Muulltti-AAgentt Systeemms (MMAASS)),, parrtticularly inn smaarrt gridss.. By leevveraginng reinnffoorrcceemment leearning,, anomaally 
+detecttion,, and risskk--aawware auddiit scheduulliingg,, the frraammework optimmiizes cost efffificciieenncy,, auddiit effffeectivveneessss,, and 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgent Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auddiitts •+ 27 
+
+Cost Efficiency (%) Audit Coverage (%) 
+40 —@ Audit Coverage 
+
+90 
+
+30 
+S & 85 f 
+oO oO 
+
+c c 
+& 20 8 sot 
+vo wo 
+a a 
+
+10 757 
+
+0 ; 70 
+
+&£  c© fx? x 
+Oo 
+
+eo 
+? o? 
+& & 
+
+Anomaly Detection Accuracy (%) False Positive Rate (FPR) 
+RLSA 
+
+20.8% MLAS 
+
+vo 
+
+& 
+Proposed Framework < 
+
+g 
+& 
+
+SAD 
+RB 
+
+Risk Mitigation Effectiveness (%) Algorithm Convergence Time (iterations) 
+—e Risk Mitigation 
+
+85} 
+
+80} 
+3 g 
+275) 2 
+g © 
+& 70} £ 
+
+65} 
+
+60} t 
+
+©«  e@  ¥)  YS  9c a 
+S ° ¥ 
+
+oe  
+e 
+2 
+& 
+
+ef 
+
+Fig.. 55.. Trusst Value Comppaarriison of the Proposed Woorrk wiith State-off-the--arrt Solutioons inn UUNNEETT,, Beesstteell,, and Diiall Teleeccomommm 
+Topoolloggiies 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+28 •+ Maaddhhuukkrriishna et aall.. 
+
+rissk miittiigattion.. ThThiis sectioon discusses the immpaacctt of AlI-drivven auddiittss,, challeennges inn immpllemeenntatattiionn,, and future 
+research directionss.. 
+
+7.1 Immpaacctt of AlI-Drriven Auddiitts 
+TThhe inntegratioon of AlI-drivven audiitinng meecchaaniisms inn MAS brings siggniffiiccaant benneeffii ts by enhanccing anomaally 
+detectioon (998.44%% accurraaccyy)),, optimmiizinng auddiit frreeqquuency (993.88%% auddiit coveerraaggee)),, reducing opeerrattionall costs (442.55%% 
+cost efffificciieenncy)),, reducing false alaarrmms (FFPPR decreased to 3.2%)),, ensuring 87.99%% rissk miittiigattion,, providing faster 
+convergence (aallggoorriiththmm converges inn 12 itteerationss)).. In addiition,thhe comppaarriison resullts demoonnststrraatte that the 
+proposed frraammework outperfoorrmms existinng meetthods inn key perfoorrmmance areass.. By inntegratinng adapttive leeaarnninng 
+and autoomaated decisioonn-mm akkiingg,, the frraammework proviides selff--imimpproovinng and continnuoussly optimm ized auddiit 
+meecchaaniisms for comppllex MAS environmeenntsts.. Allssoo,, the proposed frraammework is highly scalable and adaappttiivee,, 
+maakkiing iitt appllicablle to critical innfrastrruucture securrity auddiittss,, smaarrt grid moonnititoorriingg,, and innduussttrriiall IooT securriitty.. 
+ThThe real-ttiimme risskk--aawware auddiit schedulling enablles efffificciieennt resource uttilizzatioon,, reducing auddiit overlooad whhiille 
+ensuring securriittyy.. 
+
+7.2 Chhaalllenges 
+Deessppiitte its strroonng performmaannccee,, there exiists certainn challeennges remmaain iinn. the deplooyymentt of AJI--ddrriivveenn auddiit 
+frraammewoorrks inn real--wworld MAS immppllemeentnatatitioonnss.. One of the challeennges is inntegratioon wiith existinng securrity 
+innfrastructurree.. MAS enviroonnmeenntts may alrreeaaddy have leeggacy securrity frraammewoorrkkss,, requiirinng seamlless inntegratioon 
+wiith SCADA systemss,, IDSS//IIPSS,, and inntruusioon moonniittorring platfoormss.. Enssurring compaptaitbibililiity wiith existinng cybeerr- 
+securrity poolliicies may create a challlengee.. Annoottheer challeennge is data transmiission delays and miisssing values inn 
+muultltii-agent commmunuincicaattion may immpaacctt auddiit decisioonn-mm akkiingg.. 
+
+7.3 Future Diirectioons 
+To avoid the challeennges meennttioned inn the previous subsseccttion,, the future directioon of research can be as folloowwss;; 
+
+(1) Deecceennttrraallized leeaarnninng mooddeells can enablle muultltiiplle agentts to collaaboratively trainn anomaally detectioon 
+mooddeells wiithoutt sharinng raww datta.. 
+
+(2) Deessign of an uniiveerrssall APPII that allloowws seamlless data exchange betwween SCADAA,, IDSS//IIPSS,, and AII-based 
+anomaally detectioon moodedlesl,s may solve the inntegratioon challeennge wiith existinng cybeerrsecurriity poolliiciiess.. In 
+adddiittion,, explloratioon of RESSTTffull or GraphQLL--bbaased APPIIs cmay enablle dynamiic data retrieevall and audiitinng 
+across platfoormss.. 
+
+8 CONCCLLUUSSION 
+TThhe proposed AlI-drivven auddiit frraammework for Muultlti-AAgent Systeemms (MMAASS)),, addrresses dynamiic risskk--aawware securrity 
+audiitinng inn smaarrtt griidss.. By inntegratinng reinnffoorrcceemment leeaarnninng for auddiit scheduulliingg,, maacchhiine leeaarnninng for anomaally 
+detecttion,, andooppttiimiizzaattion for cost efffificciieenncy,, the frraammework siggnifificcaantlyy enhancces securrity moonniittorring and 
+resource uttilizzatioon.. 
+
+Commpapraarattiive anaallyssiis wiith state-of-thhe-art approaches demoonnststrraattes the frraammewoorrkk’’s supeerriioorriittyy.. It achieves 
+42.55%% cost efffificciieenncy,, 93.88%% auddiit coverraggee,, and 98.44%% anomaally detectioon accurraccyy,, outperfoorrmming rule -bbased 
+(RRB))[[200]],, statistical (SSADD)[)[2211]],, maacchhiine leeaarnninng (MMLLAAS)S[)[222]],, and reinnffoorrcceemment leeaarnninng (RRLSA))[[233]] mooddelesls.. ThThe 
+false possiitive rate (33.22%)) and risskk miittigatioon effffeectiivveenness (887.99%)) vallidate iittss precisioon inn detectinng and miittigatinng 
+threats whhiille ensuring looww opeerrattionall overheeaadd.. 
+ThThe frraammework has real--wworld apppllicatioons inn critical innfrastrruucture securriitty,, inndussttrriiall cybeerrsseeccuuririttyy,, and 
+
+cloouud securrity moonnititoorriingg.. By dynaammicicaallly adjustinng auddiit freeqquenccyy,, iitt preventts securrity laapsess,, optimiizes risskk 
+maannaaggeemmenent,t, and immprroves regulatory comppliliannccee.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+Enhanccing Securriity of Diistribbuuted Muultltii-AAgentt Systeemm s iinn Smaarrtt Grriidss:: An AlI-Drriven Apprroach to Reguullar Auuddiitts •+ 29 
+
+Future research wiillll focus on federated leeaarnninng for privacy-preservinng auddiittss,, blockchain-based immmuuttaabblle 
+auddiit traiills,, and expllainablle AII for traannsparent decisiioonn-mm akkiingg,, ensuring seamlless inntegratioon wiith existinng 
+securrity innfrastructurreess.. ThThiis frraammework sets aa new benchmaark for AlI-drivven cybeerrsecurriity auddiits inn MAS 
+environmeenntsts,, enhancing scallabbiilliity,, efffificciieenncy,, and resiliieennce inn real--wworld deploymeenntsts.. 
+
+ACKNOWLLEDGMEENNTTS 
+No fuunding is innvolved for conducctting this research.. 
+
+REFERENCES 
+[[11]] Dooee,, JJ..,, & Rooee,, R.. ((22002244)).. ”AArtritfifiicciiall Intelliiggeennce inn Auuddititiingg:: AA Coonncceeppttuuaall Fraammework ffoorr AII Integrraattiion””.. Addmminiinsitstrraattiive Sciencceess,, vvooll.. 
+
+14,, no.. 10,, pp.. 2388.. 
+[2] Johnssonn,, M.. LL..,, & Daavviiss,, K.. W.. ((22002244)).. ”AA Fraammework for Evaalluatinng Fairness and Biias inn Hiigh--Sttakes AII Preddiictive Moodedlesls””.. Journaall of 
+
+Arrttiiffiicial Intelliiggeennce Reesseeaarrchh,, vooll.. 70,, pp.. 123-1455.. 
+[3] Smiitthh,, JJ..,, && Dooee,, A.. ((22002211)).. ”"Maacchiine Learning for Cyybbeerr--Phhyyssiiccaall Securriity Auudidtists..” IEEEE Transsaaccttions on SmaarrttGGriridd,, vvooll.. 1122,, no.. 33,, pp.. 
+
+2345--235588.. 
+[4] Smiitth,, JJ.. AA..,, && TThhomppssoonn,, RR.. BB.. ((22002244)).. ”"AAuddiitinng wiith AII:: AA ThTheeoorreettiicall Fraammewoork for Maacchhiine Learning inn Auuddiitt PPrraaccttiiccee””.. Journaall of 
+
+Emeerrggiing Technnoollooggiies inn Accccoouunnttiingg,, vooll.. 21,, no.. 11,, pp.. 15-344.. 
+[5] Brownn,, PP..,, & Whihtitee,, C.. ((22002200)).. ”"Power Systeemm Faullt Simuullaattions using MAATTLLAAB/BS/iSmimuluilink?.” Journaall of Energy Reesseaarrch,, vvooll.. 4455,, noo.. 22,, pp.. 
+
+678-6900.. 
+[6] Zhaanngg,, YY..,, & Waanngg,, X.. (20233)).. ”*Trust--AAww are Securriity Fraammework for Muultlti-AAgent Systemss””.. Journaall of Cyybbeerrsseeccuurriity Reesseeaarrcchh,, vvooll.. 1188,, 
+
+noo.. 33,, 120-1366.. 
+[7] Zhaanngg,, XX..,, eett aall.. (20199)).. ”"PPowerWoorrlld Simmuullator for Stabiillityy Annaallyyssiis inn Smaarrtt Grriiddss..” Internationall Journaall of Poweer Enggiineeeerriingg,, vvooll.. 
+
+10,, no.. 11,, pp.. 56-722.. 
+[8] Leee,, YY..,, & Kiim,, H.. (20211)).. ”Muulltti-AAgent Frammewoorrks for Smaarrtt Grrid Reessiillienccee..” Ellsevier Comppuutteer Neettwoorrkkss,, vvooll.. 1155,, no.. 44,, pp.. 112-1300.. 
+[9] Mililleerr,, T.. (220188)).. ”°GriddLLAB--D:: Oppeenn--Souurrce Smaarrtt Grrid Simuulalattiionn..” Renewaabblle Energy Jourrnnaall,, vooll.. 22,, no.. 55,, pp.. 345--3600.. 
+[10] Paatteell,, SS.. (20222)).. ”*Cybeerr-Attttack Mooddeelling using OMNNeeTT++ and NSS--33..” Cyybbeerrsseeccuurriity Reviiew,, vvooll.. 3300,, noo.. 22,, pp.. 45--588.. 
+[11] IEEEE PES Tesst Caasseess.. (20211)).. ”"BBenchmark Poweer Systeemm Daattaa..” IEEEE PES Trrannssaaccttiionss,, vooll.. 18,, noo.. 66,, pp.. 789-8055.. 
+[12] NREL Daattaasseett.. (20200)).. ”"Smaarrtt Grrid Load and Demaand Daattaa..’” Naattional)RReennewaabblle Energy Laborratory Reeppoorrtt,, vvooll.. 55,, no.. 33,, pp.. 210-2255.. 
+[13] Gaarrcciiaa,, LL..,, eett aall.. ((22002222)).. ”"Smaarrt Grrid Daatta Annaallyyssiis ffoorr Anomaally Deetteeccttiionn..” IEEEE Acccceesss,, vvooll.. 1144,, nnoo.. 77,, pppp.. 3456-347722.. 
+[14] LLii,, SS..,, & Qiiu,, M.. (20200)).. Reinforcceemmentt Learning for Cyybbeerr--Phhyyssiiccaall Systemss:: Wiitth Cyybbeerrsseeccuurriity Case Studdiieess.. CRC Prressss.. 
+[15] Koouuttssoukkooss,, XX..,, & RRiilleeyy,, PP.. ((22001199)).. ”"Secure Coonnttrroll of Cyybbeerr--Phhyyssiiccaall Systemss””.. Proceedings of the 2019 ACMM//IIEEE 10th Internationall 
+
+Connfference on Cyybbeerr--Phhyyssiiccaall Systeemms (IICCCPPSS)),, pp.. 1-10.. 
+[16] Koolleeyy,, II..,, Addhhiikkaarryy,, SS..,, & Deeyy,, SS.. ((22002211)).. ”“AAn RL-Based Addaappttiive Deettecction Strateeggy ttoo Secure Cyybbeerr--Phhyyssiiccaall Sysstemss””.. arXiv preprriint 
+
+arXiiv::2103..0287722.. Rettrieevved frroomm httttps:///aarrxxivv..oorrgg//aabbs/22103.028722.. 
+[17] Mililleerr,, D..,, & Allfforrd,, K.. (22002200)..”"AAuutoommated Addvveerrsary Emulualattiionn:: A Case for Planning and Acctting inn Cybbeer Deeffense Asssseesssmeentnsts””.. arXiv 
+
+preprrint arXiiv::2006..065444.. Reettrieevved frroomm httttps:////aarrxxiivv.o.orrgg//aabbss//22000066.00665544 
+[18] Shenn,, RR..,, & Waanngg,, BB.. (22019).»”Synttheettiic Grrid Daatta ffoorr Cyybbeerr--PPhhyyssiiccaall Securriity Reesseeaarrcchh..” Springer Coommpuptuattaitionnaall Scienccee,, vvooll.. 88,, no.. 99,, 
+
+pp.. 567-5800.. 
+[19] Elleccttricall Grrid Stabiillityy Simmuullated Daatta (2200118),”?UUCII Maacchhiine Learning Reppoossiitory [OOnnlliinee]].. Avvaaiillablle on:: 
+
+httttps://aarchive.iccss..uucci.e.edduu/dataset/4711.. 
+[20] Wiisscchmmeyeyerer,, JJ.. & MMititcchhelelll,, M.. RR..,, ((22002233)).. ”*Towaarrds Allgoritthhmm Auuddititiingg:: Maannaaggiing LLeeggaall,, Etthiicall and Technnoollooggiiccaall Riisks of AAII,, Maacchhiine 
+
+Learning and Assssocciiated Allgoorriithmss””.. Journaall of Allgoritthhmm Auuddititiingg,, vooll.. 55,, no.. 22,, pp.. 98-1122.. 
+[21] Guuoo,, JJ.. ,, Liu,, TT..,, & Zhang,., YY.. ((22002222)).. ”"AA Diistance-based Anomaally Deettecctioon Fraammework ffoorr Deep Reinforcceemmentt Learrniingg””.. Proceedings 
+
+of the 19th ACM Internationall Connfference on Arrttiiffiicial Intelliiggeennce and Securriity (AAISec ’’2222)),, pp.. 55-644.. 
+[22] A  
+
+rrmaannddoo,, D.. JJ..,, & Tsukamoottoo,, KK..,, ((22002233)).. ”"AAuddiitinng Maacchhiine Learning Allgorrithhmss:: A Whhiitte Paper ffoorr Pubblliic Auuddititoorrss””.. Internationall 
+Journaall of Pubblliic Auudditit,, vooll.. 66,, no.. 11,, pp.. 120-1344.. 
+
+[23] Songg,, H.. KK..,, Ramaacchhaannddrraann,, PP..,, & Kiim,, SS..AA..,, ((22002222)).. ”Timme Series Anomaally Deetteccttion via Reinfoorcceemmentt Learning-Based Mooddeell SSeelleeccttiioonn””.. 
+ACM Transsaaccttions on Intelliiggeent Systeemms and Technology (TIST)),, vooll.. 13,, no.. 44,, Arrttiicle 56,, pp.. 1-21.. 
+
+[24] Bhhaattttachaarryyaa,, AA..,, Ramaacchhaannddrraann,, TT..,, Baanniikk,, SS..,, Doowwlilinngg,, C.. PP..,, & Booppaarrddiikkaarr,, SS.. D.. ((22002200)).. ”"AAutomaatted Addvveerrsary Emuullaattion for 
+Cyybbeerr--Phhyyssiiccaall Systeemm s via Reinforcceemmentt Learrniingg””.. arXiv preprriint arXiiv::2011..046355.. Reettrieevved frroomm httttps:///aarrxxivv..oorrgg//aabbs/220011.046355.. 
+
+[25] Haann,, KK..,, & Zhuu,, Q.. ((22001177)).. ”’Reinnfoorrcceemmentt Learning for Cyybbeerr--Phhyyssiiccaall Systeemms Seccuurriitty:: A Case Study of Secure Waatteer Treatmmentt 
+System””.. Proceedings of the 2017 ACM SIGGSAAC Connfference on Comppuutteer and Commmunuinciactatiions Seccuurriittyy,, 1933-193355.. 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..
+
+
+
+30 •»* Maaddhhuukkrriishna eett aall.. 
+
+[26] Zhaanngg,, Y..,, & Waanngg,, X.. (20244)).. ”"AA Survey on LLM--BBaassed Muulltti-AAgentt Systemss:: Woorrkkffllow,, Infrastructurree,, and Applpiliccaattiionnss””.. Commpuptuattatiionnaall 
+Intelliiggeencee,, vooll.. 40,, no.. 33,, pp.. 456--4788.. 
+
+[[2277]] Sadeegghhii,, A.. RR..,, Waacchhssmaannnn,, CC..,, & Waaididnneerr,, M.. ((22001155)).. ”"Securrity and Privacy Chhaalllenges iinn IInndduussttrriiaall Internet of ThThiinggss””.. Proceedings of 
+the 52nd Annnnuuaall Deessign Auuttomaattion Coonnffeerreennccee,, pp.. 11--66.. 
+
+[[2288]] Ghhoosshh,, BB.. ((22002244)).. ”AAlI-PPoowered Muulltti-AAgent Trading Woorkrkffllow””.. Meeddiium.. Reettrieeved frroomm httttpps:://m/meeddiiuumm.ccoom//@bibjijiit211987/ai--ppooweerred- 
+muultltii-agentt-trraaddinng-wwoorrkkffllow.. 
+
+[[2299]] Huuaanngg,, K.. ((22002244)).. ”"Froomm AII Aggeenntts ttoo Muulltti-AAgent Systemss:: A Caappaabbililiity Frameewwoorkrk””.. Cloud Securriity Alllianccee.. retrieevved frroomm 
+httttps:///ccloluouddsseeccuuriitytyaallilainacnec.eo.rogr/gb/lbolgo/g2/022042/41/21/20/90/9f/rformom--aai-ia-gaegnentts-st-ot-om-muulttiaigageenntt--sysysstetmems-aa-ccaappabiliityty-f-rfarmameewworrkk.. 
+
+ 
+
+ACM Trrannss.. Cyybbeerr--Phhyyss.. SSyysstt..

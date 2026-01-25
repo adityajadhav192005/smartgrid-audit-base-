@@ -1,0 +1,52 @@
+simulation:
+  timestep_minutes: 5
+  cycle_hours: 24
+  seed: 42
+
+audit:
+  risk_threshold: 0.5          # paper
+  audit_budget_ratio: 0.50     # scaled budget for large grids (0.10 paper baseline)
+  max_audits_per_cycle: 50     # scaled for larger grids (5 for N≤100, 50 for N≤500)
+  f_min: 0                     # allow zero audits for low-risk agents (paper top-K selection)
+  f_max: 5
+  baseline_fixed_f: 1          # paper baseline for comparison (overridable via SMARTGRID_BASELINE_F)
+
+thresholds:
+  k_sigma: 4.0                 # Th = k * sigma (raised to reduce false positives)
+  sigma_window: 24             # rolling window for sigma calibration (overridable via SMARTGRID_THRESHOLD_WINDOW)
+  score_threshold: 4.0         # default anomaly score threshold (overridable via SMARTGRID_SCORE_THRESHOLD)
+  prob_threshold: 0.999        # default anomaly probability threshold (overridable via SMARTGRID_ANOMALY_PROB_THRESHOLD)
+
+costs:
+  failure_cost_coeff: 10.0     # C_f used in executed cost and cost efficiency
+
+rl:
+  gamma: 0.9                   # paper
+  epsilon_start: 1.0
+  epsilon_min: 0.05
+  epsilon_decay: 0.995
+  learning_rate: 0.1           # Q-learning alpha (separate from gradient LR)
+
+gradient:
+  lr: 0.01                     # paper
+  max_iters: 200
+  eps: 1e-4
+
+anomaly_model:
+  lstm:
+    window: 24                 # 24 timesteps history (overridable via SMARTGRID_LSTM_WINDOW; adjust for short horizons)
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.2
+    batch_size: 64
+    epochs: 20
+    train_split: 0.8           # paper mentions 80/20
+
+clustering:
+  k: 3                         # number of K-means clusters for trend analysis
+  window: 50                   # timesteps for trend feature extraction (auto-adapts to horizon)
+  period: 10                   # clustering every N steps (auto-adapts for short horizons)
+experiment:
+  n_agents: 100
+  lstm_model_path: smartgrid_mas/data/anomaly_inputs/lstm.pt
+  output_dir: logs

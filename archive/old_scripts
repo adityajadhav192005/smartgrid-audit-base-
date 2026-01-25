@@ -1,0 +1,42 @@
+import pandas as pd
+import json
+
+# Read metrics
+dyn = pd.read_csv('logs/N100/dynamic_metrics.csv')
+base = pd.read_csv('logs/N100/baseline_metrics.csv')
+
+print('=== DYNAMIC SIMULATION (N=100, C_f=100, cap=5) ===')
+print(f'Mean attack rate (truth):     {dyn["attack_rate_truth"].mean():.4f}')
+print(f'Mean attack rate (flagged):   {dyn["attack_rate_flagged"].mean():.4f}')
+print(f'Mean deviation:               {dyn["mean_deviation"].mean():.4f}')
+print(f'Mean global risk:             {dyn["global_risk"].mean():.4f}')
+print()
+print('=== BASELINE SIMULATION (Fixed audit) ===')
+print(f'Mean attack rate:             {base["attack_rate"].mean():.4f}')
+print(f'Mean deviation:               {base["mean_deviation"].mean():.4f}')
+print(f'Mean global risk:             {base["global_risk"].mean():.4f}')
+print()
+print('=== KEY INSIGHT ===')
+detection_ratio = dyn["attack_rate_flagged"].mean() / dyn["attack_rate_truth"].mean() if dyn["attack_rate_truth"].mean() > 0 else 0
+print(f'Attack detection ratio: {detection_ratio:.2%}')
+print('  Expected: >80%')
+print()
+print('Total timesteps: 288 (24 hours)')
+print(f'Total attacks injected: {(dyn["attack_rate_truth"] > 0).sum()} timesteps')
+print(f'Total attacks detected: {(dyn["attack_rate_flagged"] > 0).sum()} timesteps')
+
+# Check deviation correlation
+print()
+print('=== ANOMALY SCORE ANALYSIS ===')
+print(f'Mean deviation during normal: {dyn[dyn["attack_rate_truth"] == 0]["mean_deviation"].mean():.4f}')
+print(f'Mean deviation during attack: {dyn[dyn["attack_rate_truth"] > 0]["mean_deviation"].mean():.4f}')
+print('  Expected: Huge spike during attacks')
+
+# Read summary
+with open('logs/N100/summary.json') as f:
+    summary = json.load(f)
+    print()
+    print('=== PER-ATTACK TYPE TPR ===')
+    for attack_type, metrics in summary['per_attack_metrics'].items():
+        if attack_type != 'NONE':
+            print(f'{attack_type:6} TPR: {metrics["tpr"]*100:6.2f}%  (Expected: 60-97%)')

@@ -1,0 +1,50 @@
+{
+  "simulation": {
+    "n_agents": 100,
+    "n_timesteps": 288,
+    "attack_rate": 0.15,
+    "seed": 42,
+    "generator_ratio": 0.20,
+    "substation_ratio": 0.30,
+    "pmu_ratio": 0.50,
+    "voltage_min": 0.95,
+    "voltage_max": 1.05,
+    "frequency_nominal": 50.0,
+    "frequency_tolerance": 0.5
+  },
+  "rl": {
+    "learning_rate": 0.01,
+    "discount_factor": 0.9,
+    "exploration_rate": 0.3,
+    "exploration_decay": 0.995,
+    "min_exploration_rate": 0.01,
+    "max_episodes": 200,
+    "convergence_window": 10,
+    "convergence_threshold": 0.01
+  },
+  "audit": {
+    "max_audits_per_cycle": 5,
+    "audit_cost_per_agent": 100.0,
+    "failure_cost_coefficient": 10.0,
+    "min_audit_frequency": 0.01,
+    "max_audit_frequency": 0.20
+  },
+  "anomaly": {
+    "lstm_hidden_size": 64,
+    "lstm_num_layers": 2,
+    "sequence_length": 10,
+    "anomaly_threshold": 0.5,
+    "alpha_high": 0.5,
+    "alpha_low": 0.01,
+    "beta_stable": 0.05,
+    "beta_dynamic": 0.5
+  },
+  "evaluation": {
+    "statistical_tests": true,
+    "per_attack_metrics": true,
+    "cross_layer_analysis": true,
+    "output_dir": "logs",
+    "save_csv": true,
+    "save_json": true
+  }
+}

@@ -1,0 +1,40 @@
+
+# Test configuration for quick validation
+simulation:
+  timestep_minutes: 15    # 15 min steps (was 5)
+  cycle_hours: 4          # 4 hour cycle (was 24)
+  seed: 42
+
+audit:
+  risk_threshold: 0.5
+  audit_budget_ratio: 0.10
+  max_audits_per_cycle: 5
+  f_min: 1
+  f_max: 5
+
+rl:
+  gamma: 0.9
+  epsilon_start: 1.0
+  epsilon_min: 0.05
+  epsilon_decay: 0.995
+  learning_rate: 0.1
+
+gradient:
+  lr: 0.01
+  max_iters: 100
+  eps: 1e-4
+
+anomaly_model:
+  lstm:
+    window: 8              # 8 steps (was 24)
+    hidden_size: 32        # Smaller (was 64)
+    num_layers: 1          # Fewer layers (was 2)
+    dropout: 0.1
+    batch_size: 32
+    epochs: 10
+    train_split: 0.8
+
+experiment:
+  n_agents: 20             # Fewer agents (was 100)
+  lstm_model_path: smartgrid_mas/data/anomaly_inputs/lstm.pt
+  output_dir: logs
