@@ -425,6 +425,7 @@ def run_all_simulations(
     config: Dict[str, Any],
     logger: logging.Logger,
     ablation_mode: str = 'HYBRID',
+    n_specific_budget_ratio: float | None = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
     """
     Run both dynamic (RL+gradient) and baseline (f=1) simulations.
@@ -433,6 +434,9 @@ def run_all_simulations(
         (dynamic_metrics, dynamic_events, baseline_metrics, baseline_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, convergence_info_dyn)
     """
     attack_cfg, fault_cfg = create_attack_and_fault_configs()
+    
+    # Use N-specific budget ratio if provided
+    effective_budget_ratio = n_specific_budget_ratio if n_specific_budget_ratio is not None else AUDIT_BUDGET_RATIO
     
     logger.info("="*70)
     logger.info("RUNNING DYNAMIC SIMULATION (RL + Gradient + Audits + Learning)")
@@ -464,10 +468,10 @@ def run_all_simulations(
     dyn_metrics, dyn_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_simulation_24h(
         agents=agents_dyn,
         lstm_infer=lstm_infer,
+        audit_budget_ratio=effective_budget_ratio,
         timestep_minutes=_timestep_minutes,
         cycle_hours=_cycle_hours,
         risk_threshold=RISK_THRESHOLD,
-        audit_budget_ratio=AUDIT_BUDGET_RATIO,
         max_audits_per_cycle=MAX_AUDITS_PER_CYCLE,
         f_min=int(config["audit"]["f_min"]),
         f_max=int(config["audit"]["f_max"]),
@@ -685,9 +689,29 @@ def print_summary_report(summary: Dict[str, Any], logger: logging.Logger) -> Non
     logger.info("FINAL EXPERIMENT SUMMARY")
     logger.info("="*70)
     
-    print("\n" + "="*70)
-    print("EXPERIMENT RESULTS SUMMARY")
-    print("="*70 + "\n")
+    # Key single-run metrics (concise view in terminal)
+    def pct(val: float) -> str:
+        return f"{val * 100:.2f}%"
+
+    def fmt(val: float, digits: int = 4) -> str:
+        return f"{val:.{digits}f}"
+
+    rows = [
+        ("Attack Rate (Dyn/Base)", f"{pct(summary.get('attack_rate_dyn', 0))} / {pct(summary.get('attack_rate_base', 0))}"),
+        ("Attack Rate Reduction", pct(summary.get('attack_rate_reduction', 0))),
+        ("Precision / Recall / F1", f"{fmt(summary.get('precision', 0),4)} / {fmt(summary.get('recall', 0),3)} / {fmt(summary.get('f1', 0),4)}"),
+        ("Accuracy", fmt(summary.get('accuracy', 0),3)),
+        ("Risk Mitigation", pct(summary.get('risk_mitigation', 0))),
+        ("Cost Efficiency", pct(summary.get('cost_efficiency', 0))),
+        ("Coverage (Dyn/Base)", f"{pct(summary.get('coverage_dyn', summary.get('coverage_cycle_dynamic',0)))} / {pct(summary.get('coverage_base', summary.get('coverage_cycle_baseline',0)))}"),
+        ("Cost Exec (Dyn/Base)", f"${summary.get('executed_cost_dynamic', summary.get('dynamic_total_audit_cost',0)):.2f} / ${summary.get('executed_cost_baseline', summary.get('baseline_total_audit_cost',0)):.2f}"),
+    ]
+
+    logger.info("%-36s %s", "Metric", "Value")
+    logger.info("-" * 70)
+    for label, value in rows:
+        logger.info("%-36s %s", label, value)
+    logger.info("="*70)
 
 
 def print_compact_sweep_table(run_summaries: List[Dict[str, Any]], logger: logging.Logger) -> None:
@@ -910,17 +934,28 @@ def main() -> None:
                 logger.info(f"✓ Chain attack rate: {CHAIN_RATE:.0%}")
                 logger.info(f"✓ Fault rate: {FAULT_RATE:.0%}")
 
+                # Step 6.5: N-specific parameter overrides
+                n_specific_budget_ratio = _env_float(f"SMARTGRID_AUDIT_BUDGET_RATIO_N{n_agents}", AUDIT_BUDGET_RATIO)
+                if n_specific_budget_ratio != AUDIT_BUDGET_RATIO:
+                    logger.info(f"  → Using N-specific budget ratio: {n_specific_budget_ratio:.3f} (default: {AUDIT_BUDGET_RATIO:.3f})")
+                
+                # Get cycle and timestep parameters
+                _cycle_hours = int(os.environ.get("SMARTGRID_CYCLE_HOURS", config["simulation"]["cycle_hours"]))
+                _timestep_minutes = int(os.environ.get("SMARTGRID_TIMESTEP_MINUTES", config["simulation"]["timestep_minutes"]))
+                
                 # Step 7-8: Run simulations (ablation modes)
                 logger.info("\n" + "="*70)
                 logger.info("STEP 7-8: Running Simulations")
                 logger.info(f"Ablation modes: {', '.join(ablation_modes)}")
+                logger.info(f"Budget ratio: {n_specific_budget_ratio:.3f} (total budget: {int(n_agents * n_specific_budget_ratio * (_cycle_hours * 60 / _timestep_minutes))})")
                 logger.info("="*70)
 
                 ablation_results = {}
                 for ablation_mode in ablation_modes:
                     logger.info(f"\n  → Ablation mode: {ablation_mode}")
                     dyn_metrics, dyn_events, base_metrics, base_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_all_simulations(
-                        agents_dyn, agents_base, lstm_infer, config, logger, ablation_mode=ablation_mode
+                        agents_dyn, agents_base, lstm_infer, config, logger, ablation_mode=ablation_mode, 
+                        n_specific_budget_ratio=n_specific_budget_ratio
                     )
                     ablation_results[ablation_mode] = {
                         'dyn_metrics': dyn_metrics, 'dyn_events': dyn_events,

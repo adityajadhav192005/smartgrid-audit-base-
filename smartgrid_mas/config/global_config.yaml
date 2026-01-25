@@ -5,8 +5,9 @@ simulation:
 
 audit:
   risk_threshold: 0.5          # paper
-  audit_budget_ratio: 0.50     # scaled budget for large grids (0.10 paper baseline)
-  max_audits_per_cycle: 50     # scaled for larger grids (5 for N≤100, 50 for N≤500)
+  audit_budget_ratio: 0.70     # DEFAULT ratio - scales automatically (N100: 20.2k, N200: 40.3k, N500: 100.8k budget)
+                               # Override per N via env: SMARTGRID_AUDIT_BUDGET_RATIO_N100=0.70, N200=0.60, N500=0.50
+  max_audits_per_cycle: 10     # conservative limit for cost efficiency (5 for small grids, 10 for medium, 20 for large)
   f_min: 0                     # allow zero audits for low-risk agents (paper top-K selection)
   f_max: 5
   baseline_fixed_f: 1          # paper baseline for comparison (overridable via SMARTGRID_BASELINE_F)
@@ -25,7 +26,7 @@ rl:
   epsilon_start: 1.0
   epsilon_min: 0.05
   epsilon_decay: 0.995
-  learning_rate: 0.1           # Q-learning alpha (separate from gradient LR)
+  learning_rate: 0.4           # Q-learning alpha (increased for faster convergence)
 
 gradient:
   lr: 0.01                     # paper
