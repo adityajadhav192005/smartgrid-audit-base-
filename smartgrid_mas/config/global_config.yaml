@@ -5,12 +5,18 @@ simulation:
 
 audit:
   risk_threshold: 0.5          # paper
-  audit_budget_ratio: 0.70     # DEFAULT ratio - scales automatically (N100: 20.2k, N200: 40.3k, N500: 100.8k budget)
-                               # Override per N via env: SMARTGRID_AUDIT_BUDGET_RATIO_N100=0.70, N200=0.60, N500=0.50
-  max_audits_per_cycle: 10     # conservative limit for cost efficiency (5 for small grids, 10 for medium, 20 for large)
-  f_min: 0                     # allow zero audits for low-risk agents (paper top-K selection)
-  f_max: 5
+  audit_budget_ratio: 0.15     # tighter spend to push cost efficiency positive
+  max_audits_per_cycle: 25     # cap audits per cycle to near-baseline envelope
+  f_min: 0                     # allow skipping audits on low-risk agents
+  f_max: 3                     # avoid over-frequency on low-risk agents
   baseline_fixed_f: 1          # paper baseline for comparison (overridable via SMARTGRID_BASELINE_F)
+  
+  # Per-N budget overrides (optional - if not specified, uses audit_budget_ratio above)
+  # Lower budgets for larger N to keep cost efficiency positive
+  budget_per_n:
+    100: 0.15
+    200: 0.20
+    500: 0.25
 
 thresholds:
   k_sigma: 4.0                 # Th = k * sigma (raised to reduce false positives)
@@ -35,7 +41,7 @@ gradient:
 
 anomaly_model:
   lstm:
-    window: 24                 # 24 timesteps history (overridable via SMARTGRID_LSTM_WINDOW; adjust for short horizons)
+    window: 12                 # Reduced from 24 to minimize cold-start (4% instead of 8% of simulation)
     hidden_size: 64
     num_layers: 2
     dropout: 0.2

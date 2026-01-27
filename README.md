@@ -162,35 +162,36 @@ results = pipeline.run(modes=['dynamic', 'baseline'])
 ### Default Parameters
 
 | Parameter | Value | Description |
-|-----------|-------|-------------|
-| `n_agents` | 100 | Number of agents in grid |
-| `n_timesteps` | 288 | Simulation duration (24h @ 5min intervals) |
-| `attack_rate` | 0.15 | Proportion of agents under attack |
-| `max_audits_per_cycle` | 5 | Maximum audits per timestep |
-| `learning_rate` | 0.01 | RL learning rate (α) |
-| `discount_factor` | 0.9 | RL discount factor (γ) |
+|-----------|-------|-------------|  
+| `n_agents` | 100, 200, 500 | Grid sizes (scalable sweep) |
+| `cycle_hours` | 24 | Simulation duration (24h) |
+| `timestep_minutes` | 5 | Time resolution (288 steps/24h) |
+| `audit_budget_ratio` | 0.70 | Audit budget (70% of operational cost) |
+| `max_audits_per_cycle` | 10 | Maximum audits per timestep |
+| `learning_rate` | 0.4 | RL learning rate (α) - faster convergence |
+| `discount_factor` | 0.95 | RL discount factor (γ) |
 
 ### Custom Configuration
 
-Create a `config.json` file:
+Edit `smartgrid_mas/config/global_config.yaml`:
 
-```json
-{
-  "simulation": {
-    "n_agents": 200,
-    "n_timesteps": 576,
-    "attack_rate": 0.20
-  },
-  "rl": {
-    "learning_rate": 0.02,
-    "discount_factor": 0.95,
-    "exploration_rate": 0.4
-  },
-  "audit": {
-    "max_audits_per_cycle": 10,
-    "failure_cost_coefficient": 15.0
-  }
-}
+```yaml
+audit:
+  audit_budget_ratio: 0.70     # Default for all N
+  max_audits_per_cycle: 10
+  
+  # Per-N budget overrides (optional)
+  budget_per_n:
+    100: 0.80                  # 80% for N=100
+    200: 0.70                  # 70% for N=200
+    500: 0.60                  # 60% for N=500
+
+rl:
+  learning_rate: 0.4           # Q-learning alpha
+  gamma: 0.95                  # Discount factor
+  epsilon_start: 1.0
+  epsilon_min: 0.05
+  epsilon_decay: 0.995
 ```
 
 ---
@@ -199,14 +200,16 @@ Create a `config.json` file:
 
 ### Key Performance Indicators
 
-| Metric | Dynamic (RL) | Baseline | Improvement |
-|--------|-------------|----------|-------------|
-| **Attack Rate** | 1.52% | 1.55% | ↓ 2.06% |
-| **Cost Efficiency** | 70.36% | - | 70% savings |
-| **F1-Score** | 0.160 | - | Detection accuracy |
-| **Precision** | 0.087 | - | Low false positives |
-| **Recall** | 1.000 | - | Perfect detection |
-| **RL Convergence** | 144k iterations | - | ~3 min |
+| Grid Size | Attack Rate (Dyn) | Attack Rate Reduction | Cost Efficiency | Risk Mitigation | Coverage |
+|-----------|-------------------|----------------------|-----------------|-----------------|----------|
+| **N=100** | 0.98% | 25.40% | 55.10% | 15.84% | 66.00% |
+| **N=200** | 1.14% | 15.66% | 54.43% | 9.35% | 31.50% |
+| **N=500** | 1.20% | 7.39% | 23.07% | 4.47% | 18.20% |
+
+**Detection Metrics (N=100):**
+- **Precision**: 0.114 | **Recall**: 1.000 | **F1-Score**: 0.204
+- **Accuracy**: 98.84% | **TPR**: 100% | **TNR**: 98.84%
+- **RL Convergence**: ~30k iterations | **Runtime**: ~18 seconds
 
 ### Output Files
 

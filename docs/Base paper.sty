@@ -1,0 +1,2696 @@
+Base paper 
+Enhancing Security of Distributed Multi-Agent Systems in Smart
+Grids: An AI-Driven Approach to Regular Audits
+MADHUKRISHNA PRIYADARSINI, National Institute of Technology Raipur, India
+Smart grids are increasingly susceptible to cyber-physical anomalies due to their complex interconnections and reliance
+on real-time data. Ensuring grid reliability and minimizing operational risks require robust anomaly detection systems and
+cost-effective audit strategies. This paper proposes a novel multi-objective framework that integrates anomaly detection with
+dynamic audit optimization to address these challenges. The framework leverages real-time operational data (푋), baseline
+metrics (퐵), thresholds (푇ℎ), and criticality weights (푤) to identify anomalies and dynamically assess system risks. Using
+a deviation-based scoring mechanism, anomalies are detected across critical grid components such as power generators,
+breakers, and controllers, while audit frequencies are optimized to balance attack rates and operational costs. In addition,
+this research contributes to Embodied AI by integrating intelligent audit agents within a physical smart grid environment;
+representing perception-action cycles that monitor, learn, and act in response to environmental conditions which is an essential
+characteristic of Embodied AI systems. These agents learn from real-time interactions and adapt behavior dynamically, aligning
+with the embodied AI paradigm.
+The framework’s multi-objective optimization model minimizes the attack rate (푅푎푡푡푎푐푘 ) and the total cost (퐶) by dynamically
+adjusting audit schedules based on real-time risk trends. The proposed solution is validated using simulated scenarios of
+cyberattacks (e.g., false data injection) and physical faults (e.g., overcurrent, voltage sag). Comparative analysis with traditional
+fixed-audit schedules demonstrates significant improvements, including 42.5% cost efficiency, 93.8% audit coverage, and 98.4%
+anomaly detection accuracy. The results establish the framework as a scalable and adaptive solution for anomaly management
+in smart grids, advancing the field of secure and efficient grid operations. This work contributes to the development of
+intelligent, risk-aware methodologies for grid resilience and operational optimization. The findings lay the groundwork for
+further exploration of AI-enhanced security solutions in autonomous and distributed systems.
+CCS Concepts: • Computer systems organization → Embedded and cyber-physical systems; Embedded systems;
+Additional Key Words and Phrases: Multi-Agent Systems (MAS), Security, Distributed Systems, AI-driven Audits, Anomaly
+Detection, Autonomous Auditing, Machine Learning, Adaptive Learning, Real-time Monitoring, Cyber-Physical Systems
+(CPS), Resilience, Robustness
+1 INTRODUCTION
+The rapid evolution of modern power systems into smart grids has introduced a paradigm shift in electricity
+generation, distribution, and consumption. By integrating advanced communication, control, and sensing technologies[1], smart grids enable real-time monitoring[2], demand-response management[3], and the seamless
+integration[4] of renewable energy sources. These advancements enhance grid efficiency[5], reliability[6], and
+sustainability[7]. However, as smart grids become increasingly interconnected and dependent on digital infrastructure[8], they also face heightened vulnerabilities to cyber-physical anomalies[10], such as cyberattacks and
+electrical faults, that pose significant risks to grid stability and security.
+Author’s Contact Information: Madhukrishna Priyadarsini, mpriyadarsini.cse@nitrr.ac.in, National Institute of Technology Raipur, Raipur,
+Chhattisgarh, India.
+Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that
+copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page.
+Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy
+otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from
+permissions@acm.org.
+© 2025 Copyright held by the owner/author(s).
+ACM 2378-9638/2025/8-ART
+https://doi.org/10.1145/3748730
+ACM Trans. Cyber-Phys. Syst.
+Check for updates
+Enhancing Security of Distributed Multi-Agent Systems in Smart
+Grids: An Al-Driven Approach to Regular Audits
+MADHUKRISHNA PRIYADARSINI, National Institute of Technology Raipur, India
+Smart grids are increasingly susceptible to cyber-physical anomalies due to their complex interconnections and reliance
+on real-time data. Ensuring grid reliability and minimizing operational risks require robust anomaly detection systems and
+cost-effective audit strategies. This paper proposes a novel multi-objective framework that integrates anomaly detection with
+dynamic audit optimization to address these challenges. The framework leverages real-time operational data (X), baseline
+metrics (B), thresholds (Th), and criticality weights (w) to identify anomalies and dynamically assess system risks. Using
+a deviation-based scoring mechanism, anomalies are detected across critical grid components such as power generators,
+breakers, and controllers, while audit frequencies are optimized to balance attack rates and operational costs. In addition,
+this research contributes to Embodied AI by integrating intelligent audit agents within a physical smart grid environment;
+representing perception-action cycles that monitor, learn, and act in response to environmental conditions which is an essential
+characteristic of Embodied AI systems. These agents learn from real-time interactions and adapt behavior dynamically, aligning
+with the embodied AI paradigm.
+The framework’s multi-objective optimization model minimizes the attack rate (Rgz+ack) and the total. cost (C) by dynamically
+adjusting audit schedules based on real-time risk trends. The proposed solution is validated using simulated scenarios of
+cyberattacks (e.g., false data injection) and physical faults (e.g., overcurrent, voltage sag). Comparative analysis with traditional
+fixed-audit schedules demonstrates significant improvements, including 42.5% cost efficiency, 93.8% audit coverage, and 98.4%
+anomaly detection accuracy. The results establish the framework as a scalable.and adaptive solution for anomaly management
+in smart grids, advancing the field of secure and efficient grid operations. This work contributes to the development of
+intelligent, risk-aware methodologies for grid resilience and operational optimization. The findings lay the groundwork for
+further exploration of Al-enhanced security solutions in autonomous and distributed systems.
+CCS Concepts: - Computer systems organization — Embedded and cyber-physical systems; Embedded systems;
+Additional Key Words and Phrases: Multi-Agent Systems (MAS), Security, Distributed Systems, Al-driven Audits, Anomaly
+Detection, Autonomous Auditing, Machine Learning, Adaptive Learning, Real-time Monitoring, Cyber-Physical Systems
+(CPS), Resilience, Robustness
+1 INTRODUCTION
+The rapid evolution of modern power systems into smart grids has introduced a paradigm shift in electricity
+generation, distribution, and consumption. By integrating advanced communication, control, and sensing technologies[1], smart grids enable real-time monitoring[2], demand-response management[3], and the seamless
+integration[4] of renewable energy sources. These advancements enhance grid efficiency[5], reliability[6], and
+sustainability[7]. However, as smart grids become increasingly interconnected and dependent on digital infrastructure[8], they,also face heightened vulnerabilities to cyber-physical anomalies[10], such as cyberattacks and
+electrical faults, that pose significant risks to grid stability and security.
+Author’s Contact Information: Madhukrishna Priyadarsini, mpriyadarsini.cse@nitrr.ac.in, National Institute of Technology Raipur, Raipur,
+Chhattisgarh, India.
+Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that
+copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page.
+Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy
+otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from
+permissions@acm.org.
+© 2025 Copyright held by the owner/author(s).
+ACM 2378-9638/2025/8-ART
+https://doi.org/10.1145/3748730
+ACM Trans. Cyber-Phys. Syst.
+2 • Madhukrishna et al.
+1.1 Background on Multi-Agent Systems in Smart Grids
+The modernization of power systems into smart grids has transformed the way electricity is generated, distributed, and consumed. At the heart of this transformation lies the concept of multi-agent systems (MAS), which
+enable decentralized, intelligent decision-making and control. In a smart grid, agents such as power generators,
+substations, breakers, phasor measurement units (PMUs), and controllers work collaboratively to maintain system
+stability, optimize energy usage, and ensure reliability. These agents are interconnected through a communication
+network, enabling them to share real-time data and make coordinated decisions.
+MAS frameworks have proven essential for managing the inherent complexity of smart grids. Each agent
+operates semi-autonomously, monitoring its environment, executing tasks, and interacting with other agents to
+address challenges such as load balancing, fault isolation, and grid reconfiguration. For instance, area controllers
+can dynamically adjust power generation based on demand, while breakers can isolate faulty components to
+prevent cascading failures. This distributed architecture improves scalability and fault tolerance, making MAS a
+cornerstone of modern smart grid operations.
+However, the increasing reliance on MAS in smart grids introduces new vulnerabilities[18].The interdependence
+among agents and their reliance on real-time communication create opportunities for cyber-physical threats,
+including cyberattacks and electrical faults. These challenges highlight the need for robust security measures
+tailored to the unique requirements of MAS in smart grids.
+This research aligns with the principles of Embodied AI by treating each audit agent as an embodied entity
+within the cyber-physical ecosystem of the smart grid. These agents continuously perceive local grid parameters
+(e.g., phase voltage, frequency, power load) and respond through intelligent audit actions. The perception-action
+coupling, policy learning from environment interaction, and physical influence on operational outcomes are
+hallmarks of embodied intelligence. Our proposed framework advances the state-of-the-art in Embodied AI by
+applying it to safety-critical, real-time, distributed audit tasks across multi-agent infrastructures.
+1.2 Security Challenges in Multi-Agent Smart Grids
+While MAS enhances the functionality and resilience of smart grids, it also amplifies the attack surface for
+adversaries. Security challenges in multi-agent smart grids stem from their interconnected nature, real-time
+operations, and heterogeneity of components. These challenges can be broadly categorized into cybersecurity
+threats and physical faults.
+1.2.1 Cybersecurity Threats.
+(1) False Data Injection (FDI): Malicious actors manipulate sensor readings or communication channels,
+causing incorrect decisions by agents. For example, injecting false voltage measurements can mislead
+controllers, destabilizing the grid.
+(2) Communication Jamming: Attackers disrupt communication between agents, impairing their ability to
+coordinate effectively.
+(3) Denial-of-Service (DoS): Overloading network resources to prevent critical agents from functioning.
+1.2.2 Physical Faults.
+(1) Overcurrent: Excessive current flow caused by faults or equipment failure can damage critical infrastructure.
+(2) Voltage Sag/Surge: Deviations from nominal voltage levels can disrupt industrial processes and damage
+sensitive equipment.
+(3) Frequency Deviations: Instability in frequency due to generation-demand mismatches can trigger systemwide outages.
+ACM Trans. Cyber-Phys. Syst.
+2 + Madhukrishna et al.
+1.1 Background on Multi-Agent Systems in Smart Grids
+The modernization of power systems into smart grids has transformed the way electricity is generated, distributed, and consumed. At the heart of this transformation lies the concept of multi-agent systems (MAS), which
+enable decentralized, intelligent decision-making and control. In a smart grid, agents such as power generators,
+substations, breakers, phasor measurement units (PMUs), and controllers work collaboratively to maintain system
+stability, optimize energy usage, and ensure reliability. These agents are interconnected through a communication
+network, enabling them to share real-time data and make coordinated decisions.
+MAS frameworks have proven essential for managing the inherent complexity of smart grids. Each agent
+operates semi-autonomously, monitoring its environment, executing tasks, and interacting with other agents to
+address challenges such as load balancing, fault isolation, and grid reconfiguration. For instance; area controllers
+can dynamically adjust power generation based on demand, while breakers can isolate faulty components to
+prevent cascading failures. This distributed architecture improves scalability and fault tolerance, making MAS a
+cornerstone of modern smart grid operations.
+However, the increasing reliance on MAS in smart grids introduces new vulnerabilities[18]. The interdependence
+among agents and their reliance on real-time communication create opportunities for cyber-physical threats,
+including cyberattacks and electrical faults. These challenges highlight the need for robust’security measures
+tailored to the unique requirements of MAS in smart grids.
+This research aligns with the principles of Embodied AI by treating each audit agent as an embodied entity
+within the cyber-physical ecosystem of the smart grid. These agents continuously perceive local grid parameters
+(e.g., phase voltage, frequency, power load) and respond through intelligent audit actions. The perception-action
+coupling, policy learning from environment interaction, and physical influence on operational outcomes are
+hallmarks of embodied intelligence. Our proposed framework advances the state-of-the-art in Embodied AI by
+applying it to safety-critical, real-time, distributed audit tasks across multi-agent infrastructures.
+1.2 Security Challenges in Multi-Agent Smart Grids
+While MAS enhances the functionality and resilience,of smart grids, it also amplifies the attack surface for
+adversaries. Security challenges in multi-agent smart grids stem from their interconnected nature, real-time
+operations, and heterogeneity of components. These challenges can be broadly categorized into cybersecurity
+threats and physical faults.
+1.2.1. Cybersecurity Threats.
+(1) False Data Injection (FDI): Malicious actors manipulate sensor readings or communication channels,
+causing incorrect decisions by agents. For example, injecting false voltage measurements can mislead
+controllers, destabilizing the grid.
+(2) Communication Jamming: Attackers disrupt communication between agents, impairing their ability to
+coordinate effectively.
+(3) Denial-of-Service (DoS): Overloading network resources to prevent critical agents from functioning.
+1.2.2 Physical Faults.
+(1) Overcurrent: Excessive current flow caused by faults or equipment failure can damage critical infrastructure.
+(2) Voltage Sag/Surge: Deviations from nominal voltage levels can disrupt industrial processes and damage
+sensitive equipment.
+(3) Frequency Deviations: Instability in frequency due to generation-demand mismatches can trigger systemwide outages.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 3
+These challenges are compounded by the dynamic nature of smart grids, where conditions change rapidly due to
+fluctuating demand, integration of renewable energy sources, and external disturbances. Traditional anomaly
+detection methods based on static thresholds or rule-based models struggle to adapt to these dynamic conditions,
+resulting in delayed or inaccurate responses.
+1.3 Motivation for AI-Driven Audits
+The limitations of traditional security measures in multi-agent smart grids motivate the need for AI-driven
+approaches to enhance anomaly detection and risk management[16]. Artificial intelligence (AI) offers powerful
+tools for analyzing complex, high-dimensional data[13] and identifying patterns that signify anomalies or risks.
+In the context of smart grids, AI can revolutionize security[15] and operational efficiency through real-time
+anomaly detection and intelligent audit scheduling.
+1.3.1 Why AI-Driven Audits?
+(1) Real-Time Adaptability: AI models, such as machine learning (ML)[14] classifiers and neural networks,
+can dynamically learn from historical and real-time data, enabling them to detect anomalies that deviate
+from normal operational patterns. For example, an AI model can identify voltage fluctuations caused by
+false data injection attacks or frequency instability due to load imbalances.
+(2) Integration of Multi-Agent Interactions: AI methods like graph neural networks (GNNs) can capture
+the interdependence between agents, modeling the grid as a graph where nodes represent agents and
+edges represent their interactions. This approach allows for holistic anomaly detection that accounts for
+cascading effects across the grid.
+(3) Risk-Aware Audit Scheduling: Traditional fixed-audit schedules are resource-intensive and often misaligned with actual risk levels. AI-driven audits optimize resource allocation by dynamically adjusting
+audit frequency based on real-time risk assessments, reducing operational costs without compromising
+security.
+(4) Scalability and Efficiency: AI models can process large-scale data generated by smart grids, ensuring
+scalability across diverse components and operational scenarios.
+1.3.2 Existing Research Gaps. While significant progress has been made in anomaly detection for smart grids,
+current approaches are often limited by:
+(1) Static Thresholds: Unable to adapt to evolving attack strategies or dynamic grid conditions.
+(2) Isolated Solutions: Focus on either anomaly detection or audit optimization, without integrating these
+aspects into a unified framework.
+(3) Resource Constraints: Lack of emphasis on cost efficiency, leading to unsustainable operational models.
+These gaps underscore the need for a comprehensive framework that integrates real-time anomaly detection and
+dynamic audit optimization using AI-driven methods.
+1.4 Objectives
+The primary objective of this study is to develop a framework that enhances the security and operational efficiency
+of multi-agent smart grids. The specific goals are:
+(1) Real-Time Anomaly Detection: To develop a deviation-based anomaly detection mechanism leveraging
+real-time observations (푋), baseline metrics (퐵), and adaptive thresholds (푇ℎ). To incorporate criticality
+weights (푤) and to prioritize high-impact anomalies based on agent importance.
+(2) Dynamic Audit Optimization: To Formulate a multi-objective optimization model which can minimize
+attack rates (푅attack) and operational costs (퐶). In addition, to adjust audit frequencies (푓 ) based on real-time
+risk assessments to achieve a balance between security and cost efficiency.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 3
+These challenges are compounded by the dynamic nature of smart grids, where conditions change rapidly due to
+fluctuating demand, integration of renewable energy sources, and external disturbances. Traditional anomaly
+detection methods based on static thresholds or rule-based models struggle to adapt to these dynamic conditions,
+resulting in delayed or inaccurate responses.
+1.3. Motivation for Al-Driven Audits
+The limitations of traditional security measures in multi-agent smart grids motivate the need for Al-driven
+approaches to enhance anomaly detection and risk management([16]. Artificial intelligence (AI) offers powerful
+tools for analyzing complex, high-dimensional data[13] and identifying patterns that signify anomalies or risks.
+In the context of smart grids, AI can revolutionize security[15] and operational efficiency through real-time
+anomaly detection and intelligent audit scheduling.
+1.3.1. Why Al-Driven Audits?
+(1) Real-Time Adaptability: AI models, such as machine learning (ML)[14] classifiers and neural networks,
+can dynamically learn from historical and real-time data, enabling them to detect anomalies that deviate
+from normal operational patterns. For example, an AI model can identify voltage fluctuations caused by
+false data injection attacks or frequency instability due to load imbalances.
+(2) Integration of Multi-Agent Interactions: AI methods like graph neural networks (GNNs) can capture
+the interdependence between agents, modeling the grid as a graph where nodes represent agents and
+edges represent their interactions. This approach allows for holistic anomaly detection that accounts for
+cascading effects across the grid.
+(3) Risk-Aware Audit Scheduling: Traditional fixed-audit schedules are resource-intensive and often misaligned with actual risk levels. Al-driven audits optimize resource allocation by dynamically adjusting
+audit frequency based on real-time risk assessments, reducing operational costs without compromising
+security.
+(4) Scalability and Efficiency: AI models can process large-scale data generated by smart grids, ensuring
+scalability across diverse components and operational scenarios.
+1.3.2. Existing Research Gaps. While significant progress has been made in anomaly detection for smart grids,
+current approaches are often limited by:
+(1) Static Thresholds: Unable to adapt to evolving attack strategies or dynamic grid conditions.
+(2) Isolated Solutions: Focus on either anomaly detection or audit optimization, without integrating these
+aspects into a unified framework.
+(3) Resource Constraints: Lack of emphasis on cost efficiency, leading to unsustainable operational models.
+These gaps underscore the need for a comprehensive framework that integrates real-time anomaly detection and
+dynamic audit optimization using Al-driven methods.
+1.4 Objectives
+The primary objective of this study is to develop a framework that enhances the security and operational efficiency
+of multi-agent smart grids. The specific goals are:
+(1) Real-Time Anomaly Detection: To develop a deviation-based anomaly detection mechanism leveraging
+real-time observations (X), baseline metrics (B), and adaptive thresholds (Th). To incorporate criticality
+weights (w) and to prioritize high-impact anomalies based on agent importance.
+(2) Dynamic Audit Optimization: To Formulate a multi-objective optimization model which can minimize
+attack rates (Rattack) and operational costs (C). In addition, to adjust audit frequencies (f) based on real-time
+risk assessments to achieve a balance between security and cost efficiency.
+ACM Trans. Cyber-Phys. Syst.
+4 • Madhukrishna et al.
+(3) Scalability and Adaptability: To ensure that the framework can scale across heterogeneous agents and
+adapt to dynamic grid conditions, including fluctuating demand, renewable integration, and evolving
+attack vectors.
+(4) Validation and Performance Analysis: To simulate the framework under diverse scenarios, including
+cyberattacks (e.g., FDI, jamming) and physical faults (e.g., voltage sag, overcurrent). Also to evaluate the
+framework using performance metrics such as precision, recall, F1-score, attack rate reduction, and cost
+savings.
+This framework is designed to address the growing challenges of securing multi-agent smart grids while
+optimizing operational efficiency. By leveraging AI-driven methods, it provides a scalable and adaptive solution
+for anomaly detection and audit optimization, advancing the field of intelligent and secure grid operations.
+The remainder of this paper is structured as follows: Section 2 reviews related work in anomaly detection and
+audit optimization for smart grids. Section 3 presents the system model and the problem formulation using one
+real-life smart grid example. Section 4 presents the proposed AI-driven audit framework, including the framework
+components in detail. Section Section 5 describes the simulation environment and evaluation metrics. Section 6
+presents the evaluation results using a case study. Section 7 discusses insights, limitations, and future directions,
+and Section 8 concludes the research work.
+2 LITERATURE STUDY
+The increasing complexity of Multi-Agent Systems (MAS) in smart grids, industrial IoT, cyber-physical systems
+(CPS), and cloud-based infrastructures has introduced significant security challenges. Traditional audit mechanisms often fail to address dynamic risks, cyber threats, and adaptive attacks, necessitating the integration of
+Artificial Intelligence (AI)-driven security audits[26]. This section reviews relevant research, categorizing it into
+security in MAS, traditional auditing techniques, and AI-driven security audits.
+2.1 Security in Multi-Agent Systems (MAS)
+Zhang et al. (2023)[6] highlighted how multi-agent communication can be exploited for adversarial attacks,
+requiring trust-aware security architectures for agent authentication and anomaly detection. Han & Zhu (2017)[25]
+proposed reinforcement learning (RL)-based anomaly detection models for SCADA-based MAS environments,
+ensuring real-time identification of malicious agents. Sadeghi et al. (2015)[27] examined Industrial IoT MAS
+security, identifying distributed denial-of-service (DDoS) vulnerabilities, prompting research into autonomous
+threat mitigation.
+Despite these advancements, existing MAS security methods lack adaptive audit scheduling, often leading to
+reactive, rather than proactive, cybersecurity measures.
+2.2 Traditional Audit Methods
+Security audits traditionally rely on rule-based and periodic evaluations that assess system compliance, access
+logs, and event anomalies. However, these approaches suffer from high false alarms, inefficiency, and inability
+to detect evolving threats. We have considered only 2 research works here from the traditional audit methods,
+as it is not the scope of our considered research paper. Smith & Thompson (2024)[4] highlighted that manual
+audits introduce operational delays, requiring automated, real-time AI-based solutions for continuous security
+monitoring. Miller & Alford (2020)[17] explored adversary emulation-based audits, where simulated cyber-attacks
+were used to test system resilience, yet this approach required significant human intervention. Traditional audits,
+while essential, lack real-time adaptability and are incapable of scaling with complex, evolving cyber threats,
+necessitating AI-based security audit frameworks.
+ACM Trans. Cyber-Phys. Syst.
+4 + Madhukrishna et al.
+(3) Scalability and Adaptability: To ensure that the framework can scale across heterogeneous agents and
+adapt to dynamic grid conditions, including fluctuating demand, renewable integration, and evolving
+attack vectors.
+(4) Validation and Performance Analysis: To simulate the framework under diverse scenarios, including
+cyberattacks (e.g., FDI, jamming) and physical faults (e.g., voltage sag, overcurrent). Also to evaluate the
+framework using performance metrics such as precision, recall, F1-score, attack rate reduction, and cost
+savings.
+This framework is designed to address the growing challenges of securing multi-agent smart grids while
+optimizing operational efficiency. By leveraging Al-driven methods, it provides a scalable and adaptive solution
+for anomaly detection and audit optimization, advancing the field of intelligent and secure grid operations.
+The remainder of this paper is structured as follows: Section 2 reviews related work in anomaly detection and
+audit optimization for smart grids. Section 3 presents the system model and the problem formulation using one
+real-life smart grid example. Section 4 presents the proposed AI-driven audit framework, including the framework
+components in detail. Section Section 5 describes the simulation environment and evaluation metrics. Section 6
+presents the evaluation results using a case study. Section 7 discusses insights, limitations, and future directions,
+and Section 8 concludes the research work.
+2 LITERATURE STUDY
+The increasing complexity of Multi-Agent Systems (MAS) in smartgrids, industrial IoT, cyber-physical systems
+(CPS), and cloud-based infrastructures has introduced significant security challenges. Traditional audit mechanisms often fail to address dynamic risks, cyber threats, and/adaptive attacks, necessitating the integration of
+Artificial Intelligence (Al)-driven security audits[26]. This section reviews relevant research, categorizing it into
+security in MAS, traditional auditing techniques, and,Al-driven security audits.
+2.1 Security in Multi-Agent Systems (MAS)
+Zhang et al. (2023)[6] highlighted how multi-agent communication can be exploited for adversarial attacks,
+requiring trust-aware security architectures for agent authentication and anomaly detection. Han & Zhu (2017)[25]
+proposed reinforcement learning (RL)-based anomaly detection models for SCADA-based MAS environments,
+ensuring real-time identification of malicious agents. Sadeghi et al. (2015)[27] examined Industrial loT MAS
+security, identifying distributed denial-of-service (DDoS) vulnerabilities, prompting research into autonomous
+threat mitigation.
+Despite these advancements, existing MAS security methods lack adaptive audit scheduling, often leading to
+reactive, rather than proactive, cybersecurity measures.
+2.2 Traditional Audit Methods
+Security audits traditionally rely on rule-based and periodic evaluations that assess system compliance, access
+logs, and event anomalies. However, these approaches suffer from high false alarms, inefficiency, and inability
+to detect evolving threats. We have considered only 2 research works here from the traditional audit methods,
+as it is not the scope of our considered research paper. Smith & Thompson (2024)[4] highlighted that manual
+audits introduce operational delays, requiring automated, real-time Al-based solutions for continuous security
+monitoring. Miller & Alford (2020)[17] explored adversary emulation-based audits, where simulated cyber-attacks
+were used to test system resilience, yet this approach required significant human intervention. Traditional audits,
+while essential, lack real-time adaptability and are incapable of scaling with complex, evolving cyber threats,
+necessitating Al-based security audit frameworks.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 5
+2.3 AI in Security Audits
+AI-driven audit mechanisms leverage machine learning (ML)[24], deep learning (DL), and reinforcement learning
+(RL) to enhance real-time anomaly detection, risk assessment, and audit frequency optimization. Johnson & Davis
+(2024)[2] proposed an AI-based auditing framework that continuously monitors system behavior and adjusts
+audits based on dynamic risk scores, achieving higher efficiency than periodic audits. Ghosh (2024)[28] developed
+AI-powered multi-agent trading security audits, where agents self-monitor their interactions, reducing audit
+overhead while improving anomaly detection accuracy. Huang (2024)[29] introduced a multi-agent AI framework
+for enterprise security auditing, demonstrating how AI-driven agents can collaboratively assess cybersecurity
+risks in decentralized networks. Doe & Roe (2024)[1] implemented a conceptual AI audit model for large-scale
+cloud security monitoring, achieving real-time threat detection with minimal false positives. Zhang & Wang
+(2024)[7] proposed large-language model (LLM)-based anomaly detection for AI-driven audits, demonstrating the
+feasibility of autonomous, interpretable risk assessment models.
+These advancements in AI-based security auditing offer self-learning, adaptive, and real-time risk-aware audit
+scheduling, outperforming traditional rule-based and periodic auditing models. However, challenges such as
+model explainability, integration with existing cybersecurity frameworks, and adversarial attack resistance require
+further research. Table 1 presents the summary of the existing highlighted solutions along with their limitations
+(for better understanding) and the research gaps that are being addressed in the proposed research paper.
+3 SYSTEM MODEL
+The system model depicted in Figure 1 highlights the complexity of modern smart grids, which integrate physical
+and cyber components for efficient and reliable operations. The interaction between the layers enables dynamic
+monitoring and control but also exposes the grid to significant vulnerabilities. The multi-layered smart grid
+architecture in Figure 1 is having two interconnected layers: the physical grid layer and the cyber layer through
+the communication layer. The physical grid layer handles the generation, transmission, and distribution of
+electricity, while the cyber layer enables monitoring, control, and communication across the grid. The interaction
+between these layers ensures the grid’s operational efficiency and stability. However, the interconnectedness also
+introduces vulnerabilities, such as cyberattacks and physical faults, which require robust anomaly detection and
+mitigation strategies. The details of each layer are as follows:
+3.0.1 Physical Layer. The Physical Grid Layer comprises the core infrastructure responsible for managing
+electricity flow and maintaining stability. The agents in this layer include: Generation Agents (GA):These agents,
+such as 푃표푤푒푟퐺푒푛푒푟푎푡표푟1 to 푃표푤푒푟퐺푒푛푒푟푎푡표푟푛, are responsible for producing electricity and supplying it to the
+grid; Storage Agents (SA): Energy storage systems managed by these agents balance supply and demand, ensuring
+grid reliability during generation fluctuations; Emergency Response Agents: These agents respond to electrical
+faults, such as line outages or equipment failures, to minimize the impact on grid operations; Maintenance
+Agents: These agents ensure the continuous operation of physical components through regular maintenance
+and fault isolation; Environmental Monitoring Agents: These agents monitor environmental conditions (e.g.,
+temperature, wind speed) that influence grid operations, enabling proactive adjustments to maintain stability;
+Phasor Measurement Units (PMUs): PMUs provide real-time measurements of electrical parameters such as
+voltage, current (퐼푎푏푐 ), and frequency, which are critical for monitoring grid health; Breakers: Breakers protect
+circuits by isolating faulty components in case of electrical faults, preventing cascading failures. Electricity flows
+through the physical grid from generators to consumers, with agents monitoring and responding to faults or
+abnormal conditions. The physical layer’s operations are influenced by inputs from the cyber layer.
+3.0.2 Cyber Layer. This layer handles data communication, monitoring, and decision-making. It connects the
+agents in the physical layer via communication links and introduces cybersecurity risks such as LAN/WAN attacks
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 5
+2.3. Alin Security Audits
+Al-driven audit mechanisms leverage machine learning (ML)[24], deep learning (DL), and reinforcement learning
+(RL) to enhance real-time anomaly detection, risk assessment, and audit frequency optimization. Johnson & Davis
+(2024)[2] proposed an Al-based auditing framework that continuously monitors system behavior and adjusts
+audits based on dynamic risk scores, achieving higher efficiency than periodic audits. Ghosh (2024)[28] developed
+Al-powered multi-agent trading security audits, where agents self-monitor their interactions, reducing audit
+overhead while improving anomaly detection accuracy. Huang (2024)[29] introduced a multi-agent AI framework
+for enterprise security auditing, demonstrating how AJI-driven agents can collaboratively assess cybersecurity
+risks in decentralized networks. Doe & Roe (2024)[1] implemented a conceptual AI audit model for large-scale
+cloud security monitoring, achieving real-time threat detection with minimal false positivessZhang & Wang
+(2024)[7] proposed large-language model (LLM)-based anomaly detection for Al-driven audits, demonstrating the
+feasibility of autonomous, interpretable risk assessment models.
+These advancements in Al-based security auditing offer self-learning, adaptive, and real-time risk-aware audit
+scheduling, outperforming traditional rule-based and periodic auditing models. However, challenges such as
+model explainability, integration with existing cybersecurity frameworks, and adversarial attack resistance require
+further research. Table 1 presents the summary of the existing highlighted solutions along with their limitations
+(for better understanding) and the research gaps that are being addressed in the proposed research paper.
+3 SYSTEM MODEL
+The system model depicted in Figure 1 highlights the complexity of modern smart grids, which integrate physical
+and cyber components for efficient and reliable operations. The interaction between the layers enables dynamic
+monitoring and control but also exposes the grid to significant vulnerabilities. The multi-layered smart grid
+architecture in Figure 1 is having two interconnected layers: the physical grid layer and the cyber layer through
+the communication layer. The physical grid layer handles the generation, transmission, and distribution of
+electricity, while the cyber layer enables monitoring, control, and communication across the grid. The interaction
+between these layers ensures the grid’s operational efficiency and stability. However, the interconnectedness also
+introduces vulnerabilities, such as cyberattacks andphysical faults, which require robust anomaly detection and
+mitigation strategies. The details of each layer are as follows:
+3.0.1 Physical Layer. The Physical Grid Layer comprises the core infrastructure responsible for managing
+electricity flow and maintaining stability. The agents in this layer include: Generation Agents (GA):These agents,
+such as PowerGeneratory to PowerGeneratorn, are responsible for producing electricity and supplying it to the
+grid; Storage Agents (SA): Energy storage systems managed by these agents balance supply and demand, ensuring
+grid reliability during generation fluctuations; Emergency Response Agents: These agents respond to electrical
+faults, such as line outages or equipment failures, to minimize the impact on grid operations; Maintenance
+Agents: These agents ensure the continuous operation of physical components through regular maintenance
+and fault isolation; Environmental Monitoring Agents: These agents monitor environmental conditions (e.g.,
+temperature, wind speed) that influence grid operations, enabling proactive adjustments to maintain stability;
+Phasor Measurement Units (PMUs): PMUs provide real-time measurements of electrical parameters such as
+voltage, current (Igp-), and frequency, which are critical for monitoring grid health; Breakers: Breakers protect
+circuits by isolating faulty components in case of electrical faults, preventing cascading failures. Electricity flows
+through the physical grid from generators to consumers, with agents monitoring and responding to faults or
+abnormal conditions. The physical layer’s operations are influenced by inputs from the cyber layer.
+3.0.2. Cyber Layer. This layer handles data communication, monitoring, and decision-making. It connects the
+agents in the physical layer via communication links and introduces cybersecurity risks such as LAN/WAN attacks
+ACM Trans. Cyber-Phys. Syst.
+6 • Madhukrishna et al.
+Table 1. Summary of the Existing Solutions along with their Limitations
+Article Contribution Research Gap Research Gaps Addressed in the
+Proposed Framework
+Zhang et
+al. [6]
+Developed a Trust-aware MAS
+security
+Lacks adaptability to new attack patterns
+Adaptive AI-driven anomaly detection
+with dynamic learning
+Johnson
+et al.
+(2024) [2]
+Proposed AI-powered riskaware audits framework
+Limited to pre-defined risk factors Self-learning risk prioritization in realtime audits
+Zhang
+& Wang
+(2024) [7]
+Introduced AI-driven anomaly
+detection technique
+Data-intensive Enhanced AI-driven anomaly detection
+with minimal data requirements
+Doe
+& Roe
+(2024) [1]
+Proposed AI-based audit scheduling
+High computational cost Efficient, lightweight AI models for realtime auditing
+Smith &
+Thompson (2024)
+[4]
+Proposed AI-powered log analysis
+Lacks real-time adaptability Continuous AI-driven security monitoring and adaptation
+Han
+& Zhu
+(2017)
+[25]
+Proposed RL-based anomaly detection for SCADA
+Relies on pre-trained policies Real-time reinforcement learning-based
+risk-aware audits
+Ghosh
+(2024)
+[28]
+Introduced AI-driven financial
+audit security
+Not applicable to other domains Multi-domain adaptable AI-driven audit
+framework
+Wischmeyer
+et al.
+(2023)
+[20]
+Developed traditional rulebased auditing using static
+thresholds for detecting security risks
+Inflexible and ineffective against evolving cyber threats
+AI-driven adaptive audit framework
+overcoming static rule limitations
+Guo et
+al. (2022)
+[21]
+Proposed statistical anomaly detection based on deviation from
+normal patterns in system logs
+High false positives due to rigid statistical assumptions
+Machine learning-based anomaly detection reducing false positives
+Armando
+et al.
+(2023)
+[22]
+Introduced supervised learningbased audit scheduling for optimized anomaly detection
+Lack of adaptability in real-time audit
+scheduling
+Optimized audit frequency scheduling
+based on dynamic risk assessment
+Song et
+al. (2022)
+[23]
+Proposed Reinforcement
+learning-based security audits
+optimizing audit frequency
+dynamically
+High computational complexity and
+slower convergence
+Enhanced efficiency with AI-powered
+risk-aware audit scheduling
+and malicious intrusions. The agents in this layer include: Monitoring & Control Agents: These agents gather data
+from physical components, such as PMUs and environmental monitoring agents, and issue control commands to
+ensure grid stability; Security Agents: These agents detect and respond to cyberattacks, such as false data injection
+(FDI), communication jamming, and denial-of-service (DoS) attacks; Learning & Adaptation Agents: These
+agents leverage AI/ML models to dynamically adapt to changing grid conditions, optimize decision-making, and
+enhance anomaly detection capabilities. Other major components of cyber layer are as follows: Area Controllers:
+Responsible for managing grid stability within specific geographic regions, these controllers adjust power
+ACM Trans. Cyber-Phys. Syst.
+6 + Madhukrishna et al.
+Table 1. Summary of the Existing Solutions along with their Limitations
+Article Contribution Research Gap Research Gaps Addressed in the
+Proposed Framework
+Zhang et | Developed a Trust-aware MAS | Lacks adaptability to new attack pat- | Adaptive Al-driven anomaly detection
+al. [6] security terns with dynamic learning
+Johnson | Proposed AlJ-powered risk- | Limited to pre-defined risk factors Self-learning risk prioritization in realet al. | aware audits framework time audits
+(2024) [2]
+Zhang Introduced AI-driven anomaly | Data-intensive Enhanced AlI-driven anomaly detection
+& Wang | detection technique with minimal data requirements
+(2024) [7]
+Doe Proposed AI-based audit sched- | High computational cost Efficient, lightweight AI models for real-
+& Roe | uling time auditing
+(2024) [1]
+Smith & | Proposed Al-powered log anal- | Lacks real-time adaptability Continuous Al-driven security monitorThomp- ysis ing and adaptation
+son (2024)
+[4]
+Han Proposed RL-based anomaly de- | Relies on pre-trained policies Real-time reinforcement learning-based
+& Zhu | tection for SCADA risk-aware audits
+(2017)
+[25]
+Ghosh Introduced AlJ-driven financial | Not applicable to other domains Multi-domain adaptable AI-driven audit
+(2024) audit security framework
+[28]
+Wis- Developed traditional rule- | Inflexible and ineffective against evolv- | Al-driven adaptive audit framework
+chmeyer | based auditing using static | ing cyber threats overcoming static rule limitations
+et al. | thresholds for detecting secu-
+(2023) rity risks
+[20]
+Guo et | Proposed statistical anomaly de- | High-false positives due to rigid statisti- | Machine learning-based anomaly detecal. (2022) | tection based on deviation from | cal assumptions tion reducing false positives
+[21] normal patterns in system logs
+Armando | Introduced supervised learning- | Lack of adaptability in real-time audit | Optimized audit frequency scheduling
+et al. | based audit scheduling for opti) scheduling based on dynamic risk assessment
+(2023) mized anomaly detection
+[22]
+Song et | Proposed Reinforcement | High computational complexity and | Enhanced efficiency with Al-powered
+al. (2022),), learning-based)security audits | slower convergence risk-aware audit scheduling
+[23] optimizing audit frequency
+dynamically
+and malicious intrusions. The agents in this layer include: Monitoring & Control Agents: These agents gather data
+from physical components, such as PMUs and environmental monitoring agents, and issue control commands to
+ensure grid stability; Security Agents: These agents detect and respond to cyberattacks, such as false data injection
+(FDI), communication jamming, and denial-of-service (DoS) attacks; Learning & Adaptation Agents: These
+agents leverage AI/ML models to dynamically adapt to changing grid conditions, optimize decision-making, and
+enhance anomaly detection capabilities. Other major components of cyber layer are as follows: Area Controllers:
+Responsible for managing grid stability within specific geographic regions, these controllers adjust power
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 7
+Fig. 1. A system model with smart grid layers, components, and multiple agents
+generation, load balancing, and fault isolation strategies; Substation Controllers: Substation controllers oversee
+electricity distribution within substations and communicate with area controllers for coordinated operations;
+Consumer Agents (CA): Representing the grid’s end-users, these agents monitor consumer demand and provide
+feedback to optimize load distribution. The cyber layer not only facilitates seamless communication among agents
+but also monitors and mitigates potential cyber threats that can disrupt grid operations.
+3.0.3 Cross Layer Interactions. The interaction between the Physical Grid Layer and the Cyber Layer is crucial
+for the grid’s functionality. Communication links connect the two layers, enabling real-time data exchange and
+decision-making. For example, PMUs in the physical layer transmit electrical measurements to monitoring agents
+in the cyber layer, which analyze the data and issue corrective actions if anomalies are detected. Similarly, area
+controllers and learning agents in the cyber layer adapt grid operations based on real-time conditions in the
+physical layer. However, these interactions also expose the grid to vulnerabilities. LAN attacks can disrupt local
+communication among agents in the physical layer, while WAN attacks can compromise the decision-making
+processes in the cyber layer. These vulnerabilities necessitate robust security measures, including anomaly
+detection and risk-aware audit optimization.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 7
+Physical Grid Layer
+Generation Agents Emergency - Environmental Power generator 1 Z| an <——» Storage Agents (SA) <—-» Response Agents <—+>| Maintenance Agents |}«—» Monitoring Agents Power generator n
+Load ate" I ae i, Load
+Breaker PMU Electrical fault P Breaker
+‘Communication Agents
+LAN Attack
+Communication Link,
+Monitoring & Control Emergency Security Agents Response Agents Area Controller
+WAN Attack ‘N\
+“Cyber Layer
+Learning & Adaptation Agents. .
+Substation Controller 1 Substation Controller n
+Consumer Agents (CA)
+Consumer 1 Consumer n
+Fig. 1. A system model with smart grid layers, components, and multiple agents
+generation, load balancing, and fault.isolation strategies; Substation Controllers: Substation controllers oversee
+electricity distribution within substations and communicate with area controllers for coordinated operations;
+Consumer Agents (CA): Representing the grid’s end-users, these agents monitor consumer demand and provide
+feedback to optimize load distribution. The cyber layer not only facilitates seamless communication among agents
+but also monitors and mitigates potential cyber threats that can disrupt grid operations.
+3.0.3 Cross Layer Interactions. The interaction between the Physical Grid Layer and the Cyber Layer is crucial
+for the grid’s functionality. Communication links connect the two layers, enabling real-time data exchange and
+decision-making. For example, PMUs in the physical layer transmit electrical measurements to monitoring agents
+in the cyber layer, which analyze the data and issue corrective actions if anomalies are detected. Similarly, area
+controllers and learning agents in the cyber layer adapt grid operations based on real-time conditions in the
+physical layer. However, these interactions also expose the grid to vulnerabilities. LAN attacks can disrupt local
+communication among agents in the physical layer, while WAN attacks can compromise the decision-making
+processes in the cyber layer. These vulnerabilities necessitate robust security measures, including anomaly
+detection and risk-aware audit optimization.
+ACM Trans. Cyber-Phys. Syst.
+8 • Madhukrishna et al.
+3.1 Problem Formulation
+The objective of this research work is to develop a multi-objective framework for anomaly detection and audit
+optimization in smart grids. The framework should:
+(1) Detect anomalies in real-time using observed data (푋) relative to historical baselines (퐵).
+(2) Minimize the attack rate (푅푎푡푡푎푐푘 )- the proportion of agents flagged as anomalous.
+(3) Minimize the operational cost (퐶)—the total cost of audits and failure risks.
+This involves modeling the following key components mathematically:
+3.1.1 Problem Objectives.
+Objective 1: Minimize Attack Rate (푅푎푡푡푎푐푘 ): The attack rate (푅푎푡푡푎푐푘 ) quantifies the proportion of agents in
+a smart grid system that are flagged as anomalous due to deviations from expected behavior. It serves as an
+indicator of the overall health of the system and highlights the impact of potential cyber-physical anomalies. The
+attack rate is defined as:
+푅푎푡푡푎푐푘 =
+P푛
+푖=1 푎푖
+(푡)
+푛
+(1)
+Where 푛 is the total number of agents present in both physical and cyber layer, and 푎푖
+(푡) is the binary variable
+indicating whether agent 푖 is anomalous: 푎푖
+(푡) = (
+1; if 푆푖
+(푡) > 1(퐴푛표푚푎푙표푢푠)
+0; 푂푡ℎ푒푟푤푖푠푒
+Objective 2: Minimize Operational Cost (퐶): The operational cost (퐶) is the sum of audit cost (퐶푎) and frequency
+cost (퐶푓
+) weighted by the audit frequency (푓 ) and risk score (푅푡
+) which can be defined as:
+퐶 = 퐶푎 × 푓 + 퐶푓 ×
+푅(푡)
+푓
+(2)
+Here, 푅(푡) is the dynamic risk score which is defined as:
+푅(푡) = X푛
+푖=1
+푤푖 × 푎푖
+(푡) (3)
+With 푤푖
+is the criticality of agent i.
+Objective 3: Cross-layer Stability: The aim is to minimize the discrepancy between observed data (푋(푡)) and
+baseline data (퐵) across physical and cyber layers.
+푚푖푛(||푋(푡) − 퐵푋 ||+||푌(푡) − 퐵푌 ||) (4)
+Where:
+푋(푡): Observed physical metrics (e.g., voltage, current)
+푌(푡): Observed cyber metrics (e.g., latency, packet integrity)
+퐵푋, 퐵푌 : Baselines for physical and cyber metrics, respectively
+3.1.2 Variables and Definitions.
+(1) Observed Data (푋푡
+): 푋푡
+is the real-time measured data from 푛 agents, with 푑 metrics per agent which is
+defined as:
+푋푡 = [푥푖푗(푡)] (5)
+Here, 푥푖푗(푡) is the 푗
+푡ℎ metric of agent 푖 at time 푡
+(2) Baseline Data (퐵): 퐵 is the historical average data under normal conditions which is defined as:
+퐵 = [푏푖푗] (6)
+ACM Trans. Cyber-Phys. Syst.
+8 © Madhukrishna et al.
+3.1. Problem Formulation
+The objective of this research work is to develop a multi-objective framework for anomaly detection and audit
+optimization in smart grids. The framework should:
+(1) Detect anomalies in real-time using observed data (X) relative to historical baselines (B).
+(2) Minimize the attack rate (Rarrack)- the proportion of agents flagged as anomalous.
+(3) Minimize the operational cost (C)—the total cost of audits and failure risks.
+This involves modeling the following key components mathematically:
+3.1.1 Problem Objectives.
+Objective 1: Minimize Attack Rate (Ratrack): The attack rate (Ratrack) quantifies the proportion of agents in
+a smart grid system that are flagged as anomalous due to deviations from expected behaviorsIt serves as an
+indicator of the overall health of the system and highlights the impact of potential cyber-physical anomalies. The
+attack rate is defined as:
+n .
+Rattack = Per) (1)
+Where n is the total number of agents present in both physical and cyber layer, and a;(t) is the binary variable
+1; if S;(t) > 1(Anomalous)
+0; Otherwise
+Objective 2: Minimize Operational Cost (C): The operational cost (C)is the sum of audit cost (C,) and frequency
+cost (Cr) weighted by the audit frequency (f) and risk score (R;) which can be defined as:
+indicating whether agent i is anomalous: a;(t) =
+Rit C= Cx fr px (2)
+Here, R(t) is the dynamic risk score which is defined as:
+n
+R(t) = >); x a;(t) (3) i=l
+With w; is the criticality of agent i.
+Objective 3: Cross-layer Stability: The aim is to minimize the discrepancy between observed data (X(t)) and
+baseline data (B) across physical and cyber layers.
+min(||X(t) — Bx||+||¥(¢) — By|l) (4)
+Where:
+X(t): Observed physical metrics (e.g., voltage, current)
+Y(t): Observed cyber metrics (e.g., latency, packet integrity)
+Bx, By: Baselines for physical and cyber metrics, respectively
+3.1.2. Variables and Definitions.
+(1) Observed Data (X;): X; is the real-time measured data from n agents, with d metrics per agent which is
+defined as:
+X; = [xi;(t)] (5)
+Here, x;;(t) is the j'* metric of agent i at time t
+(2) Baseline Data (B): B is the historical average data under normal conditions which is defined as:
+B= [bij] (6)
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 9
+Here, 푏푖푗 is the baseline value of metric 푗 for agent 푖. The values are taken from the standard SCADA
+databases such as Rapid SCADA, SCADA-LTS, PySCADA.
+(3) Threshold Matrix (푇ℎ): 푇ℎ is the maximum permissible deviations from the baseline which is defined as:
+푇ℎ푖푗 = 푘 × 휎푖푗 (7)
+Here, 휎푖푗 is the standard deviation of 푥푖푗(푡). 푥푖푗(푡) for metric 푗 of agent 푖 at different time points 푡. For
+example 푥11(푡1) = 230푣, 푥11(푡2) = 231푣, ....푥11(푡30) = 229푣,.
+(4) Weight Vector (푤): 푤 represents the importance of each agent.
+푤 = [푤1,푤2,푤3, ....,푤푛], 푤푖 ≥ 0 (8)
+(5) Anomaly Score (푆푖
+(푡)): 푆푖
+(푡) quantifies deviation from expected behavior for agent 푖 which can be defined
+as:
+푆푖
+(푡) = 푤푖
+.
+vt
+1
+푑
+X
+푑
+푗=1
+(
+푥푖푗(푡) − 푏푖푗
+푇ℎ푖푗
+)
+2
+(9)
+(6) Audit Frequency (푓 ): 푓 represents the number of audits conducted per year such that 푓 ≥ 푓푚푖푛, where
+푓푚푖푛 is the regulatory minimum.
+3.1.3 Constraints.
+Physical Limits: Voltage (푉 , current 퐼, and frequency 푓 must lie within permissible ranges:
+푉푖
+(푡) ∈ [푉푚푖푛,푉푚푎푥 ], 퐼푖
+(푡) ∈ [0, 퐼푚푎푥 ], 푓 (푡) ∈ [푓푚푖푛, 푓푚푎푥 ]
+Audit Frequency Limits: The audit frequency must meet regulatory requirements:
+푓 ≥ 푓푚푖푛
+Communication Limits: Latency (퐿) and packet integrity (퐷) in the cyber layer must satisfy:
+퐿푖
+(푡) ≤ 퐿푚푎푥 , 퐷푖
+(푡) ≥ 퐷푚푖푛
+3.1.4 Problem Statement (Optimization Formulation). Communication Limits: The multi-objective optimization
+problem is to minimize both the attack rate and operational costs while ensuring cross-layer stability:
+푚푖푛(푅푎푡푡푎푐푘,퐶, ||푋(푡) − 퐵푋 ||+||푌(푡) − 퐵푌 ||)
+Subject to the following constraints:
+(1) Physical limits (푉 , 퐼, 푓 )
+(2) Communication constraints (퐿, 퐷)
+(3) Threshold and baseline deviations
+With the decision variables; anomaly indicators (푎푖
+(푡)) and audit frequency (푓 ). The parameters and notations
+used for the problem formulation and the proposed framework are shown in Table 2.
+3.2 Security Threats and Challenges
+The interconnected nature of the smart grid introduces several security challenges are as follows:
+(1) Physical Faults: Electrical faults such as overcurrent, voltage sag, and equipment failures can disrupt
+operations and damage infrastructure.
+(2) Cyber Threats: False data injection (FDI), communication jamming, and DoS attacks can compromise
+decision-making and grid stability.
+(3) Cross-Layer Vulnerabilities: Cyberattacks on the communication layer can trigger faults in the physical
+layer, leading to cascading failures.
+To address these challenges, a robust anomaly detection framework, coupled with optimized audit strategies, is
+essential to secure the grid against cyber-physical threats and ensure its continued stability and reliability.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 9
+Here, b;; is the baseline value of metric j for agent i. The values are taken from the standard SCADA
+databases such as Rapid SCADA, SCADA-LTS, PySCADA.
+(3) Threshold Matrix (Th): Th is the maximum permissible deviations from the baseline which is defined as:
+Thi =k x oi; (7)
+Here, oj; is the standard deviation of x;;(t). x;;(t) for metric j of agent i at different time points t. For
+example x11(t,) = 230, x11(t2) = 2314, ....x11(t30) = 229v,.
+(4) Weight Vector (w): w represents the importance of each agent.
+w = [w1, W2, W3, 5 Wl, wi > 0 (8)
+(5) Anomaly Score (S;(t)): S;(t) quantifies deviation from expected behavior for agent i which can be defined
+as:
+Wem yee Pilg (9)
+hij
+(6) Audit Frequency (f): f represents the number of audits conducted per year such that f > fmin, where
+fmin is the regulatory minimum.
+3.1.3. Constraints.
+physical Limits: vonage (V, current J, and frequency f must lie within permissible ranges:
+Audit Fr em Limits: The audit frequency must meet regulatory requirements:
+f 2 fmin
+Communication Limits: Latency (L) and packet integrity (D) in,the cyber layer must satisfy:
+L(t) < Lax; Dj(t) 2 Dyin
+3.1.4 Problem Statement (Optimization Formulation). Communication Limits: The multi-objective optimization
+problem is to minimize both the attack rate andoperational costs while ensuring cross-layer stability:
+min(Rattack: C; ||X(t) — Bx||+||¥(t) — By|I)
+Subject to the following constraints:
+(1) Physical limits (V, I, f)
+(2) Communication constraints (L, D)
+(3) Threshold and baseline deviations
+With the decision variables; anomaly indicators (a;(t)) and audit frequency (f). The parameters and notations
+used for the problem formulation and the proposed framework are shown in Table 2.
+3.2 Security Threats and Challenges
+The interconnected nature of the smart grid introduces several security challenges are as follows:
+(1) Physical Faults: Electrical faults such as overcurrent, voltage sag, and equipment failures can disrupt
+operations and damage infrastructure.
+(2) Cyber Threats: False data injection (FDI), communication jamming, and DoS attacks can compromise
+decision-making and grid stability.
+(3) Cross-Layer Vulnerabilities: Cyberattacks on the communication layer can trigger faults in the physical
+layer, leading to cascading failures.
+To address these challenges, a robust anomaly detection framework, coupled with optimized audit strategies, is
+essential to secure the grid against cyber-physical threats and ensure its continued stability and reliability.
+ACM Trans. Cyber-Phys. Syst.
+10 • Madhukrishna et al.
+Table 2. Notations used in the Problem Formulation and proposed AI-driven Audit Framework
+Notation Description
+푋(푡) Physical layer data matrix
+푌(푡) Cyber layer data matrix
+퐵푋 Baseline matrix for physical layer
+퐵푌 Baseline matrix for cyber layer
+푇ℎ Threshold matrix for anomaly detection
+푑 No. of metrics per agent
+푤 Weight matrix
+푅푎푡푡푎푐푘 Attack rate
+퐶 Operational cost
+푅푡 Risk score
+푓 Audit frequency
+퐶푎 Audit cost
+퐶푓 Frequency cost
+푎푖
+(푡) Anomaly indicator
+퐹퐷퐼 False data injection
+훼 Smoothing factor
+훽 Adjustment factor
+퐷푖푗(푡) Cumulative deviation
+휎푖푗(푡) Standard deviation
+퐵 Allocated total budget
+In the next section, we solved the formulated problem using Genetic Algorithm (GA) and Reinforcement
+Learning (RL).
+4 PROPOSED AI-DRIVEN AUDIT FRAMEWORK
+The proposed framework integrates AI-driven techniques to manage anomalies, reduce operational costs, and
+ensure resilience in MAS. Heuristic optimization technique Reinforcement Learning (RL), is employed to design
+an adaptable solution for real-time operations. The workflow of the proposed AI-driven Audit Framework is
+shown in Figure 2. The detailed explanation of the major five components of the framework are presented in the
+next subsections.
+4.1 Framework Components
+4.1.1 Data Collection. It involves gathering real-time data from the physical and cyber layers of the smart
+grid, ensuring the data is normalized, cleaned, and ready for downstream analysis like anomaly detection and
+behavior analysis. The data is collected in the form of physical layer matrix (푋(푡)), cyber layer matrix (푌(푡)),
+baseline metrics (퐵푋, 퐵푌 ), and threshold matrix (푇ℎ) for anomaly detection. The physical layer matrix (푋(푡))
+is the real-time measurements of voltage (푉 ), current (퐼), frequency (푓 푟) power load (푝) from sensors, PMUs,
+breakers, generators etc. 푋(푡) is presented as: 푋(푡)=
+
+
+
+
+
+
+
+
+
+푥11(푡), 푥12(푡)…푥1푑 (푡)
+푥21(푡), 푥22(푡)…푥2푑 (푡)
+.
+.
+.
+푥푛1(푡), 푥푛2(푡)…푥푛푑 (푡)
+
+
+
+
+
+
+
+
+
+, Where 푥푖푗(푡): value of metric 푗 for
+ACM Trans. Cyber-Phys. Syst.
+10 + Madhukrishna et al.
+Table 2. Notations used in the Problem Formulation and proposed Al-driven Audit Framework
+Notation | Description
+X(t) Physical layer data matrix
+Y(t) Cyber layer data matrix
+By Baseline matrix for physical layer
+By Baseline matrix for cyber layer
+Th Threshold matrix for anomaly detection
+d No. of metrics per agent
+w Weight matrix
+Rattack Attack rate
+Cc Operational cost
+R; Risk score
+f Audit frequency
+Ca Audit cost
+Cr Frequency cost
+a,(t) Anomaly indicator
+FDI False data injection
+a Smoothing factor
+B Adjustment factor
+Di;(t) Cumulative deviation
+oi; (t) Standard deviation
+B Allocated total budget
+In the next section, we solved the formulated problem using Genetic Algorithm (GA) and Reinforcement
+Learning (RL).
+4 PROPOSED AI-DRIVEN AUDIT FRAMEWORK
+The proposed framework integrates AI-driven techniques to manage anomalies, reduce operational costs, and
+ensure resilience in MAS. Heuristic optimization technique Reinforcement Learning (RL), is employed to design
+an adaptable solution for real-time operations. The workflow of the proposed AJ-driven Audit Framework is
+shown in Figure 2. The detailed explanation of the major five components of the framework are presented in the
+next subsections.
+4.1 Framework Components
+4.1.1 Data Collection. It involves gathering real-time data from the physical and cyber layers of the smart
+grid, ensuring the data is normalized, cleaned, and ready for downstream analysis like anomaly detection and
+behavior analysis. The data is collected in the form of physical layer matrix (X(t)), cyber layer matrix (Y(t)),
+baseline metrics (Bx, By), and threshold matrix (Th) for anomaly detection. The physical layer matrix (X(t))
+is the real-time measurements of voltage (V), current (I), frequency (fr) power load (p) from sensors, PMUs,
+X11(t), X12(t)...x1a(t)
+X21 (t), X22(t)..-X2a(t) breakers, generators etc. X(t) is presented as: X(t)= . , Where x;;(t): value of metric j for
+Xn1(t),Xna(t).-Xna(t)
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 11
+Fig. 2. Workflow of Proposed AI-driven Audit Framework
+agent 푖 at time 푡, 푛: number of agents, 푑: number of metrics per agent. The cyber data matrix 푌(푡) is presented as:
+푋(푡)=
+
+
+
+
+
+
+
+
+
+푦11(푡), 푦12(푡)…푦1푚(푡)
+푥21(푡), 푥22(푡)…푥2푚(푡)
+.
+.
+.
+푥푛1(푡), 푥푛2(푡)…푥푛푚(푡)
+
+
+
+
+
+
+
+
+
+, Where 푦푖푗(푡): value of cyber metric 푗 for agent 푖 at time 푡, 푛: number of agents, 푚:
+number of cyber metrics per agent. After the data has been collected, 푋(푡) and 푌(푡) will be preprocessed to remove
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits
+DATA COLLECTION
+(Physical metrics *,
+Cyber metrics Y)
+|
+ANOMALY DETECTION
+(Compute $,(1), Classify
+anomalies)
+i
+BEHAVIOR ANALYSIS
+(Refine baselines B;
+Adjust threshold.th)
+y
+AUDIT SCHEDULING
+(Optimize f, Minimize C)
+\
+RESPONSE
+MECHANISM (Mitigate
+anomalies, Automate
+actions)
+Fig. 2. Workflow of Proposed Al-driven Audit Framework Refinement of X, ¥
+11
+agent i at time f, n: number of agents, d: number of metrics per agent. The cyber data matrix Y(t) is presented as:
+yii(t), yr2o(t)..-Y1m(t)
+X21(t), X22(t)...X2m(t)
+Xni(t), Xn2(t).-.Xnm(t)
+number of cyber metrics per agent. After the data has been collected, X(t) and Y(t) will be preprocessed to remove
+ACM Trans. Cyber-Phys. Syst.
+, Where y;;(t): value of cyber metric j for agent i at time t, n: number of agents, m:
+12 • Madhukrishna et al.
+random noise using low-pass filter and is denoted as 푋ˆ(푡) and 푌ˆ(푡). The preprocessed data is normalized to scale
+the metrics to consistent range and is denoted as 푋¤
+(푡) and 푌¤
+(푡). 퐵푋 represents the normal operating conditions of
+each metric in the physical baseline whose structure can be presented as: 퐵푋 =
+
+
+
+
+
+
+
+
+
+푏11, 푏12…푏1푑
+푏21, 푏22…푏2푑
+.
+.
+.
+푏푛1, 푏푛2…푏푛푑
+
+
+
+
+
+
+
+
+
+=
+
+
+
+
+
+
+
+
+
+
+퐵퐺
+퐵퐷
+퐵퐶
+퐵푆
+퐵푆푒푐
+
+
+
+
+
+
+
+
+
+
+,
+Where 푏푖푗 is mean of metric 푗 for agent 푖. 퐵퐺, 퐵퐷, 퐵퐶, 퐵푆, 퐵푆푒푐 are the various agent’s baseline matrixes such as
+generation agent, distribution agent, consumer agent, storage agent, and security agent respectively. The metrics
+used in 퐵퐺 are current (퐼), voltage (푉 ), power (푃), response time (RT), communication frequency (퐶퐹 ). The metrics
+used in 퐵퐶 are energy consumption (퐸퐶),demand response frequency (퐹푅), communication frequency(퐶퐹 ), and
+peak consumption time (푃퐶푇 ). The metrics used in 퐵퐷 are load distribution (퐿퐷), fault detection time (퐹퐷푇 ),
+communication latency (퐶퐿), and energy loss (퐸퐿). The metrics used in 퐵푆 are charging rate (퐶푅), discharging
+rate (퐷푅), state of charge (푆표퐶), communication latency (퐶퐿), and idle time (퐼푇 ). The metrics used in 퐵푠푒푐 are
+response time (푅푇 ), communication integrity (퐶퐼), log update frequency (퐿푈 퐹 ), and false positive rate (퐹푃푅). 퐵푌
+is the cyber baseline whose structure is similar as 퐵푋 and contains the metrics of the cyber agents. Threshold
+matrix 푇ℎ defines permissible deviations from baseline which is represented as: 푇ℎ=
+
+
+
+
+
+
+
+
+
+푇ℎ11,푇ℎ12…푇ℎ1푑
+푇ℎ21,푇ℎ22…푇ℎ2푑
+.
+.
+.
+푇ℎ푛1,푇ℎ푛2…푇ℎ푛푑
+
+
+
+
+
+
+
+
+
+, where
+푇ℎ푖푗 = 푘 × 휎푖푗 and 푘 being an user-defined scailing factor.
+4.1.2 Anomaly Detection. Anomaly detection is a critical component of the AI-driven audit framework. It
+identifies deviations from expected behavior in the physical and cyber metrics of the smart grid’s agents. This
+component uses mathematical models to compute anomaly scores and classify agents as normal or anomalous.
+The anomaly score is calculated using Eq. (9) and is a weighted, normalized aggregation of deviations across all
+metrics for agent 푖. Agents are classified as anomalous or normal based on their anomaly scores. A threshold of
+푆푖
+(푡)=1 ensures that an agent is flagged only when its deviations exceed the acceptable range defined by 푇ℎ. The
+anomaly detection module feeds its output to the next component i.e., behavior analysis which is explained in
+the next subsection.
+4.1.3 Behavior Analysis. Behavior analysis plays a vital role in ensuring the adaptability of the smart grid system
+by analyzing agents’ behavior over time. It refines baselines, adjusts thresholds, and identifies long-term trends to
+enhance anomaly detection and decision-making. This component ensures that the framework adapts dynamically
+to evolving conditions. The primary objective of behavior analysis component is to (i) refine the baselines, i.e.,
+dynamically update the baselines (퐵푋푎푛푑퐵푌 ) based on recent observations, (ii) adjust the threshold (푇ℎ) to reduce
+false positives and negatives in anomaly detection, (iii) analyze the behavior/trend i.e., identify behavioral patterns
+and long-term deviations for predictive maintenance and anomaly anticipation, (iv) use adaptive learning to
+optimize thresholds and refine behavior models. The procedure to calculate the above 4 objectives are as follows:
+(1) Baseline refinement: Baseline refinement dynamically updates the normal operating conditions (퐵푋 , 퐵푌 )
+for each metric of every agent. It ensures that the baselines reflect the latest trends and observations
+while considering historical data. The refinement is essential to adapt baselines to reflect evolving grid
+conditions and to minimize the impact of outdated baselines on anomaly detection. The refined baseline
+푏
+0
+푖푗 for metric 푗 of agent 푖 can be calculated as:
+푏
+‘
+푖푗 = (1 − 훼).푏푖푗 + 훼.푥푖푗(푡) (10)
+ACM Trans. Cyber-Phys. Syst.
+12 + Madhukrishna et al.
+random noise using low-pass filter and is denoted as X (t) and Y(t). The preprocessed data is normalized to scale
+the metrics to consistent range and is denoted as X(t) and Y(t). Bx represents the normal operating conditions of
+bi, bi2...bia] | Bo
+bat, b22...b2d Bp . =| Be |,
+: Bs
+bnis bno---Dna Bsee
+Where b;; is mean of metric j for agent i. Bg, Bp, Bc, Bs, Bsec are the various agent’s baseline matrixes such as
+generation agent, distribution agent, consumer agent, storage agent, and security agent respectively. The metrics
+used in Bg are current (J), voltage (V), power (P), response time (RT), communication frequency (CF). The metrics
+used in Bc are energy consumption (EC),demand response frequency (FR), communication frequency(CF), and
+peak consumption time (PCT). The metrics used in Bp are load distribution (LD), fault detection time (FDT),
+communication latency (CL), and energy loss (EL). The metrics used in Bs are charging rate (CR), discharging
+rate (DR), state of charge (SoC), communication latency (CL), and idle time (IT). The metrics usedin Bye, are
+response time (RT), communication integrity (CI), log update frequency (LUF), and false positive rate (FPR). By
+is the cyber baseline whose structure is similar as By and contains the metrics of the cyber agents. Threshold
+Thy, Thy... Thig
+Tho, Tho2...Thea
+each metric in the physical baseline whose structure can be presented as: By=
+matrix Th defines permissible deviations from baseline which is represented as: Th= , where
+Thin, Thn2--T And
+Thy; = k X oj; and k being an user-defined scailing factor.
+4.1.2 Anomaly Detection. Anomaly detection is a critical component of the Al-driven audit framework. It
+identifies deviations from expected behavior in the physical.and cyber metrics of the smart grid’s agents. This
+component uses mathematical models to compute anomaly scores and classify agents as normal or anomalous.
+The anomaly score is calculated using Eq(9) and is a.weighted, normalized aggregation of deviations across all
+metrics for agent i. Agents are classified as anomalous or normal based on their anomaly scores. A threshold of
+S;(t)=1 ensures that an agent is flagged only when its’deviations exceed the acceptable range defined by Th. The
+anomaly detection module feeds its output to the next component i.e., behavior analysis which is explained in
+the next subsection.
+4.1.3. Behavior Analysis. Behavior analysis plays a vital role in ensuring the adaptability of the smart grid system
+by analyzing agents’ behavior over time. It refines baselines, adjusts thresholds, and identifies long-term trends to
+enhance anomaly detection and decision-making. This component ensures that the framework adapts dynamically
+to evolving conditions. The primary objective of behavior analysis component is to (i) refine the baselines, i.e.,
+dynamically, update the baselines (Bx andBy) based on recent observations, (ii) adjust the threshold (Th) to reduce
+false positives and negatives in anomaly detection, (iii) analyze the behavior/trend i.e., identify behavioral patterns
+and long-term deviations for predictive maintenance and anomaly anticipation, (iv) use adaptive learning to
+optimize thresholds and refine behavior models. The procedure to calculate the above 4 objectives are as follows:
+(1) Baseline refinement: Baseline refinement dynamically updates the normal operating conditions (Bx, By)
+for each metric of every agent. It ensures that the baselines reflect the latest trends and observations
+while considering historical data. The refinement is essential to adapt baselines to reflect evolving grid
+conditions and to minimize the impact of outdated baselines on anomaly detection. The refined baseline
+b, ; for metric j of agent i can be calculated as:
+bj; = (1 — @—).bij + a.xi;(t) (10) L
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 13
+Where 훼 is smoothing factor (0 < 훼 < 1), 푏푖푗 is previous baseline for metric 푗, and 푥푖푗(푡) is
+the current observed value for metric 푗. The value of 훼 can be dynamically adjusted as: 훼 = (
+훼ℎ푖푔ℎ; if 푥푖푗(푡) is in normal range
+훼푙표푤; if 푥푖푗(푡) is an outlier
+Here, 훼ℎ푖푔ℎ leads to rapid adaptation, suitable for addressing anomalies. A higher value ( 0.5 to 0.9) is used
+when the system detects significant anomalies or rapid changes in metrics. This ensures that the baseline
+quickly adapts to the new conditions. 훼푙표푤 for stable, long-term consistency. A lower value (0.01 to 0.3) is
+used when the system observes stable conditions. This ensures that the baseline remains anchored to the
+historical trend and is not overly influenced by transient noise or outliers.
+(2) Threshold Adjustment: Threshold adjustment dynamically modifies the permissible deviation limits (푇ℎ)
+for each metric based on real-time trends and historical patterns. This ensures the system remains sensitive
+to true anomalies while reducing false positives and negatives. It balances sensitivity and robustness in
+anomaly detection and adapts thresholds to handle changing operational ranges. The refined threshold
+metric 푇ℎ0
+푖푗 for metric 푗 of agent 푖 can be calculated as:
+푇ℎ0
+푖푗 = 푇ℎ푖푗 + 훽.훿푥푖푗(푡) (11)
+Here, 푇ℎ푖푗 is the current threshold for metric 푗, 훿푥푖푗(푡) = 푥푖푗(푡) - 푏푖푗 ; deviation from the baseline, and 훽 is
+the adjustment factor controlling the rate of change. We have considered the range of 훽 from 0.01 to 1.0
+depending on the system dynamics and desired sensitivity. The range 0.01 to 0.3 is considered for stable
+systems (lightly loaded grids), the range 0.5 to 1.0 is considered for dynamic systems (rapidly changing
+grids).
+(3) Trend Analysis: Trend analysis identifies long-term patterns and behavioral shifts in agent operations. It
+provides insights into potential risks, helps predict future anomalies, and prioritizes audit scheduling.
+It basically identifies agents exhibiting unusual long-term behavior and predicts future risks based on
+cumulative deviations and trends. The cumulative deviation from the baseline over a period of T can be
+calculated as:
+퐷푖푗(푡) = X
+푇
+푗=1
+|푥푖푗(푡) − 푏푖푗 | (12)
+Groups can be formed considering the similar pattern of cumulative deviations of multiple agents to
+understand behavioral shifts over time and to anticipate failures or evolving anomalies in the grid systems.
+We have used K-means clustering to group agents with similar behavioral patterns based on feature vector
+푏푖푗, 휎푖푗, 퐷푖푗(푡) and can be represented as 퐹푖 = [푏푖푗, 휎푖푗, 퐷푖푗(푡)].
+(4) Reinforcement Learning for Adaptive Behavior Analysis: Reinforcement learning (RL) is used to learn
+optimal policies for refining baselines and thresholds. The RL agent learns from feedback to improve
+anomaly detection accuracy and reduce operational costs. The major objective is to minimize false positives
+and negatives in anomaly detection and the goal is to find optimized policies for baseline and threshold
+updates.
+Mathematical Explanation:
+(a) State (푠푡
+): It represents the current system state, including anomaly rates, deviations, and audit results
+and can be expressed as: 푠푡 = {푆푖
+(푡), 훿푥푖푗(푡), 푎푖
+(푡)}.
+(b) Action (푎푡
+): Actions modify baselines or thresholds as 푎푡 ∈ {퐼푛푐푟푒푎푠푒, 퐷푒푐푟푒푎푠푒, 푀푎푖푛푡푎푖푛}
+(c) Reward (푅푡
+): Reward function balances false positives and negatives by 푅푡 = −(휆1.퐹푎푙푠푒푃표푠푖푡푖푣푒푠 +
+휆2.퐹푎푙푠푒푁 푒푔푎푡푖푣푒푠), where 휆1 and 휆2 are weighting factors.
+(d) Policy Update: The action-value (Q-value), represents the expected cumulative reward that an agent
+can obtain by taking a specific action in a given state and following an optimal policy thereafter.The
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 13
+Where a@ is smoothing factor (0 < @ <_ 1), bj; is previous baseline for metric j, and x;;(t) is
+the current observed value for metric j. The value of @ can be dynamically adjusted as: a =
+@nigh; if x;;(t) is in normal range
+ow; if x;;(t) is an outlier
+Here, apigh leads to rapid adaptation, suitable for addressing anomalies. A higher value (0.5 to 0.9) is used
+when the system detects significant anomalies or rapid changes in metrics. This ensures that the baseline
+quickly adapts to the new conditions. a9 for stable, long-term consistency. A lower value (0.01 to 0.3) is
+used when the system observes stable conditions. This ensures that the baseline remains anchored to the
+historical trend and is not overly influenced by transient noise or outliers.
+Threshold Adjustment: Threshold adjustment dynamically modifies the permissible deviation limits (Th)
+for each metric based on real-time trends and historical patterns. This ensures the system remains sensitive
+to true anomalies while reducing false positives and negatives. It balances sensitivity and robustness in
+anomaly detection and adapts thresholds to handle changing operational ranges. The refined threshold
+metric Th, ; for metric j of agent i can be calculated as:
+Th,; = Thi + B.dxij(t) (11)
+Here, Th;; is the current threshold for metric j, 6x;;(t) = x;;(t) - bij; deviation from the baseline, and f is
+the adjustment factor controlling the rate of change. We have considered the range of f from 0.01 to 1.0
+depending on the system dynamics and desired sensitivity. The range 0.01 to 0.3 is considered for stable
+systems (lightly loaded grids), the range 0.5 to 1.0 is considered for dynamic systems (rapidly changing
+grids).
+Trend Analysis: Trend analysis identifies long-term patterns and behavioral shifts in agent operations. It
+provides insights into potential risks, helps predict future anomalies, and prioritizes audit scheduling.
+It basically identifies agents exhibiting unusual long-term behavior and predicts future risks based on
+cumulative deviations and trends. The cumulative deviation from the baseline over a period of T can be
+calculated as: T
+Dig(t) = >) \xij(t) — bij (12) j=l
+Groups can be formed,considering the similar pattern of cumulative deviations of multiple agents to
+understand behavioral shifts over time and to anticipate failures or evolving anomalies in the grid systems.
+We have used K-means clustering to group agents with similar behavioral patterns based on feature vector
+bij; Oij, Di;(t) and canbe represented as F; = [bij, Oij, Dj;(t)).
+Reinforcement Learning for Adaptive Behavior Analysis: Reinforcement learning (RL) is used to learn
+optimal policies for refining baselines and thresholds. The RL agent learns from feedback to improve
+anomaly detection accuracy and reduce operational costs. The major objective is to minimize false positives
+and negatives in anomaly detection and the goal is to find optimized policies for baseline and threshold
+updates.
+Mathematical Explanation:
+(a) State (s;): It represents the current system state, including anomaly rates, deviations, and audit results
+and can be expressed as: s; = {S;(t), 6x;;(t), ai(t)}.
+(b) Action (a;): Actions modify baselines or thresholds as a; € {Increase, Decrease, Maintain}
+(c) Reward (R;): Reward function balances false positives and negatives by R; = —(A;.FalsePositives +
+A2.FalseNegatives), where A, and Az are weighting factors.
+(d) Policy Update: The action-value (Q-value), represents the expected cumulative reward that an agent
+can obtain by taking a specific action in a given state and following an optimal policy thereafter. The
+ACM Trans. Cyber-Phys. Syst.
+14 • Madhukrishna et al.
+Q-value for each state-action pair is updated using the Bellman equation presented as follows:
+푄(푠푡
+, 푎푡
+) = 푄(푠푡
+, 푎푡
+) + 훼.[푅푡 + 훾 . max
+푎
+0
+푄(푠푡+1, 푎0
+) − 푄(푠푡
+, 푎푡
+)] (13)
+Here, 푄(푠푡
+, 푎푡
+) is the Q-value for state-action pair, 훼 is learning rate, 훾 is discount factor, and 푎
+0
+is the
+action that maximizes 푄(푠푡+1, 푎0
+). In the next step the updated optimal policy is used to dynamically
+allocate audit resources that minimizes audit costs while mitigating risks.
+(e) Convergence Criteria: The Q-learning-based audit policy converges when the expected reward 퐸[푅]
+stabilizes over 10 consecutive episodes, with audit coverage and accuracy thresholds fixed at > 90%.
+4.1.4 Audit Scheduling. Audit scheduling in the proposed AI-driven framework ensures that audit tasks are
+dynamically optimized to balance operational costs, detect anomalies effectively, and enhance system security.
+This component prioritizes agents or subsystems based on their anomaly likelihood and criticality, dynamically
+determining the frequency and allocation of audits. The goal is to minimize the operational cost (퐶) as mentioned
+in Eq. (2) with the following constraints:
+(1) Budget Constraint: Total cost should not exceed the available budget: P푛
+푖=1 퐶푎.푓푖 ≤ 퐵, where 퐵 is the
+allocated audit budget.
+(2) Minimum Frequency: Each agent should have at least one audit during a time period (푓푖 > 푓푚푖푛∀푖).
+(3) Total Audit Frequency: Number of audits should not exceed the maximum allowable limit (P푛
+푖=1 푓푖 ≤ 퐹 ).
+To achieve the objective mentioned in Eq. (2), we have used the RL agents who interact with the environment,
+receive feedback in the form of rewards, and improve its scheduling decisions over time. This process ensures
+that audit schedules are adaptive, cost-efficient, and effective in mitigating risks. The RL agent selects actions
+(adjusting audit frequencies) using a policy derived from 휀-greedy exploration (used to balance the trade-off
+between exploration and exploitation) and feedback-driven reward updates. The reward function penalizes
+high audit costs and failure risks, guiding the agent to minimize the total cost. Q-values are updated iteratively
+using the Bellman equation (Eq. (13)), and a target network ensures stability during learning. This mechanism
+dynamically adapts the audit schedule to evolving conditions while optimizing resource allocation and risk
+mitigation.
+4.1.5 Response Mechanism. The response mechanism in an AI-driven audit framework is responsible for taking
+appropriate actions when anomalies or risks are detected during audits. It ensures system stability by isolating
+problematic agents, mitigating potential failures, and triggering follow-up procedures. This mechanism operates
+in real-time and integrates with other components like anomaly detection and audit scheduling. The detected
+anomalies are classified according to their severity i.e., critical, high, medium, and low. The severity score 푆푒푖 for
+agent 푖 can be calculated as:
+푆푒푖 = 푤푖푚푝푎푐푡 × Impact Factor + 푤푙푖푘푒푙푖ℎ표표푑 × Likelihood of Failure (14)
+After calculation of severity score 푆푒푖
+, the response level is assigned as follows:
+Response Level =
+
+
+
+퐿표푤; if Se_i< Se_low
+푀푒푑푖푢푚; if Se_low< Se_i ≤ Se_medium
+퐻푖푔ℎ; if Se_medium< Se_i ≤ Se_high
+퐶푟푖푡푖푐푎푙; if Se_i> Se_high
+Afterward, the mitigation action 퐴 for each response level 퐿 is decided as a function of 퐿, anomaly type and
+agent criticality A=f(L, Anomaly type, Agent Criticality). The action 퐴 can be as follows:
+퐴 =
+(
+Log anomaly; if A_Low
+Isolate agent OR Notify Operator; if 퐴ℎ푖푔ℎ
+ACM Trans. Cyber-Phys. Syst.
+14. + Madhukrishna et al.
+Q-value for each state-action pair is updated using the Bellman equation presented as follows:
+Q(sz, at) = O(sz, ar) + a.[ Ry+ y. max O(S¢41, a’) — O(s;, az)] (13)
+Here, Q(s;, a;) is the Q-value for state-action pair, a is learning rate, y is discount factor, and a’ is the
+action that maximizes Q(s;41, a’). In the next step the updated optimal policy is used to dynamically
+allocate audit resources that minimizes audit costs while mitigating risks.
+(e) Convergence Criteria: The Q-learning-based audit policy converges when the expected reward E[R]
+stabilizes over 10 consecutive episodes, with audit coverage and accuracy thresholds fixed at > 90%.
+4.1.4 Audit Scheduling. Audit scheduling in the proposed Al-driven framework ensures that,audit tasks are
+dynamically optimized to balance operational costs, detect anomalies effectively, and enhance system security.
+This component prioritizes agents or subsystems based on their anomaly likelihood and criticality, dynamically
+determining the frequency and allocation of audits. The goal is to minimize the operational cost (C) as mentioned
+in Eq. (2) with the following constraints:
+(1) Budget Constraint: Total cost should not exceed the available budget: 31? , Cq.fi < B;,where B is the
+allocated audit budget.
+(2) Minimum Frequency: Each agent should have at least one audit during a time period (fj > fminVi).
+(3) Total Audit Frequency: Number of audits should not exceed the maximum allowable limit (7, fi < F).
+To achieve the objective mentioned in Eq. (2), we have used the RL agents,who interact with the environment,
+receive feedback in the form of rewards, and improve its scheduling decisions over time. This process ensures
+that audit schedules are adaptive, cost-efficient, and effective in mitigating risks. The RL agent selects actions
+(adjusting audit frequencies) using a policy derived from €-greedy, exploration (used to balance the trade-off
+between exploration and exploitation) and feedback-driven reward updates. The reward function penalizes
+high audit costs and failure risks, guiding the agent to minimize the total cost. Q-values are updated iteratively
+using the Bellman equation (Eq. (13)), and a target network ensures stability during learning. This mechanism
+dynamically adapts the audit schedule to evolving conditions while optimizing resource allocation and risk
+mitigation.
+4.1.5 Response Mechanism. The response mechanism in an Al-driven audit framework is responsible for taking
+appropriate actions when anomalies or risks are detected during audits. It ensures system stability by isolating
+problematic agents, mitigating potential failures, and triggering follow-up procedures. This mechanism operates
+in real-time and integrates;with other components like anomaly detection and audit scheduling. The detected
+anomalies are classified according to their severity ie., critical, high, medium, and low. The severity score Se; for
+agent i can be calculated as:
+S€i = Wimpact X Impact Factor + wyikelihood X Likelihood of Failure (14)
+After calculation of severity score Se;, the response level is assigned as follows:
+Low; if Se_i< Se _low
+Medium; if Se_low< Se_i < Se_medium Response Level = ; ; ; ; } High; if Se_medium< Se_i < Se_high
+Critical; if Se_i> Se_high
+Afterward, the mitigation action A for each response level L is decided as a function of L, anomaly type and
+agent criticality A=f(L, Anomaly type, Agent Criticality). The action A can be as follows:
+_ Log anomaly; if A_Low
+Isolate agent OR Notify Operator; if Anigh
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 15
+Depending on the mitigation action, the new feedback is generated and the baseline metrics are updated using
+Eq.10, and accordingly the audit scheduling is refined. The Impact Factorand Likelihood of Failure in Eq.14 are
+calculated as follows:
+Impact Factor푖 =
+Impact Value푖
+푚푎푥(Impact Values)
+(15)
+퐿푖푘푒푙푖ℎ표표푑푖 =
+P푇
+푡=1 푆푖
+(푡)
+푇
+(16)
+Where 푇 is the observation period and the potential impact value for different agents are mentioned in Table 3.
+The next subsection describes the adaptability of the proposed framework to the Multi-Agent Systems (MAS).
+Table 3. Example of Impact Value Ranges
+Category Example Event Impact Value Range
+System Criticality Outage of power generator 5–10
+Performance Degradation
+Reduced transmission capacity
+of a line
+1–5
+Economic Impact Financial losses due to equipment failure
+10, 0001, 000, 000
+Safety and Security Risk to personnel or environment
+1–3
+Cascading Failure Regional blackout caused by
+substation
+10–50 (dependent units)
+4.2 Adaptability to MAS Models
+The proposed AI-driven audit framework is highly adaptable to Multi-Agent Systems (MAS) due to its modular,
+decentralized, and scalable design. MAS typically consists of distributed, autonomous agents that interact to
+achieve system-wide goals. The framework’s components—data collection, audit scheduling, anomaly detection,
+behavior analysis, and response mechanism—can seamlessly integrate into MAS by leveraging agent-specific
+parameters and interactions. We are explaining the adaptability of the framework to MAS model in the next
+subsection through a case study:
+4.2.1 Case Study: Smart Grid MAS. Scenario: The agents in the smart grid system include:
+(1) Power Generators (Agent Type 1): Supply electricity to the grid.
+(2) PMUs (Phasor Measurement Units) (Agent Type 2): Monitor grid parameters like voltage and current.
+(3) Breakers (Agent Type 3): Protect equipment by isolating faulty components.
+(4) Substation Controllers (Agent Type 4): Manage regional grids by coordinating with generators and PMUs.
+Problem: The system needs to:
+(1) Dynamically schedule audits to minimize costs and reduce risks.
+(2) Detect and respond to anomalies (e.g., overloading, equipment failure) efficiently.
+(3) Adapt to changing grid conditions and ensure uninterrupted power supply.
+How the Proposed Framework Operates?
+(1) Data Collection: Each agent collects local data and computes relevant metrics as follows; The Power
+generators measure power output and capacity utilization. The PMUs collect real-time voltage and current
+readings. The breakers monitor fault events and operating status, and the substation controllers aggregate
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits +» 15
+Depending on the mitigation action, the new feedback is generated and the baseline metrics are updated using
+Eq.10, and accordingly the audit scheduling is refined. The Impact Factorand Likelihood of Failure in Eq.14 are
+calculated as follows: Impact Value, I t Factor, =
+°
+mpact Factor; max(Impact Values) " 74 Silt Likelihood; = Fei 50
+Where T is the observation period and the potential impact value for different agents are mentioned in Table " 3.
+The next subsection describes the adaptability of the proposed framework to the Multi-Agent Systems (MAS).
+Table 3. Example of Impact Value Ranges
+Category Example Event Impact Value Range
+System Criticality Outage of power generator 5-10
+Performance Degrada- | Reduced transmission capacity | 1-5
+tion of a line
+Economic Impact Financial losses due to equip- | 10,0001, 000, 000
+ment failure
+Safety and Security Risk to personnel or environ- | 1=3
+ment
+Cascading Failure Regional blackout caused: by | 10-50 (dependent units)
+substation
+4.2 Adaptability to MAS Models
+The proposed Al-driven audit framework is highly adaptable to Multi-Agent Systems (MAS) due to its modular,
+decentralized, and scalable design. MAS typically. consists of distributed, autonomous agents that interact to
+achieve system-wide goals. The framework’s components—data collection, audit scheduling, anomaly detection,
+behavior analysis, and response mechanism—can seamlessly integrate into MAS by leveraging agent-specific
+parameters and interactions. We are explaining the adaptability of the framework to MAS model in the next
+subsection through a case study:
+4.2.1 Case Study: Smart GridMAS. Scenario: The agents in the smart grid system include:
+(1) Power Generators (Agent Type 1): Supply electricity to the grid.
+(2) PMUs (Phasor Measurement Units) (Agent Type 2): Monitor grid parameters like voltage and current.
+(3) Breakers (Agent Type 3): Protect equipment by isolating faulty components.
+(4) Substation Controllers (Agent Type 4): Manage regional grids by coordinating with generators and PMUs.
+Problem: The system needs to:
+(1) Dynamically schedule audits to minimize costs and reduce risks.
+(2) Detect and respond to anomalies (e.g., overloading, equipment failure) efficiently.
+(3) Adapt to changing grid conditions and ensure uninterrupted power supply.
+How the Proposed Framework Operates?
+(1) Data Collection: Each agent collects local data and computes relevant metrics as follows; The Power
+generators measure power output and capacity utilization. The PMUs collect real-time voltage and current
+readings. The breakers monitor fault events and operating status, and the substation controllers aggregate
+ACM Trans. Cyber-Phys. Syst.
+16 • Madhukrishna et al.
+data from connected agents. For example; PMU 퐴2 measure voltage as 240V and current as 100A. both
+the metrics are used to calculate the power delivered as 240× 100=24kW.
+(2) Anomaly Detection: Agents use the anomaly detection model to identify unusual patterns in their metrics.
+For example; PMU 퐴2 detects a sudden increase in current such as; observed current= 150A wherein
+Threshold= 120A. Here, an anomaly is flagged since 훿푐푢푟푟푒푛푡= 150-120=30A.
+(3) Behavior Analysis: The proposed framework clusters agents with similar behavior for collaborative
+mitigation. Multiple PMUs in a region report anomalies indicating high load followed by the substation
+controller identifies a regional demand surge and informs neighboring regions to supply additional power.
+For example; PMU 퐴2 and PMU 퐴3 detect similar voltage deviations. A cluster is formed, and their behavior
+is analyzed together such as Cluster Trend: Voltage Decreasing at10V/min.
+(4) Audit Scheduling: Each agent is assigned a risk score (푅푖
+) based on impact Factor (푤푖
+: how critical the
+agent is to the grid). For example; generator 퐴1 has impact factor 7 (highly critical generator), then the
+dynamic risk score is calculated as 7 using Eq:3. Based on the dynamic risk score, the audit scheduler
+prioritizes Generator 퐴1 for more frequent inspections.
+(5) Response Mechanism: Based on anomaly severity, agents execute mitigation actions such as;low severity->
+PMU logs the anomaly for later analysis, medium severity-> The substation controller redistributes load
+among generators, high severity-> breaker 퐴3 isolates the faulty line to prevent cascading failures, critical
+severity-> generator 퐴1 is shut down immediately to prevent damage.
+The proposed framework is adapted to the MAS environment through the following three key components; (1)
+decentralized operations: where each agent (PMU, breaker, generator) operates autonomously, using local data
+and models, (2) collaboration: all agents communicate through the substation controller, ensuring coordinated
+actions, and (3) dynamic adjustments: the risk scores, thresholds, and audit schedules are updated in real-time
+based on system behavior.
+5 METHODOLOGY
+In this section, our focus is mainly on the details of the AI techniques used in the proposed framework and how
+it optimizes the audit frequency. In addition, we have also discussed the simulation environments used for the
+experimentation and the evaluation metrices.
+5.1 AI Techniques Used
+We have used Reinforcement Learning (RL) and clustering techniques for adaptive behavior analysis and gradientbased optimization for audit scheduling. The detailed mechanism of RL is presented in Section 4.1.3 (4. Reinforcement Learning for Adaptive Behavior Analysis). We have used K-means clustering in the Section 4.1.3
+(3. Trend Analysis) to group agents with similar trends, facilitating collaborative audits or mitigation. Finally,
+gradient-based optimization is employed to minimize the total cost of audits and failures. The cost function
+is optimized under constraints such as audit budget and minimum frequency requirements. Gradients guide
+adjustments to audit schedules, ensuring near-optimal solutions even for large, complex systems satisfying the
+constraints mentioned in Section 4.1.4. Also in this module, RL dynamically adapts audit scheduling based on
+evolving agent behaviors and system conditions. The summary of the used AI techniques are presented in Table
+4.
+Justification for Using Reinforcement Learning (RL):
+Reinforcement Learning (RL) was selected due to its ability to handle dynamic decision-making under uncertainty
+and temporal dependencies in audit actions across multi-agent systems. Unlike supervised models that rely
+on fixed input-output mappings, RL optimizes audit strategies through trial-and-error interaction with the
+environment, making it ideal for real-time, adaptive audit scheduling in unpredictable smart grid conditions. In
+ACM Trans. Cyber-Phys. Syst.
+16 « Madhukrishna et al.
+data from connected agents. For example; PMU A2 measure voltage as 240V and current as 100A. both
+the metrics are used to calculate the power delivered as 240x 100=24kW.
+(2) Anomaly Detection: Agents use the anomaly detection model to identify unusual patterns in their metrics.
+For example; PMU Ap: detects a sudden increase in current such as; observed current= 150A wherein
+Threshold= 120A. Here, an anomaly is flagged since dcurrent= 150-120=30A.
+(3) Behavior Analysis: The proposed framework clusters agents with similar behavior for collaborative
+mitigation. Multiple PMUs in a region report anomalies indicating high load followed by the substation
+controller identifies a regional demand surge and informs neighboring regions to supply additional power.
+For example; PMU Az and PMU As detect similar voltage deviations. A cluster is formed, and their behavior
+is analyzed together such as Cluster Trend: Voltage Decreasing at10V/min.
+(4) Audit Scheduling: Each agent is assigned a risk score (R;) based on impact Factor (w;: how critical the
+agent is to the grid). For example; generator A; has impact factor 7 (highly critical generator), then the
+dynamic risk score is calculated as 7 using Eq:3. Based on the dynamic risk score, the audit scheduler
+prioritizes Generator A; for more frequent inspections.
+(5) Response Mechanism: Based on anomaly severity, agents execute mitigation actions such as;low severity->
+PMU logs the anomaly for later analysis, medium severity-> The substation controller redistributes load
+among generators, high severity-> breaker A; isolates the faulty line to prevent cascading failures, critical
+severity-> generator A, is shut down immediately to prevent damage.
+The proposed framework is adapted to the MAS environment through the following three key components; (1)
+decentralized operations: where each agent (PMU, breaker, generator) operates autonomously, using local data
+and models, (2) collaboration: all agents communicate through the substation controller, ensuring coordinated
+actions, and (3) dynamic adjustments: the risk scores, thresholds, and. audit schedules are updated in real-time
+based on system behavior.
+5 METHODOLOGY
+In this section, our focus is mainly on the details of the Al techniques used in the proposed framework and how
+it optimizes the audit frequency. In addition, we have also discussed the simulation environments used for the
+experimentation and the evaluation metrices.
+5.1. Al Techniques Used
+We have used Reinforcement Learning (RL) and clustering techniques for adaptive behavior analysis and gradientbased optimization for audit.scheduling. The detailed mechanism of RL is presented in Section 4.1.3 (4. Reinforcement Learning for Adaptive Behavior Analysis). We have used K-means clustering in the Section 4.1.3
+(3. Trend Analysis) to group'agents with similar trends, facilitating collaborative audits or mitigation. Finally,
+gradient-based optimization is employed to minimize the total cost of audits and failures. The cost function
+is optimized under constraints such as audit budget and minimum frequency requirements. Gradients guide
+adjustments to audit schedules, ensuring near-optimal solutions even for large, complex systems satisfying the
+constraints mentioned in Section 4.1.4. Also in this module, RL dynamically adapts audit scheduling based on
+evolving agent behaviors and system conditions. The summary of the used AI techniques are presented in Table
+4.
+Justification for Using Reinforcement Learning (RL):
+Reinforcement Learning (RL) was selected due to its ability to handle dynamic decision-making under uncertainty
+and temporal dependencies in audit actions across multi-agent systems. Unlike supervised models that rely
+on fixed input-output mappings, RL optimizes audit strategies through trial-and-error interaction with the
+environment, making it ideal for real-time, adaptive audit scheduling in unpredictable smart grid conditions. In
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 17
+Table 4. Summary of AI Techniques and Roles
+Technique Module Role
+Reinforcement Learning
+(RL)
+Adaptive Behavior Analysis Dynamic resource allocation and
+policy optimization
+K-Means Clustering Adaptive Behavior Analysis Group agents for collaborative analysis
+Gradient-Based Optimization
+Audit Scheduling Optimize audit frequency and minimize costs under specific constraints
+Reinforcement Learning
+(RL)
+Response Mechanism Stabilize the system by mitigating
+potential failures
+our problem, audit outcomes at time 푡 influence future risk exposure at time 푡 + 1. RL supports sequential learning
+where the agent maximizes cumulative reward, aligning with long-term grid stability and cost efficiency goals.
+5.2 Audit Frequency Optimization
+Audit frequency optimization aims to dynamically allocate audit resources to agents based on their risk scores,
+ensuring a balance between minimizing audit costs and mitigating system risks. This process is central to the
+Audit Scheduling Module in the proposed framework and leverages techniques like gradient-based optimization,
+and reinforcement learning. The optimization here aims to minimize the operational cost (퐶), Prioritize high-risk
+agents (푅푖
+) for audit ensuring the resource constraints like total budget (퐵) and minimum audit requirements (푓푚푖푛.
+The mathematical modeling and the constraints details are presented in Section 4.1.4. Here, we are discussing the
+Gradient-based optimization technique for adjustment of audit frequency. The gradient of the cost function (in
+Eq.2) w.r.t frequency 푓푖
+is calculated as:
+휕퐶
+휕 푓푖
+= 퐶푎 − 퐶푓
+.
+푅푖
+푓
+2
+푖
+(17)
+This gradient ensures the impact of 푓푖 on total cost as; positive gradient 휕퐶
+휕 푓푖
+> 0 suggests increase in 푓푖
+increases
+the cost and negative gradient 휕퐶
+휕 푓푖
+< 0 suggests increase in 푓푖 decreases the cost. Finally, the audit frequencies are
+updated iteratively using the gradient:
+푓
+(푘+1)
+푖
+= 푓
+푘
+푖 − 휂.
+휕퐶
+휕 푓푖
+(18)
+here, 푘 is the current iteration and 휂 is the learning rate which controls the step size of updates. The iteration
+stops when the (i) gradient magnitude is below a predefined threshold (lets say 휖) i.e., |
+휕퐶
+휕푓푖
+|< 휖, (ii) a maximum
+number of iterations reached.
+The algorithm of the proposed AI-driven framework is shown in Algorithm 1, 36. From the algorithm, it is
+evident that the time complexity of the data collection procedure is 푂(푛), where 푛 is the number of agents. The
+procedure risk score computation takes 푂(푛푇 ), where 푇 is the observation period.The time complexity of the
+anomaly detection procedure is 푂(푛푇 ), and the time complexity of the behavior analysis procedure is 푂(푛푘),
+where 푘 is the number of clusters. The time complexity of the audit scheduling mechanism is 푂(푛푑), where 푑 is
+the number of gradient descent iterations. Finally, the time complexity of the response mechanism is 푂(푛). So,
+the overall complexity of the proposed framework is 푂(푛 + 푛푇 + 푛푇 + 푛푘 + 푛푑 + 푛) = 푂(푛).
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 17
+Table 4. Summary of Al Techniques and Roles
+Technique Module Role
+Reinforcement Learning | Adaptive Behavior Analysis | Dynamic resource allocation and
+(RL) policy optimization
+K-Means Clustering Adaptive Behavior Analysis | Group agents for collaborative analysis
+Gradient-Based Opti- | Audit Scheduling Optimize audit frequency and minmization imize costs under specific constraints
+Reinforcement Learning | Response Mechanism Stabilize the system by mitigating
+(RL) potential failures
+our problem, audit outcomes at time ¢ influence future risk exposure at time t + 1. RL supports sequential learning
+where the agent maximizes cumulative reward, aligning with long-term grid stability and cost efficiency goals.
+5.2 Audit Frequency Optimization
+Audit frequency optimization aims to dynamically allocate audit resources to agents based on their risk scores,
+ensuring a balance between minimizing audit costs and mitigating system risks. This process is central to the
+Audit Scheduling Module in the proposed framework and leverages techniques like gradient-based optimization,
+and reinforcement learning. The optimization here aims to minimize the operational cost (C), Prioritize high-risk
+agents (R;) for audit ensuring the resource constraints like total budget (B) and minimum audit requirements (fin.
+The mathematical modeling and the constraints details are presented in Section 4.1.4. Here, we are discussing the
+Gradient-based optimization technique for adjustment of audit frequency. The gradient of the cost function (in
+Eq.2) w.r.t frequency fj is calculated as:
+(17)
+This gradient ensures the impact of fj on total cost as; positive gradient A > 0 suggests increase in fj increases
+the cost and negative gradient TA < 0 suggests increase in fj; decreases the cost. Finally, the audit frequencies are
+updated iteratively using the gradient:
+k+ ac Ai? = fF 1-55 (18)
+here, k is the currentiteration and 7 is the learning rate which controls the step size of updates. The iteration
+stops when the (i) gradient magnitude is below a predefined threshold (lets say €) ie., |Spl< €, (ii) a maximum
+number of iterations reached.
+The algorithm of the proposed AI-driven framework is shown in Algorithm 1, 36. From the algorithm, it is
+evident that the time complexity of the data collection procedure is O(n), where n is the number of agents. The
+procedure risk score computation takes O(nT), where T is the observation period.The time complexity of the
+anomaly detection procedure is O(nT), and the time complexity of the behavior analysis procedure is O(nk),
+where k is the number of clusters. The time complexity of the audit scheduling mechanism is O(nd), where d is
+the number of gradient descent iterations. Finally, the time complexity of the response mechanism is O(n). So,
+the overall complexity of the proposed framework is O(n + nT + nT + nk + nd +n) = O(n).
+ACM Trans. Cyber-Phys. Syst.
+18 • Madhukrishna et al.
+Algorithm 1 Algorithm of the proposed AI-driven framework
+Input: 푛 - No. of agents; 퐶푎 - Cost per audit; 퐶푓
+- Cost per failure; 퐵 - Total budget; 푓푚푖푛, 푓푚푎푥 - Minimum and maximum audit frequencies; 푇 - Oservation period for anomaly
+detection; 훼,훾, 휂 - Learning rate, discount factor, and step size for optimization.
+1: procedure AI-driven Multi-agent Audit Framework(RPL-enabled IoT network, N, K)
+2: Initialize agent state 푆 = 푆1, 푆2, ..., 푆푛
+3: Initialize risk scores 푅 = 푅1, 푅2, ..., 푅푛
+4: Set initial audit frequencies 푓푖 = 푓푚푖푛 for all agents
+5: Load historical data for anomaly detection
+6: while system is operational do
+7: Call DATA_COLLECTION()
+8: Call RISK_SCORE_COMPUTATION()
+9: Call AUDIT_SCHEDULING_OPTIMIZATION()
+10: Call ANOMALY_DETECTION()
+11: Call BEHAVIOR_ANALYSIS()
+12: Call RESPONSE_MECHANISM()
+13: Call FEEDBACK_MECHANISM()
+14: end while
+15: end procedure
+16: procedure Data Collection()
+17: for each agent 푖 in {1, 2, ..., 푛} do
+18: Collect operational metrics (voltage, current, load, anomaly scores)
+19: Update feature vector 푋푖
+for agent 푖
+20: end for
+21: end procedure
+22: procedure RISK_SCORE_COMPUTATION()
+23: for each agent 푖 in {1, 2, ..., 푛} do
+24: Compute Impact Factor:
+25: 퐼푚푝푎푐푡_퐹푎푐푡표푟푖 = 푤푐푟 푖푡 × 퐶푐푟 푖푡 + 푤 × 퐶푝푒푟 푓 + 푤푒푐표푛 × 퐶푒푐표푛
+26: Compute Likelihood of Failure:
+27: 퐿푖푘푒푙푖ℎ표표푑푖 =
+P푇
+푡=1 푆푖
+(푡 )
+푇
+28: Compute Risk Score:
+29: 푅푖 = 푤푖푚푝푎푐푡 × 퐼푚푝푎푐푡_퐹푎푐푡표푟푖 + 푤푙푖푘푒푙푖ℎ표표푑 × 퐿푖푘푒푙푖ℎ표표푑푖
+30: end for
+31: end procedure
+32: procedure ANOMALY_DETECTION()
+33: for each agent 푖 in {1, 2, ..., 푛} do
+34: Extract feature vector 푋푖
+35: Compute Anomaly Score:
+36: 푆푖 = | |푋푖
+(푡) − 푋 ˆ
+푖
+(푡)| |2
+37: if 푆푖 > 푇ℎ푟푒푠ℎ표푙푑 then
+38: Flag agent 푖 as anomalous
+39: end if
+40: end for
+41: end procedure
+42: procedure BEHAVIOR_ANALYSIS()
+43: Compute Feature Set for Clustering:
+44: 퐹푖 = [푏푖 푗, 퐷푖 푗 (푇 ), 휎푖 푗] for each agent 푖
+45: Apply K-Means or DBSCAN Clustering
+46: Identify clusters with abnormal behavior for increased monitoring
+47: end procedure
+48: procedure AUDIT_SCHEDULING_OPTIMIZATION()
+49: Define Cost Function:
+50: P푛
+푖=1(퐶푎.푓푖 +퐶푓
+.
+푅푖
+푓푖
+) for each agent 푖
+51: repeat
+52: for each agent 푖 in {1, 2, ..., 푛} do
+53: Compute gradient:
+54: 퐺푟푎푑푖푒푛푡푖 = 퐶푎 − 퐶푓 × (푅푖 /푓
+2
+푖
+)
+55: Update audit frequency:
+56: 푓푖 = 푓푖 − 휂 × 퐺푟푎푑푖푒푛푡푖
+57: end for
+58: Apply Constraints:
+59: if Sum over all agents (퐶푎 × 푓푖
+) > 퐵 then
+60: Scale 푓푖
+to fit within budget
+61: end if
+62: Ensure 푓푖 >= 푓푚푖푛 and 푓푖 <= 푓푚푎푥 for all 푖
+63: until 퐶표푛푣푒푟푔푒푛푐푒
+64: end procedure
+ACM Trans. Cyber-Phys. Syst.
+18 +» Madhukrishna et al.
+Algorithm 1 Algorithm of the proposed Al-driven framework
+Input: n - No. of agents; Cag - Cost per audit; C¢ - Cost per failure; B - Total budget; fmin, fmax - Minimum and maximum audit frequencies; T - Oservation period for anomaly
+detection; a, y, 7 - Learning rate, discount factor, and step size for optimization.
+1: procedure AI-pRIVEN MULTI-AGENT AUDIT FRAMEWORK(RPL-enabled IoT network, N, K)
+2: Initialize agent state S = Sj, So, ...,Sn
+3 Initialize risk scores R = Rj, Ro,...,Rn
+4: Set initial audit frequencies fj = fmmin for all agents
+5: Load historical data for anomaly detection
+6: while system is operational do 7 Call DATA_COLLECTION() 8 Call RISK_SCORE_COMPUTATION()
+9 Call AUDIT_SCHEDULING_OPTIMIZATION()
+10: Call ANOMALY_DETECTION() 11: Call BEHAVIOR_ANALYSIS()
+12: Call RESPONSE_MECHANISM() 13: Call FEEDBACK_MECHANISM()
+14: end while
+15: end procedure
+16: procedure Data CoLLEcTION()
+17: for each agent i in {1,2,...,n} do
+18: Collect operational metrics (voltage, current, load, anomaly scores)
+19: Update feature vector X; for agent i
+20: end for
+21: end procedure
+22: procedure RISK_SCORE_COMPUTATION()
+23: for each agent i in {1, 2,...,n} do
+24: Compute Impact Factor:
+25: Impact_Factor; = werit X Cerit + WX Cperf + Wecon X Cecon
+26: Compute Likelihood of Failure:
+T s,
+27: Likelihood; = Fe SiO
+28: Compute Risk Score:
+29: Ri = Wimpact X Impact_Factor; + whikelihood X Likelihood;
+30: end for
+31: end procedure
+32: procedure ANOMALY_DETECTION()
+33: for each agent i in {1,2,...,n} do
+34: Extract feature vector Xj
+35: Compute Anomaly Score:
+36: Si = |1Xi(t) — Xi)?
+37: if S; > Threshold then
+38: Flag agent i as anomalous
+39: end if
+40: end for
+41: end procedure
+42: procedure BEHAVIOR_ANALYSIS()
+43: Compute Feature Set for Clustering:
+44: F; = [bij, Dij(T), oi] for each agent i
+45: Apply K-Means or DBSCAN Clustering
+46: Identify clusters with abnormal behavior for increased monitoring
+47: end procedure
+48: procedure AUDIT_SCHEDULING_OPTIMIZATION()
+49: Define Cost Function:
+50: LE (Ca-fi + Cp. F8) for each agent i
+51: repeat
+52: for each agent iin {1, 2, ...,m} do
+53: Compute gradient:
+54: Gradient; = Ca =Cf x (Ri/f?)
+55: Update audit frequency:
+56: fi = fi -1 X Gradient;
+57: end for
+58: Apply Constraints:
+59: if Sum over all agents (Cg x fj) > B then
+60: Scale fj to fit within budget
+61: end if
+62: Ensure fj >= fmin and fi <= fmax for alli
+63: until Convergence
+64: end procedure
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 19
+Algorithm 2 Continuation of Algorithm
+1: procedure RESPONSE_MECHANISM()
+2: for each flagged anomaly do
+3: Compute Severity Score:
+4: 푆푖 = 푤푖푚푝푎푐푡 × 퐼푚푝푎푐푡_퐹푎푐푡표푟푖 + 푤푙푖푘푒푙푖ℎ표표푑 × 퐿푖푘푒푙푖ℎ표표푑푖
+5: Determine Mitigation Action:
+6: if 푆푖
+is Low then
+7: Log event and monitor agent 푖
+8: else if 푆푖
+is Medium then
+9: Increase audit frequency for agent 푖
+10: else if 푆푖
+is High then
+11: Isolate faulty agent 푖 and notify controller
+12: else if 푆푖
+is Critical then
+13: Perform emergency shutdown of agent 푖
+14: end if
+15: end for
+16: end procedure
+17: procedure FEEDBACK_MECHANISM()
+18: for e doach agent i in 1, 2, …, n
+19: if mitigation was successful then
+20: Update risk score:
+21: 푅푖 = 휆 × 푅푖 + (1 − 휆) × 푅푒푠표푙푣푒푑퐴푛표푚푎푙푖푒푠
+22: Reduce audit frequency:
+23: 푓푖 = 푚푎푥(푓푚푖푛, 푓푖 − 훿)
+24: else
+25: Increase audit frequency:
+26: 푓푖 = 푚푖푛(푓푚푎푥, 푓푖 + 훿)
+27: end if
+28: end for
+29: end procedure
+30: procedure CHECK_CONVERGENCE()
+31: if ||퐺푟푎푑푖푒푛푡||< 휖 or Risk Scores remain stable for 푇 iterations then
+32: return True
+33: else
+34: return false
+35: end if
+36: end procedure
+5.3 Simulation Environment
+In this subsection, we discuss the experimental setup which we have followed to implement and evaluate the
+proposed AI-driven framework. Subsequently, we have also discussed the system configuration, parameter
+settings, and evaluation metrics used to check the performance of the proposed framework.
+5.3.1 System Configuration. To evaluate the proposed AI-driven audit framework in a Multi-Agent System
+(MAS), a comprehensive simulation environment was established. This environment integrates power system
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 19
+Algorithm 2 Continuation of Algorithm
+1: procedure RESPONSE_MECHANISM()
+2 for each flagged anomaly do
+3 Compute Severity Score:
+4 Si = Wimpact X Impact_Factor; + Whikelihood X Likelihood;
+5: Determine Mitigation Action:
+6
+7
+8
+9
+if S; is Low then
+Log event and monitor agent i
+else if S; is Medium then
+Increase audit frequency for agent i
+10: else if S; is High then
+11: Isolate faulty agent i and notify controller
+12: else if S; is Critical then
+13: Perform emergency shutdown of agent i
+14: end if
+15: end for
+16: end procedure
+17: procedure FEEDBACK_MECHANISM()
+18: for e doach agent iin 1, 2,...,n
+19: if mitigation was successful then
+20: Update risk score:
+21: Rj = AX R; + (1 — A) x ResoluedAnomalies
+22: Reduce audit frequency:
+23: fi = max(fmin, fi — 5)
+24: else
+25: Increase audit frequency:
+26: fi = min( fax, fi + )
+27: end if
+28: end for
+29: end procedure
+30: procedure CHECK_CONVERGENCE()
+31: if ||Gradient||< ¢€ or Risk Scores remain stable for T iterations then
+32: return True
+33: else
+34: return false
+35: end if
+36: end procedure
+5.3 Simulation Environment
+In this subsection, we discuss the experimental setup which we have followed to implement and evaluate the
+proposed AlI-driven framework. Subsequently, we have also discussed the system configuration, parameter
+settings, and evaluation metrics used to check the performance of the proposed framework.
+5.3.1 System Configuration. To evaluate the proposed Al-driven audit framework in a Multi-Agent System
+(MAS), a comprehensive simulation environment was established. This environment integrates power system
+ACM Trans. Cyber-Phys. Syst.
+20 • Madhukrishna et al.
+modeling, AI-driven decision-making, and cyber-attack simulations to assess framework performance. We have
+performed the experiments on a system which is equipped with 11th Gen Intel(R) Core(TM) i9-1165G7 CPU @
+3.5 GHz clock speed, 64 GB RAM, 1 TB SSD, NVIDIA RTX 3090 GPU, and runs a 64-bit Ubuntu 22.04 LTS. We
+have used the MATLAB, Python, and JADE with multi-threading enabled simulator for performing our study.
+5.3.2 RL Training Setup. The simulation environment and the computational overhead details for the RL training
+are mentioned as follows:
+(1) Simulation Environment: The grid topology consists of 100 nodes with a 10 × 10 agent grid which can be
+extended up to 500 nodes of 20 × 25 grids for scalability testing. The agent roles are divided among the
+Generators, substations, and both PMUs and breakers as 20%, 30%, and 50% respectively. The considered
+attack scenarios for the implementation are as follows: (i) Random FDI attacks on 10% of nodes, (ii) DoS
+attacks on 5% of the nodes, and (iii) coordinated attack on breaker-substation chains. The evaluation
+results of these attack scenarios are shown in the Result and Analysis Section.
+(2) Computational Overhead: (i) The training time is ≈ 2-3 minutes corresponds to 200 training episodes for a
+100 node agent environment. The convergence threshold was set to an average Q-value 푑푒푙푡푎 < 0.01 across
+10 episodes. Each episode took ≈ 0.7 seconds on average, totaling approximately 140 seconds. Scaling to
+500 agents increased episode duration by ≈ 1.6x but required fewer episodes (≈ 120) due to accelerated
+convergence via experience replay and prioritized sampling. (ii) The inference time takes < 50 ms per audit
+cycle, where each audit decision across 500 agents uses a forward pass through a trained Q-network with
+a batch input size of 500. Measured latency on an RTX 3090 using TensorFlow in evaluation mode yielded
+an average inference time of 42.7 ms per cycle. This latency supports near real-time audit decision-making
+at sub-second intervals. (iii) The memory foot print used is < 2.1 GB. This was measured using psutil
+and NVIDIA System Management Interface (nvidia-smi) during runtime. Memory usage was distributed
+across model weights (≈ 200 MB), experience buffer (≈ 1.2 GB), and state-action representations (≈ 700
+MB for 500 agents). These metrics indicate deployability even on resource-constrained edge devices with
+moderate GPU support.
+5.3.3 Software Stacks Used. The framework was implemented using a combination of software tools for power
+system simulation, agent-based modeling, optimization, and cybersecurity analysis. We have used Python code
+for the implementation of audit scheduling, anomaly detection, risk assessment, and reinforcement learning
+procedures. MATLAB (Simulink) is used for modeling of power system dynamics and fault scenarios, power world
+simulator is the simulation tool for power system stability analysis and contingency planning. GridLAB-D is used
+for electricity distribution modeling and NS-3 is helpful in Cyber-attack simulation and network traffic analysis.
+Majority of the simulation was tested on the JADE (Java Agent DEvelopment Framework) platform which works
+on the decentralized auditing of MAS. The GridLAB-D and NS-3 simulation tools output are integrated with the
+JADE Platform to find out the final optimized audits in MAS environment.
+5.3.4 Datasets Used. The proposed framework was evaluated using real-world and synthetic datasets to ensure
+reproducibility and robustness. In real-world datasets we have used IEEE PES Power Grid Test Cases [11] for
+real-world contingency cases, NREL (National Renewable Energy Laboratory) Dataset [12] for considering load
+demand and grid disturbances for realistic anomaly detection, Smart Grid Dataset (SGD)[19] for benchmarking
+historical voltage, current, and frequency data. We have generated one synthetic data set by considering the fault
+scenarios simulated in MATLAB (Simulink) and also we have integrated cyber-attack datasets with false data
+injection (FDI), denial-of-service (DoS), and man-in-the-middle (MITM) attacks in the same.
+5.3.5 Experimental Scenarios. For the experiments, we have designed three test cases as follows;
+ACM Trans. Cyber-Phys. Syst.
+20 + Madhukrishna et al.
+modeling, Al-driven decision-making, and cyber-attack simulations to assess framework performance. We have
+performed the experiments on a system which is equipped with 11th Gen Intel(R) Core(TM) i9-1165G7 CPU @
+3.5 GHz clock speed, 64 GB RAM, 1 TB SSD, NVIDIA RTX 3090 GPU, and runs a 64-bit Ubuntu 22.04 LTS. We
+have used the MATLAB, Python, and JADE with multi-threading enabled simulator for performing our study.
+5.3.2 RL Training Setup. The simulation environment and the computational overhead details for the RL training
+are mentioned as follows:
+(1) Simulation Environment: The grid topology consists of 100 nodes with a 10 x 10 agent grid which can be
+extended up to 500 nodes of 20 x 25 grids for scalability testing. The agent roles are divided among the
+Generators, substations, and both PMUs and breakers as 20%, 30%, and 50% respectively. The considered
+attack scenarios for the implementation are as follows: (i) Random FDI attacks on 10% ofnodes, (ii) DoS
+attacks on 5% of the nodes, and (iii) coordinated attack on breaker-substation chains. The evaluation
+results of these attack scenarios are shown in the Result and Analysis Section.
+(2) Computational Overhead: (i) The training time is ~ 2-3 minutes corresponds to 200 training episodes for a
+100 node agent environment. The convergence threshold was set to an average Q-value delta < 0.01 across
+10 episodes. Each episode took ~ 0.7 seconds on average, totaling approximately 140%seconds. Scaling to
+500 agents increased episode duration by ~ 1.6x but required fewer episodes (~ 120) due to accelerated
+convergence via experience replay and prioritized sampling. (ii) The inference time takes < 50 ms per audit
+cycle, where each audit decision across 500 agents uses a forward pass through a trained Q-network with
+a batch input size of 500. Measured latency on an RTX 3090 using, TensorFlow in evaluation mode yielded
+an average inference time of 42.7 ms per cycle. This latency supports near real-time audit decision-making
+at sub-second intervals. (iii) The memory foot print used is.<.2.1 GB. This was measured using psutil
+and NVIDIA System Management Interface (nvidia-smi) during runtime. Memory usage was distributed
+across model weights (~ 200 MB), experience buffer (~ 1.2 GB), and state-action representations (~ 700
+MB for 500 agents). These metrics indicate deployability even on resource-constrained edge devices with
+moderate GPU support.
+5.3.3 Software Stacks Used. The framework was implemented using a combination of software tools for power
+system simulation, agent-based modeling, optimization, and cybersecurity analysis. We have used Python code
+for the implementation of auditscheduling, anomaly detection, risk assessment, and reinforcement learning
+procedures. MATLAB (Simulink) is used for modeling of power system dynamics and fault scenarios, power world
+simulator is the simulation tool for power system stability analysis and contingency planning. GridLAB-D is used
+for electricity distribution modeling and NS-3 is helpful in Cyber-attack simulation and network traffic analysis.
+Majority of the simulation was tested on the JADE (Java Agent DEvelopment Framework) platform which works
+on the decentralized auditing of MAS. The GridLAB-D and NS-3 simulation tools output are integrated with the
+JADE Platform to find out the final optimized audits in MAS environment.
+5.3.4 Datasets Used. The proposed framework was evaluated using real-world and synthetic datasets to ensure
+reproducibility and robustness. In real-world datasets we have used IEEE PES Power Grid Test Cases [11] for
+real-world contingency cases, NREL (National Renewable Energy Laboratory) Dataset [12] for considering load
+demand and grid disturbances for realistic anomaly detection, Smart Grid Dataset (SGD)[19] for benchmarking
+historical voltage, current, and frequency data. We have generated one synthetic data set by considering the fault
+scenarios simulated in MATLAB (Simulink) and also we have integrated cyber-attack datasets with false data
+injection (FDI), denial-of-service (DoS), and man-in-the-middle (MITM) attacks in the same.
+5.3.5 Experimental Scenarios. For the experiments, we have designed three test cases as follows;
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 21
+(1) Normal Operation (Baseline Scenario) – It evaluates standard grid system performance under normal
+conditions, power flow remains within safe operational limits,and no attacks or faults introduced in the
+system.
+(2) Fault Injection (Physical Failure) – This test case tests framework responses to line faults, transformer
+failures, and breaker malfunctions
+(3) Cyber-Attacks on MAS – It evaluates the impact of false data injection (FDI), denial-of-service (DoS),
+Man-in-the-Middle (MIM), and communication tampering
+5.3.6 Simulation Parameter Settings. The framework parameters were configured based on real-world operational
+data. The risk score threshold was set to 0.5, meaning values above this trigger an audit action. The audit budget
+constraint was limited to 10% of total operational costs. Anomaly detection was implemented using a supervised
+LSTM network, trained with an 80:20 training-to-testing split. The optimization learning rate for gradient-based
+audit frequency adjustments was set to 0.01, while the reinforcement learning discount factor (훾) was fixed at 0.9
+to ensure long-term policy optimization. The maximum audit frequency was constrained to 5 audits per cycle to
+balance efficiency and computational feasibility. A summary of all the simulation parameter values which we
+have used in the evaluation of the proposed work are provided in Table 5 for better understanding.
+Table 5. Simulation Parameters
+Parameter Value
+Simulation Tools JADE, MATLAB, NS-3,
+GridLAB-D
+Simulation Time 24 hour operational cycle
+Risk Score Threshold 0.5
+Audit Budget Constraint 10% of total operational
+costs
+Anomaly Detection
+Model
+LSTM Network (Supervised Learning)
+Training Testing Split 80:20
+Optimization Learning
+Rate
+0.01
+Reinforcement Learning
+(훾)
+0.9
+Maximum Audit Frequency
+5 audits per cycle
+5.4 Evaluation Metrics
+To ensure rigorous evaluation of the proposed framework, multiple performance metrics are considered across
+different components of the framework. The considered metrics are as follows;
+5.4.1 Audit Scheduling Metrics. The goal of the proposed framework is to optimize the audits with minimum
+attack rate and cross-layer stability. To verify the correctness, we have used two metrics namely; (a) cost efficiency
+and (b) audit coverage which measure reduction in total cost (in %) after optimization and percentage of high-risk
+agents audited respectively. The cost efficiency and audit coverage are calculated as follows;
+Cost efficiency =
+cost without optimization − cost withoptimization
+cost without optimization × 100 (19)
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 21
+(1) Normal Operation (Baseline Scenario) - It evaluates standard grid system performance under normal
+conditions, power flow remains within safe operational limits,and no attacks or faults introduced in the
+system.
+(2) Fault Injection (Physical Failure) - This test case tests framework responses to line faults, transformer
+failures, and breaker malfunctions
+(3) Cyber-Attacks on MAS - It evaluates the impact of false data injection (FDI), denial-of-service (DoS),
+Man-in-the-Middle (MIM), and communication tampering
+5.3.6 Simulation Parameter Settings. The framework parameters were configured based on real-world operational
+data. The risk score threshold was set to 0.5, meaning values above this trigger an audit action. The audit budget
+constraint was limited to 10% of total operational costs. Anomaly detection was implemented using a supervised
+LSTM network, trained with an 80:20 training-to-testing split. The optimization learning rate forgradient-based
+audit frequency adjustments was set to 0.01, while the reinforcement learning discount factor (y) was fixed at 0.9
+to ensure long-term policy optimization. The maximum audit frequency was constrained. to.5 audits per cycle to
+balance efficiency and computational feasibility. A summary of all the simulation parameter values which we
+have used in the evaluation of the proposed work are provided in Table 5 for better understanding.
+Table 5. Simulation Parameters
+Parameter Value
+Simulation Tools JADE, MATLAB, NS-3,
+GridLAB-D
+Simulation Time 24 hour operational cycle
+Risk Score Threshold
+Audit Budget Constraint
+0.5
+10%,of total operational
+costs
+Anomaly Detection | LSTM Network (SuperModel vised Learning)
+Training Testing Split 80:20
+Optimization Learning | 0.01
+Rate
+Reinforcement Learning | 0.9
+(y)
+Maximum Audit Fre-| 5 audits per cycle
+quency
+5.4 Evaluation Metrics
+To ensure rigorous evaluation of the proposed framework, multiple performance metrics are considered across
+different components of the framework. The considered metrics are as follows;
+5.4.1 Audit Scheduling Metrics. The goal of the proposed framework is to optimize the audits with minimum
+attack rate and cross-layer stability. To verify the correctness, we have used two metrics namely; (a) cost efficiency
+and (b) audit coverage which measure reduction in total cost (in %) after optimization and percentage of high-risk
+agents audited respectively. The cost efficiency and audit coverage are calculated as follows;
+cost without optimization — cost withoptimization Cost efficiency = x 100 (19) cost without optimization
+ACM Trans. Cyber-Phys. Syst.
+22 • Madhukrishna et al.
+Audit coverage =
+Agents audited
+Total high − risk agents × 100 (20)
+5.4.2 Anomaly Detection Metrics. For verifying the correctness of the anomaly detection metrics, we have used
+five classification metrics namely: (i) True Positive Rate (TPR) which represents the ability to correctly identify
+the high-risk agents; (ii) True Negative Rate (TNR) which reflects the capability to correctly identify the low-risk
+agents; (iii) False Positive Rate (FPR) which measures the proportion of low-risk agents that are misidentified as
+high-risk; (iv) False Negative Rate (FNR) which represents the proportion of high-risk agents that are misidentified
+as low-risk1
+; and finally (v) accuracy which represents the overall effectiveness of the identification mechanism.
+TPR (in %) =
+TP
+TP + FN
+× 100 (21)
+TNR (in %) =
+TN
+TN + FP
+× 100 (22)
+FPR (in %) =
+FP
+FP + TN
+× 100 (23)
+FNR (in %) =
+FN
+FN + TP
+× 100 (24)
+Accuracy (in %) =
+TP + TN
+TP + TN + FP + FN
+× 100 (25)
+where, TP represents the number of high-risk agents that are correctly identified as high-risk; TN represents the
+number of low-risk agents that are correctly identified as low-risk; FP represents the number of low-risk agents
+that are wrongly identified as high-risk; and FN represents the number of high-risk agents that are wrongly
+identified as low-risk.
+We believe that this type of evaluation of our obtained results, will provide a clear demonstration of the smart
+grid system’s robustness in identifying both high-risk and low-risk agents in a MAS environment.
+5.4.3 Response Mechanism Metrics. We have also calculated the risk mitigation effectiveness i.e., reduction of
+overall risk score after mitigation as;
+Risk Mitigation =
+Initial Risk Score-Final Risk Score
+Initial Risk Score × 100 (26)
+Here, we have considered response time as another metrics which is the time taken to detect and respond to
+anomalies in seconds (s).
+5.4.4 Computational efficiency Metrics. The computational efficiency calculates (1) the number of iterations for
+optimization to converge which is tracked per audit cycle and termed as algorithm convergence time (AGT),
+(2) change in execution time as the number of agents increases which is evaluated for 푛 = 102
+, 103
+, 104 which is
+termed as scalability (runtime Vs. agents).
+1
+It is to be noticed that the FNR and TPR share a complementary relationship which can be mathematically expressed as FNR + TPR = 1.
+Similarly, for the same reason, the FPR and TNR can be mathematically expressed as FPR + TNR = 1. These relationships ensure that the
+summation of misidentification and correct identification rates always equals one.
+ACM Trans. Cyber-Phys. Syst.
+22 +» Madhukrishna et al.
+Agents gents audite audited x 100 (20)
+Audit coverage = Total high — risk agents
+5.4.2 Anomaly Detection Metrics. For verifying the correctness of the anomaly detection metrics, we have used
+five classification metrics namely: (i) True Positive Rate (TPR) which represents the ability to correctly identify
+the high-risk agents; (ii) True Negative Rate (TNR) which reflects the capability to correctly identify the low-risk
+agents; (iii) False Positive Rate (FPR) which measures the proportion of low-risk agents that are misidentified as
+high-risk; (iv) False Negative Rate (FNR) which represents the proportion of high-risk agents that are misidentified
+as low-risk!; and finally (v) accuracy which represents the overall effectiveness of the identification mechanism.
+TP TPR (in %) = ——— x 100 (21) TP + FN
+™N TNR (in %) = ———— x 100 (22) TN + FP
+FP FPR (in %) = ——— x 100 (23) FP + TN
+FN ENR (in %) = ———— x 100 (24) FN + TP
+TP +TN y
+TP + TN + FP + FN
+where, TP represents the number of high-risk agents that are correctly identified as high-risk; TN represents the
+number of low-risk agents that are correctly identified as low-risk; FP represents the number of low-risk agents
+that are wrongly identified as high-risk;and FN represents the number of high-risk agents that are wrongly
+identified as low-risk.
+We believe that this type of evaluation of our obtained results, will provide a clear demonstration of the smart
+grid system’s robustness in identifying both high-risk and low-risk agents in a MAS environment.
+Accuracy (in %) = 100 (25)
+5.4.3 Response Mechanism Metrics. We have also calculated the risk mitigation effectiveness i.e., reduction of
+overall risk score after mitigation as;
+Initial Risk Score-Final Risk Score POY ostion - x 100 26 isk Mitigation Initial Risk Score i Here, we have considered response time as another metrics which is the time taken to detect and respond to
+anomalies in seconds (s).
+5.4.4 Computational efficiency Metrics. The computational efficiency calculates (1) the number of iterations for
+optimization to converge which is tracked per audit cycle and termed as algorithm convergence time (AGT),
+(2) change in execution time as the number of agents increases which is evaluated for n = 102, 103, 104 which is
+termed as scalability (runtime Vs. agents).
+lt is to be noticed that the FNR and TPR share a complementary relationship which can be mathematically expressed as FNR + TPR = 1.
+Similarly, for the same reason, the FPR and TNR can be mathematically expressed as FPR + TNR = 1. These relationships ensure that the
+summation of misidentification and correct identification rates always equals one.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 23
+Fig. 3. Correctness Verification of the Identified high-risk agents: (a) FNR Values; and (b) TPR Values
+6 RESULTS AND ANALYSIS
+This section represents the evaluation results which we have obtained while implementing our proposed work in
+the integrated simulation platform for 24 hour opertional cycle. We have evaluated our proposed framework in
+terms of Cost Efficiency (%), Audit Coverage (%), Anomaly Detection Accuracy (%), False Positive Rate (FPR),
+False Negative Rate (FNR), Risk Mitigation Effectiveness (%), and Algorithm Convergence Time (iterations)
+in the subsection 6.1. We have also compared the obtained results with four state-of-the-art solutions namely,
+Baseline Rule-Based Auditing (RB)[20] which used traditional rule-based auditing with static thresholds, Statistical
+Anomaly Detection (SAD) [21] that used statistical deviation for detecting anomalies, Machine Learning-Based
+Audit Scheduling (MLAS)[22] which used supervised learning for anomaly detection but lacks optimization for
+audit frequency, and Reinforcement Learning-Based Security Audits (RLSA)[23] that used reinforcement learning
+but does not integrate feedback-based audit adaptation which are shown in subsection 6.2 .
+6.1 Performance Metrics
+Here, we have shown the performance evaluation of our proposed AI-riven framework. Figures 3 (a) and (b)
+represent the FNR and TPR values which we have obtained form the simulation results while running our
+proposed AI-driven framework. From the figure, it can be observed that out of the four considered attack types
+false data injection (FDI), denial-of-service (DoS), Man-in-the-Middle (MIM), and communication tampering,
+the communication tampering attack achieves the highest FNR value of 5.500%. This is because of the fact that
+the communication tampering leads to de-synchronization, making the security system incapable of detecting
+correlated anomalies. However, despite this, the TPR values across all attack types remain consistently high, with
+minimal variations, indicating the robustness of the proposed system in correctly identifying the high-risk agents.
+The low FNR values, combined with high TPR values, signify the efficiency of the proposed work in maintaining
+the reliable agent detection across the smart grid regardless the attack type.
+Figure 4 shows the performance metrics evaluation results (in %) of the our proposed framework for 24
+Hours operational cycle. From the results it is evident that the framework consistently improves cost efficiency,
+reaching 42.5% cost savings by the 24th hour. The audit coverage gradually increases, reaching 93.8%, ensuring
+optimal resource allocation to high-risk agents. The framework achieves 98.4% anomaly detection accuracy,
+with minimal undetected anomalies (1.6%) which is due to the coordinated attacks. The FPR decreases from 10%
+to 3.2%, reducing unnecessary false alerts. The risk mitigation effectiveness significantly improves, reaching
+87.9%, ensuring effective security interventions. In addition, the framework optimizes convergence time, reducing
+iterations from 20 to 12, demonstrating computational efficiency. The proposed framework continuously improves
+its performance over time, ensuring cost-efficient audit scheduling, high anomaly detection accuracy, reduced
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 23
+10 False Negative Rate (FNR) vs. Attack Types 100 True Positive Rate (TPR) vs. Attack Types o
+False Negative Rate (FNR) (%)
+True Positive Rate (TPR) (%)
+False Data Injection = Man-in-the-Middle Denial-of-Service Communication Tampering
+Attack Types Attack Types
+False Data Injection = Man-in-the-Middle Denial-of-ServiceCommunication Tampering
+Fig. 3. Correctness Verification of the Identified high-risk agents: (a) FNR Values; and (b) TPR Values
+6 RESULTS AND ANALYSIS
+This section represents the evaluation results which we have obtained while implementing, our proposed work in
+the integrated simulation platform for 24 hour opertional cycle. We have evaluatedour proposed framework in
+terms of Cost Efficiency (%), Audit Coverage (%), Anomaly Detection Accuracy (%), False Positive Rate (FPR),
+False Negative Rate (FNR), Risk Mitigation Effectiveness (%), and Algorithm Convergence Time (iterations)
+in the subsection 6.1. We have also compared the obtained results with four state-of-the-art solutions namely,
+Baseline Rule-Based Auditing (RB)[20] which used traditional rule-based auditing with static thresholds, Statistical
+Anomaly Detection (SAD) [21] that used statistical deviationfor detecting anomalies, Machine Learning-Based
+Audit Scheduling (MLAS)[22] which used supervised learning for anomaly detection but lacks optimization for
+audit frequency, and Reinforcement Learning-Based Security Audits (RLSA)[23] that used reinforcement learning
+but does not integrate feedback-based audit adaptation which are shown in subsection 6.2 .
+6.1. Performance Metrics
+Here, we have shown the performance evaluation of our proposed Al-riven framework. Figures 3 (a) and (b)
+represent the FNR and TPR values which we have obtained form the simulation results while running our
+proposed AlI-driven framework. From the figure, it can be observed that out of the four considered attack types
+false data injection (FDI), denial-of-service (DoS), Man-in-the-Middle (MIM), and communication tampering,
+the communication tampering attack achieves the highest FNR value of 5.500%. This is because of the fact that
+the communication tampering leads to de-synchronization, making the security system incapable of detecting
+correlated anomalies. However, despite this, the TPR values across all attack types remain consistently high, with
+minimal variations, indicating the robustness of the proposed system in correctly identifying the high-risk agents.
+The low FNR values, combined with high TPR values, signify the efficiency of the proposed work in maintaining
+the reliable agent detection across the smart grid regardless the attack type.
+Figure 4 shows the performance metrics evaluation results (in %) of the our proposed framework for 24
+Hours operational cycle. From the results it is evident that the framework consistently improves cost efficiency,
+reaching 42.5% cost savings by the 24th hour. The audit coverage gradually increases, reaching 93.8%, ensuring
+optimal resource allocation to high-risk agents. The framework achieves 98.4% anomaly detection accuracy,
+with minimal undetected anomalies (1.6%) which is due to the coordinated attacks. The FPR decreases from 10%
+to 3.2%, reducing unnecessary false alerts. The risk mitigation effectiveness significantly improves, reaching
+87.9%, ensuring effective security interventions. In addition, the framework optimizes convergence time, reducing
+iterations from 20 to 12, demonstrating computational efficiency. The proposed framework continuously improves
+its performance over time, ensuring cost-efficient audit scheduling, high anomaly detection accuracy, reduced
+ACM Trans. Cyber-Phys. Syst.
+24 • Madhukrishna et al.
+Fig. 4. Performance Metrics Evaluation Results of the Proposed AI-driven Framework for 24 Hours Operational Cycle
+false positives, and rapid mitigation of risks. The faster convergence time enables real-time adaptation to dynamic
+cybersecurity threats.
+To test how different attack scenarios affect grid security and auditing, we ran experiments showing that the
+reinforcement learning (RL) agent can quickly adapt to various cyber-physical threats. Even under these attacks,
+the system continues to respond quickly and learns effectively, maintaining stable performance. The results are
+ACM Trans. Cyber-Phys. Syst.
+24 + Madhukrishna et al.
+Cost Efficiency Over 24 Hours (%) Audit Coverage Over 24 Hours (%)
+—® Audit Coverage
+40;
+35 90
+30}
+(0) a 85 225) 2 c c 2 20} g 5 5 80 Ea @ 15}
+10+ 75
+5b
+70
+oo 5 10 15 20 25 0 5 10 15 20 25
+Hours Hours
+Anomaly Detection Accuracy at 24 Hours (%) False Positive Rate (FPR) Over 24,Hours (%)
+10
+Missed Anomalies 3
+ou B 6
+c
+vu Y 2 4
+Detected Anomalies 2h
+0 0 5 10 15 20 25
+Hours
+Risk Mitigation Effectiveness Over 24 Hours (%) Algorithm Convergence Time Over 24 Hours (Iterations)
+Risk Mitigation P 20.0
+857 c 17.5
+80 15.0
+v DD wn 12.5 £75 x 5
+Cc =] 8 o © 10.0
+2 2 70 ba 75
+A
+65 5.0 ZA 2.5
+60; ©
+0 5 10 15 20 25 0.079 5 10 15 20 25
+Hours Hours
+Fig. 4. Performance Metrics Evaluation Results of the Proposed Al-driven Framework for 24 Hours Operational Cycle
+false positives, and rapid mitigation of risks. The faster convergence time enables real-time adaptation to dynamic
+cybersecurity threats.
+To test how different attack scenarios affect grid security and auditing, we ran experiments showing that the
+reinforcement learning (RL) agent can quickly adapt to various cyber-physical threats. Even under these attacks,
+the system continues to respond quickly and learns effectively, maintaining stable performance. The results are
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 25
+shown in Table 6. The False Data Injection (FDI) scenario simulates malicious tampering with PMU and sensor
+values across 10% of agents, creating false readings for voltage or frequency. These were reflected in deviations
+of 25% to 45% from baseline metrics (B). The RL model successfully learned to prioritize audit coverage in
+compromised zones, maintaining a 97.2% anomaly detection accuracy without noticeable impact on convergence.
+The Denial-of-Service (DoS) attacks were emulated by interrupting message passing among agents, leading to
+time-out behavior or sudden null values in communication logs. A 5% DoS rate caused some episodes to converge
+slightly slower due to delayed environment response, but accuracy remained strong at 94.8%. The RL model
+learned to reassign audit focus dynamically when communication loss persisted across a cluster. The Coordinated
+Chain Tampering involved simultaneously corrupting a localized chain of breaker-substation-controller nodes
+to simulate a coordinated attack. The anomalies spread across dependent agents, creating localized bursts in
+anomaly scores. Although initial training saw minor oscillations in policy convergence, the Q-learning model
+stabilized using replay memory and soft-updates, achieving 96.7% detection accuracy. These results validate the
+Table 6. Effect of Attack Types on RL Agent Performance and System Behavior
+Attack Type Injection
+Rate
+Effect on Anomaly Score Detection
+Accuracy
+(RL)
+Impact on Convergence
+False Data Injection (FDI)
+10% 0.25-0.45 deviation in behavior metrics (e.g., phase voltage, frequency)
+97.2% No effect- convergence
+within ∼12 episodes
+Denial-of-Service
+(DoS)
+5% Communication timeout
+spikes in affected agents
+94.8% Slight delay- convergence
+extended by ∼3 episodes
+Coordinated
+Chain Tampering
+8% Localized cascades of
+deviation among breakersubstation-agent sets
+96.7% Occasional oscillations during training, mitigated by experience replay
+framework’s scalability, robustness, and real-world applicability to multi-agent system security audits.
+6.2 Comparative Analysis
+As the proposed work shows promising results in all the evaluation metrics aspects (cost efficiency, audit coverage,
+anomaly detection, FPR, risk mitigation, algorithm convergence), we have compared the proposed work with for
+state-of-the-art solutions as mentioned in Section 6. From the results it is clear that, the proposed framework
+achieves 42.5% cost efficiency, surpassing RB[20] (25.0%), SAD[21] (30.0%), MLAS[22] (35.0%), and RLSA[23]
+(40.0%). The proposed framework maintains the highest audit coverage (93.8%), while RLSA achieves 90%, MLAS
+at 85%, SAD at 75%, and RB at 70%. The pie chart shows anomaly detection accuracy in which the highest accuracy
+is achieved by the proposed framework (98.4%), followed by RLSA (97%), MLAS (95%), SAD (90%), and RB (85%).
+The proposed framework has the lowest false positive rate (3.2%), significantly outperforming RB (10.0%), SAD
+(8.0%), MLAS (5.0%), and RLSA (4.0%). The risk mitigation graph shows that, the proposed framework achieves
+87.9% risk mitigation, compared to RLSA (85%), MLAS (80%), SAD (70%), and RB (60%). In addition, the proposed
+framework converges in just 12 iterations, compared to RB (20), SAD (18), MLAS (15), and RLSA (14). From the
+comparative analysis, the key findings are as follows;
+(1) The proposed framework consistently outperforms all state-of-the-art approaches across all evaluation
+metrics
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 25
+shown in Table 6. The False Data Injection (FDI) scenario simulates malicious tampering with PMU and sensor
+values across 10% of agents, creating false readings for voltage or frequency. These were reflected in deviations
+of 25% to 45% from baseline metrics (B). The RL model successfully learned to prioritize audit coverage in
+compromised zones, maintaining a 97.2% anomaly detection accuracy without noticeable impact on convergence.
+The Denial-of-Service (DoS) attacks were emulated by interrupting message passing among agents, leading to
+time-out behavior or sudden null values in communication logs. A 5% DoS rate caused some episodes to converge
+slightly slower due to delayed environment response, but accuracy remained strong at 94.8%. The RL model
+learned to reassign audit focus dynamically when communication loss persisted across a cluster. The Coordinated
+Chain Tampering involved simultaneously corrupting a localized chain of breaker-substation-controller nodes
+to simulate a coordinated attack. The anomalies spread across dependent agents, creating localized bursts in
+anomaly scores. Although initial training saw minor oscillations in policy convergence, the Q-learning model
+stabilized using replay memory and soft-updates, achieving 96.7% detection accuracy. These results validate the
+Table 6. Effect of Attack Types on RL Agent Performance and System Behavior
+Attack Type Injec- Effect on Anomaly Score | Detec- Impact on. Convergence
+tion tion
+Rate Accuracy
+(RL)
+False Data Injec- | 10% 0.25-0.45 deviation in behav- | 97.2% No effect- convergence
+tion (FDI) ior metrics (e.g., phase volt- within ~12 episodes
+age, frequency)
+Denial-of-Service | 5% Communication timeout | 94.8% Slight delay- convergence
+(DoS) spikes in affected.agents extended by ~3 episodes
+Coordinated 8% Localized cascades __ of | 96.7% Occasional oscillations durChain Tampering deviation. among» breaker- ing training, mitigated by exsubstation-agent sets perience replay
+framework’s scalability, robustness, and real-world applicability to multi-agent system security audits.
+6.2 Comparative Analysis
+As the proposed work shows promising results in all the evaluation metrics aspects (cost efficiency, audit coverage,
+anomaly detection, FPR, risk mitigation, algorithm convergence), we have compared the proposed work with for
+state-of-the-art solutions asmentioned in Section 6. From the results it is clear that, the proposed framework
+achieves 42.5% cost efficiency, surpassing RB[20] (25.0%), SAD[21] (30.0%), MLAS[22] (35.0%), and RLSA[23]
+(40.0%). The proposed.framework maintains the highest audit coverage (93.8%), while RLSA achieves 90%, MLAS
+at 85%, SAD at 75%, and RB at 70%. The pie chart shows anomaly detection accuracy in which the highest accuracy
+is achieved by the proposed framework (98.4%), followed by RLSA (97%), MLAS (95%), SAD (90%), and RB (85%).
+The proposed framework has the lowest false positive rate (3.2%), significantly outperforming RB (10.0%), SAD
+(8.0%), MLAS (5.0%), and RLSA (4.0%). The risk mitigation graph shows that, the proposed framework achieves
+87.9% risk mitigation, compared to RLSA (85%), MLAS (80%), SAD (70%), and RB (60%). In addition, the proposed
+framework converges in just 12 iterations, compared to RB (20), SAD (18), MLAS (15), and RLSA (14). From the
+comparative analysis, the key findings are as follows;
+(1) The proposed framework consistently outperforms all state-of-the-art approaches across all evaluation
+metrics
+ACM Trans. Cyber-Phys. Syst.
+26 • Madhukrishna et al.
+(2) The cost efficiency and audit coverage improvements highlight the effectiveness of reinforcement learningbased optimization
+(3) Anomaly detection accuracy is significantly improved due to the AI-driven adaptive scheduling
+(4) The false positive rate is reduced, ensuring fewer unnecessary alerts
+(5) Risk mitigation effectiveness shows a major advantage, with a robust response mechanism
+(6) The algorithm convergence time indicates high computational efficiency, making it scalable for large-scale
+multi-agent systems
+In summary, the proposed framework provides strong evidence for its superiority over existing methodologies in
+multi-agent system security audits.
+To validate our framework design using RL, we compared RL with the baselines: Random Forest (RF), Support
+Vector Machine (SVM), Gradient Boosted Trees (GBT), and Rule-Based Auditing (RB). The comparison result is
+shown in Table 7. The result clearly states that, RL consistently outperformed other techniques in both detection
+accuracy and cost efficiency, and was the only method capable of adapting to evolving attack patterns and
+dynamic grid behaviors without reconfiguration. The proposed framework is tested across increasing agent sizes
+Table 7. Comparison of RL with Other Baseline Anomaly Detection Methods
+Method Anomaly Detection Accuracy
+(%)
+Audit Cost Efficiency (%)
+Scalability to 500
+Agents
+Real-time Adaptation
+RL (Proposed) 98.4 42.5 ✓ Robust ✓ Yes
+RF 92.6 19.3 ✗ Model re-train needed ✗ No
+SVM 90.8 16.4 ✗ Performance drops ✗ No
+GBT 94.2 21.7 ✗ Training time increases
+✗ No
+RB 85.0 9.1 ✓ Static thresholds ✗ No
+for (100, 250, 500) and the results are depicted in Table 8. Below are the observations from Table 8.
+(1) The algorithm exhibits sub-linear growth in convergence time with respect to the number of agents due
+to shared experience replay and parallel inference
+(2) The accuracy degradation remains under 2%, showcasing robustness
+(3) Inference latency remained under 50 ms, supporting real-time audit decisions
+Table 8. System Performance vs. Agent Count
+Agent Count Avg. Convergence Iterations Detection Accuracy (%) Audit Delay (ms)
+100 12 98.7 40
+250 14 97.9 46
+500 18 96.8 49
+7 DISCUSSIONS
+The proposed AI-driven audit framework introduces a transformative approach to security and risk mitigation
+in Multi-Agent Systems (MAS), particularly in smart grids. By leveraging reinforcement learning, anomaly
+detection, and risk-aware audit scheduling, the framework optimizes cost efficiency, audit effectiveness, and
+ACM Trans. Cyber-Phys. Syst.
+26 »* Madhukrishna et al.
+(2) The cost efficiency and audit coverage improvements highlight the effectiveness of reinforcement learningbased optimization
+(3) Anomaly detection accuracy is significantly improved due to the Al-driven adaptive scheduling
+(4) The false positive rate is reduced, ensuring fewer unnecessary alerts
+(5) Risk mitigation effectiveness shows a major advantage, with a robust response mechanism
+(6) The algorithm convergence time indicates high computational efficiency, making it scalable for large-scale
+multi-agent systems
+In summary, the proposed framework provides strong evidence for its superiority over existing methodologies in
+multi-agent system security audits.
+To validate our framework design using RL, we compared RL with the baselines: Random Forest (RF), Support
+Vector Machine (SVM), Gradient Boosted Trees (GBT), and Rule-Based Auditing (RB). The comparison result is
+shown in Table 7. The result clearly states that, RL consistently outperformed other techniques/in both detection
+accuracy and cost efficiency, and was the only method capable of adapting to evolving attack patterns and
+dynamic grid behaviors without reconfiguration. The proposed framework is tested across increasing agent sizes
+Table 7. Comparison of RL with Other Baseline Anomaly Detection Methods
+Method Anomaly Detec- | Audit Cost Effi-| Scalability to 500 | Real-time Adaption Accuracy | ciency (%) Agents tation
+(%)
+RL (Proposed) 98.4 42.5 ¥ Robust Vv Yes
+RF 92.6 19.3 X Model re-train needed | X No
+SVM 90.8 16.4 X Performance drops X No
+GBT 94.2 21.7 X Training time in-| X No
+creases
+RB 85.0 9.1 ¥ Static thresholds X No
+for (100, 250, 500) and the results are depictedin Table 8. Below are the observations from Table 8.
+(1) The algorithm exhibits sub-linear growth in convergence time with respect to the number of agents due
+to shared experience replay and parallel inference
+(2) The accuracy degradation remains under 2%, showcasing robustness
+(3) Inference latency remained under 50 ms, supporting real-time audit decisions
+Table 8. System Performance vs. Agent Count
+Agent Count,| Avg. Convergence Iterations | Detection Accuracy (%) | Audit Delay (ms)
+100 12 98.7 40
+250 14 97.9 46
+500 18 96.8 49
+7 DISCUSSIONS
+The proposed Al-driven audit framework introduces a transformative approach to security and risk mitigation
+in Multi-Agent Systems (MAS), particularly in smart grids. By leveraging reinforcement learning, anomaly
+detection, and risk-aware audit scheduling, the framework optimizes cost efficiency, audit effectiveness, and
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 27
+Fig. 5. Trust Value Comparison of the Proposed Work with State-of-the-art Solutions in UUNET, Bestel, and Dial Telecomm
+Topologies
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 27
+Cost Efficiency (%) Audit Coverage (%)
+40 —@ Audit Coverage
+90
+30 S & 85 f
+oO oO c c & 20 8 sot
+vo wo a a
+10 757
+0 ; 70
+£ © x? x & cf
+Oo
+eo ? o? & &
+Anomaly Detection Accuracy (%) False Positive Rate (FPR)
+RLSA
+20.8% MLAS
+vo & Proposed Framework < g &
+SAD
+RB
+Risk Mitigation Effectiveness (%) Algorithm Convergence Time (iterations)
+—e Risk Mitigation
+85}
+80} 3 g 275) 2 g © & 70} £
+65}
+60} t
+« @ ) S ca © e ¥ Y 9 S ° ¥
+oe
+2 e
+& ef
+Fig. 5. Trust Value Comparison of the Proposed Work with State-of-the-art Solutions in UUNET, Bestel, and Dial Telecomm
+Topologies
+ACM Trans. Cyber-Phys. Syst.
+28 • Madhukrishna et al.
+risk mitigation. This section discusses the impact of AI-driven audits, challenges in implementation, and future
+research directions.
+7.1 Impact of AI-Driven Audits
+The integration of AI-driven auditing mechanisms in MAS brings significant benefits by enhancing anomaly
+detection (98.4% accuracy), optimizing audit frequency (93.8% audit coverage), reducing operational costs (42.5%
+cost efficiency), reducing false alarms (FPR decreased to 3.2%), ensuring 87.9% risk mitigation, providing faster
+convergence (algorithm converges in 12 iterations). In addition,the comparison results demonstrate that the
+proposed framework outperforms existing methods in key performance areas. By integrating adaptive learning
+and automated decision-making, the framework provides self-improving and continuously optimized audit
+mechanisms for complex MAS environments. Also, the proposed framework is highly scalable and adaptive,
+making it applicable to critical infrastructure security audits, smart grid monitoring, and industrial IoT security.
+The real-time risk-aware audit scheduling enables efficient resource utilization, reducing audit overload while
+ensuring security.
+7.2 Challenges
+Despite its strong performance, there exists certain challenges remain in the deployment of AI-driven audit
+frameworks in real-world MAS implementations. One of the challenges is integration with existing security
+infrastructure. MAS environments may already have legacy security frameworks, requiring seamless integration
+with SCADA systems, IDS/IPS, and intrusion monitoring platforms. Ensuring compatibility with existing cybersecurity policies may create a challenge. Another challenge is data transmission delays and missing values in
+multi-agent communication may impact audit decision-making.
+7.3 Future Directions
+To avoid the challenges mentioned in the previous subsection, the future direction of research can be as follows;
+(1) Decentralized learning models can enable multiple agents to collaboratively train anomaly detection
+models without sharing raw data.
+(2) Design of an universal API that allows seamless data exchange between SCADA, IDS/IPS, and AI-based
+anomaly detection models may solve the integration challenge with existing cybersecurity policies. In
+addition, exploration of RESTful or GraphQL-based APIs cmay enable dynamic data retrieval and auditing
+across platforms.
+8 CONCLUSION
+The proposed AI-driven audit framework for Multi-Agent Systems (MAS), addresses dynamic risk-aware security
+auditing in smart grids. By integrating reinforcement learning for audit scheduling, machine learning for anomaly
+detection, and optimization for cost efficiency, the framework significantly enhances security monitoring and
+resource utilization.
+Comparative analysis with state-of-the-art approaches demonstrates the framework’s superiority. It achieves
+42.5% cost efficiency, 93.8% audit coverage, and 98.4% anomaly detection accuracy, outperforming rule-based
+(RB)[20], statistical (SAD)[21], machine learning (MLAS)[22], and reinforcement learning (RLSA)[23] models. The
+false positive rate (3.2%) and risk mitigation effectiveness (87.9%) validate its precision in detecting and mitigating
+threats while ensuring low operational overhead.
+The framework has real-world applications in critical infrastructure security, industrial cybersecurity, and
+cloud security monitoring. By dynamically adjusting audit frequency, it prevents security lapses, optimizes risk
+management, and improves regulatory compliance.
+ACM Trans. Cyber-Phys. Syst.
+28 + Madhukrishna et al.
+risk mitigation. This section discusses the impact of Al-driven audits, challenges in implementation, and future
+research directions.
+7.1 Impact of Al-Driven Audits
+The integration of Al-driven auditing mechanisms in MAS brings significant benefits by enhancing anomaly
+detection (98.4% accuracy), optimizing audit frequency (93.8% audit coverage), reducing operational costs (42.5%
+cost efficiency), reducing false alarms (FPR decreased to 3.2%), ensuring 87.9% risk mitigation, providing faster
+convergence (algorithm converges in 12 iterations). In addition,the comparison results demonstrate that the
+proposed framework outperforms existing methods in key performance areas. By integrating adaptive learning
+and automated decision-making, the framework provides self-improving and continuously optimized audit
+mechanisms for complex MAS environments. Also, the proposed framework is highly scalable and adaptive,
+making it applicable to critical infrastructure security audits, smart grid monitoring, and industrial IoT security.
+The real-time risk-aware audit scheduling enables efficient resource utilization, reducing audit overload while
+ensuring security.
+7.2 Challenges
+Despite its strong performance, there exists certain challenges remain in. the deployment of AJI-driven audit
+frameworks in real-world MAS implementations. One of the challenges is integration with existing security
+infrastructure. MAS environments may already have legacy security frameworks, requiring seamless integration
+with SCADA systems, IDS/IPS, and intrusion monitoring platforms. Ensuring compatibility with existing cybersecurity policies may create a challenge. Another challenge is datatransmission delays and missing values in
+multi-agent communication may impact audit decision-making.
+7.3 Future Directions
+To avoid the challenges mentioned in the previous subsection, the future direction of research can be as follows;
+(1) Decentralized learning models can enable multiple agents to collaboratively train anomaly detection
+models without sharing raw data.
+(2) Design of an universal API that allows seamless data exchange between SCADA, IDS/IPS, and AI-based
+anomaly detection models, may solve the integration challenge with existing cybersecurity policies. In
+addition, exploration of RESTful or GraphQL-based APIs cmay enable dynamic data retrieval and auditing
+across platforms.
+8 CONCLUSION
+The proposed Al-driven audit framework for Multi-Agent Systems (MAS), addresses dynamic risk-aware security
+auditing in smart grids. By integrating reinforcement learning for audit scheduling, machine learning for anomaly
+detection, andoptimization for cost efficiency, the framework significantly enhances security monitoring and
+resource utilization.
+Comparative analysis with state-of-the-art approaches demonstrates the framework’s superiority. It achieves
+42.5% cost efficiency, 93.8% audit coverage, and 98.4% anomaly detection accuracy, outperforming rule-based
+(RB)[20], statistical (SAD)[21], machine learning (MLAS)[22], and reinforcement learning (RLSA)[23] models. The
+false positive rate (3.2%) and risk mitigation effectiveness (87.9%) validate its precision in detecting and mitigating
+threats while ensuring low operational overhead.
+The framework has real-world applications in critical infrastructure security, industrial cybersecurity, and
+cloud security monitoring. By dynamically adjusting audit frequency, it prevents security lapses, optimizes risk
+management, and improves regulatory compliance.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An AI-Driven Approach to Regular Audits • 29
+Future research will focus on federated learning for privacy-preserving audits, blockchain-based immutable
+audit trails, and explainable AI for transparent decision-making, ensuring seamless integration with existing
+security infrastructures. This framework sets a new benchmark for AI-driven cybersecurity audits in MAS
+environments, enhancing scalability, efficiency, and resilience in real-world deployments.
+ACKNOWLEDGMENTS
+No funding is involved for conducting this research.
+REFERENCES
+[1] Doe, J., & Roe, R. (2024). ”Artificial Intelligence in Auditing: A Conceptual Framework for AI Integration”. Administrative Sciences, vol.
+14, no. 10, pp. 238.
+[2] Johnson, M. L., & Davis, K. W. (2024). ”A Framework for Evaluating Fairness and Bias in High-Stakes AI Predictive Models”. Journal of
+Artificial Intelligence Research, vol. 70, pp. 123-145.
+[3] Smith, J., & Doe, A. (2021). ”Machine Learning for Cyber-Physical Security Audits.” IEEE Transactions on Smart Grid, vol. 12, no. 3, pp.
+2345-2358.
+[4] Smith, J. A., & Thompson, R. B. (2024). ”Auditing with AI: A Theoretical Framework for Machine Learning in Audit Practice”. Journal of
+Emerging Technologies in Accounting, vol. 21, no. 1, pp. 15-34.
+[5] Brown, P., & White, C. (2020). ”Power System Fault Simulations using MATLAB/Simulink.” Journal of Energy Research, vol. 45, no. 2, pp.
+678-690.
+[6] Zhang, Y., & Wang, X. (2023). ”Trust-Aware Security Framework for Multi-Agent Systems”. Journal of Cybersecurity Research, vol. 18,
+no. 3, 120-136.
+[7] Zhang, X., et al. (2019). ”PowerWorld Simulator for Stability Analysis in Smart Grids.” International Journal of Power Engineering, vol.
+10, no. 1, pp. 56-72.
+[8] Lee, Y., & Kim, H. (2021). ”Multi-Agent Frameworks for Smart Grid Resilience.” Elsevier Computer Networks, vol. 15, no. 4, pp. 112-130.
+[9] Miller, T. (2018). ”GridLAB-D: Open-Source Smart Grid Simulation.” Renewable Energy Journal, vol. 22, no. 5, pp. 345-360.
+[10] Patel, S. (2022). ”Cyber-Attack Modeling using OMNeT++ and NS-3.” Cybersecurity Review, vol. 30, no. 2, pp. 45-58.
+[11] IEEE PES Test Cases. (2021). ”Benchmark Power System Data.” IEEE PES Transactions, vol. 18, no. 6, pp. 789-805.
+[12] NREL Dataset. (2020). ”Smart Grid Load and Demand Data.” National Renewable Energy Laboratory Report, vol. 5, no. 3, pp. 210-225.
+[13] Garcia, L., et al. (2022). ”Smart Grid Data Analysis for Anomaly Detection.” IEEE Access, vol. 14, no. 7, pp. 3456-3472.
+[14] Li, S., & Qiu, M. (2020). Reinforcement Learning for Cyber-Physical Systems: With Cybersecurity Case Studies. CRC Press.
+[15] Koutsoukos, X., & Riley, P. (2019). ”Secure Control of Cyber-Physical Systems”. Proceedings of the 2019 ACM/IEEE 10th International
+Conference on Cyber-Physical Systems (ICCPS), pp. 1-10.
+[16] Koley, I., Adhikary, S., & Dey, S. (2021). ”An RL-Based Adaptive Detection Strategy to Secure Cyber-Physical Systems”. arXiv preprint
+arXiv:2103.02872. Retrieved from https://arxiv.org/abs/2103.02872.
+[17] Miller, D., & Alford, K. (2020). ”Automated Adversary Emulation: A Case for Planning and Acting in Cyber Defense Assessments”. arXiv
+preprint arXiv:2006.06544. Retrieved from https://arxiv.org/abs/2006.06544
+[18] Shen, R., & Wang, B. (2019). ”Synthetic Grid Data for Cyber-Physical Security Research.” Springer Computational Science, vol. 8, no. 9,
+pp. 567-580.
+[19] Electrical Grid Stability Simulated Data (2018),”UCI Machine Learning Repository [Online]. Available on:
+https://archive.ics.uci.edu/dataset/471.
+[20] Wischmeyer, J. & Mitchell, M. R., (2023). ”Towards Algorithm Auditing: Managing Legal, Ethical and Technological Risks of AI, Machine
+Learning and Associated Algorithms”. Journal of Algorithm Auditing, vol. 5, no. 2, pp. 98-112.
+[21] Guo, J. , Liu , T., & Zhang., Y. (2022). ”A Distance-based Anomaly Detection Framework for Deep Reinforcement Learning”. Proceedings
+of the 19th ACM International Conference on Artificial Intelligence and Security (AISec ’22), pp. 55-64.
+[22] Armando, D. J., & Tsukamoto, K., (2023). ”Auditing Machine Learning Algorithms: A White Paper for Public Auditors”. International
+Journal of Public Audit, vol. 6, no. 1, pp. 120-134.
+[23] Song, H. K., Ramachandran, P., & Kim, S.A., (2022). ”Time Series Anomaly Detection via Reinforcement Learning-Based Model Selection”.
+ACM Transactions on Intelligent Systems and Technology (TIST), vol. 13, no. 4, Article 56, pp. 1-21.
+[24] Bhattacharya, A., Ramachandran, T., Banik, S., Dowling, C. P., & Bopardikar, S. D. (2020). ”Automated Adversary Emulation for
+Cyber-Physical Systems via Reinforcement Learning”. arXiv preprint arXiv:2011.04635. Retrieved from https://arxiv.org/abs/2011.04635.
+[25] Han, K., & Zhu, Q. (2017). ”Reinforcement Learning for Cyber-Physical Systems Security: A Case Study of Secure Water Treatment
+System”. Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security, 1933-1935.
+ACM Trans. Cyber-Phys. Syst.
+Enhancing Security of Distributed Multi-Agent Systems in Smart Grids: An Al-Driven Approach to Regular Audits + 29
+Future research will focus on federated learning for privacy-preserving audits, blockchain-based immutable
+audit trails, and explainable AI for transparent decision-making, ensuring seamless integration with existing
+security infrastructures. This framework sets a new benchmark for Al-driven cybersecurity audits in MAS
+environments, enhancing scalability, efficiency, and resilience in real-world deployments.
+ACKNOWLEDGMENTS
+No funding is involved for conducting this research.
+REFERENCES
+[1] Doe, J., & Roe, R. (2024). Artificial Intelligence in Auditing: A Conceptual Framework for AI Integration”. Administrative Sciences, vol.
+14, no. 10, pp. 238.
+Johnson, M. L., & Davis, K. W. (2024). ”A Framework for Evaluating Fairness and Bias in High-Stakes AI Predictive Models”. Journal of
+Artificial Intelligence Research, vol. 70, pp. 123-145.
+Smith, J., & Doe, A. (2021). "Machine Learning for Cyber-Physical Security Audits.” IEEE Transactions on SmartGrid, vol. 12, no. 3, pp.
+2345-2358.
+Smith, J. A., & Thompson, R. B. (2024). "Auditing with AI: A Theoretical Framework for Machine Learning in Audit Practice”. Journal of
+Emerging Technologies in Accounting, vol. 21, no. 1, pp. 15-34.
+Brown, P., & White, C. (2020). "Power System Fault Simulations using MATLAB/Simulink? Journal of Energy Research, vol. 45, no. 2, pp.
+678-690.
+Zhang, Y., & Wang, X. (2023). *Trust-Aware Security Framework for Multi-Agent Systems”. Journal of Cybersecurity Research, vol. 18,
+no. 3, 120-136.
+Zhang, X., et al. (2019). "PowerWorld Simulator for Stability Analysis in Smart Grids.” International Journal of Power Engineering, vol.
+10, no. 1, pp. 56-72.
+Lee, Y., & Kim, H. (2021). ”Multi-Agent Frameworks for Smart Grid Resilience.” Elsevier Computer Networks, vol. 15, no. 4, pp. 112-130.
+Miller, T. (2018). °GridLAB-D: Open-Source Smart Grid Simulation.” Renewable Energy Journal, vol. 22, no. 5, pp. 345-360.
+Patel, S. (2022). *Cyber-Attack Modeling using OMNeT++ and NS-3.” Cybersecurity Review, vol. 30, no. 2, pp. 45-58.
+IEEE PES Test Cases. (2021). "Benchmark Power System Data.” IEEE PES Transactions, vol. 18, no. 6, pp. 789-805.
+NREL Dataset. (2020). "Smart Grid Load and Demand Data.’ National)Renewable Energy Laboratory Report, vol. 5, no. 3, pp. 210-225.
+Garcia, L., et al. (2022). "Smart Grid Data Analysis for Anomaly Detection.” IEEE Access, vol. 14, no. 7, pp. 3456-3472.
+Li, S., & Qiu, M. (2020). Reinforcement Learning for Cyber-Physical Systems: With Cybersecurity Case Studies. CRC Press.
+Koutsoukos, X., & Riley, P. (2019). "Secure Control of Cyber-Physical Systems”. Proceedings of the 2019 ACM/IEEE 10th International
+Conference on Cyber-Physical Systems (ICCPS), pp. 1-10.
+Koley, I., Adhikary, S., & Dey, S. (2021). “An RL-Based Adaptive Detection Strategy to Secure Cyber-Physical Systems”. arXiv preprint
+arXiv:2103.02872. Retrieved from https://arxiv.org/abs/2103.02872.
+Miller, D., & Alford, K. (2020)."Automated Adversary Emulation: A Case for Planning and Acting in Cyber Defense Assessments”. arXiv
+preprint arXiv:2006.06544. Retrieved from https://arxiv.org/abs/2006.06544
+Shen, R., & Wang, B. (2019)»”Synthetic Grid Data for Cyber-Physical Security Research.” Springer Computational Science, vol. 8, no. 9, pp. 567-580.
+Electrical Grid Stability Simulated Data (2018)?UCI Machine Learning Repository [Online]. Available on:
+https://archive.ics.uci.edu/dataset/471.
+Wischmeyer, J. & Mitchell, M. R., (2023). *Towards Algorithm Auditing: Managing Legal, Ethical and Technological Risks of AI, Machine
+Learning and Associated Algorithms”. Journal of Algorithm Auditing, vol. 5, no. 2, pp. 98-112.
+Guo, J. , Liu, T., & Zhang, Y. (2022). "A Distance-based Anomaly Detection Framework for Deep Reinforcement Learning”. Proceedings
+of the 19th ACM International Conference on Artificial Intelligence and Security (AISec ’22), pp. 55-64.
+Armando, D. J., & Tsukamoto, K., (2023). "Auditing Machine Learning Algorithms: A White Paper for Public Auditors”. International
+Journal of Public Audit, vol. 6, no. 1, pp. 120-134.
+Song, H. K., Ramachandran, P., & Kim, S.A., (2022). ”Time Series Anomaly Detection via Reinforcement Learning-Based Model Selection”.
+ACM Transactions on Intelligent Systems and Technology (TIST), vol. 13, no. 4, Article 56, pp. 1-21.
+Bhattacharya, A., Ramachandran, T., Banik, S., Dowling, C. P., & Bopardikar, S. D. (2020). "Automated Adversary Emulation for
+Cyber-Physical Systems via Reinforcement Learning”. arXiv preprint arXiv:2011.04635. Retrieved from https://arxiv.org/abs/2011.04635.
+Han, K., & Zhu, Q. (2017). ’Reinforcement Learning for Cyber-Physical Systems Security: A Case Study of Secure Water Treatment
+System”. Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security, 1933-1935.
+ACM Trans. Cyber-Phys. Syst.
+30 • Madhukrishna et al.
+[26] Zhang, Y., & Wang, X. (2024). ”A Survey on LLM-Based Multi-Agent Systems: Workflow, Infrastructure, and Applications”. Computational
+Intelligence, vol. 40, no. 3, pp. 456-478.
+[27] Sadeghi, A. R., Wachsmann, C., & Waidner, M. (2015). ”Security and Privacy Challenges in Industrial Internet of Things”. Proceedings of
+the 52nd Annual Design Automation Conference, pp. 1-6.
+[28] Ghosh, B. (2024). ”AI-Powered Multi-Agent Trading Workflow”. Medium. Retrieved from https://medium.com/@bijit211987/ai-poweredmulti-agent-trading-workflow.
+[29] Huang, K. (2024). ”From AI Agents to Multi-Agent Systems: A Capability Framework”. Cloud Security Alliance. retrieved from
+https://cloudsecurityalliance.org/blog/2024/12/09/from-ai-agents-to-multiagent-systems-a-capability-framework.
+ACM Trans. Cyber-Phys. Syst.
+30 »* Madhukrishna et al.
+[26] Zhang, Y., & Wang, X. (2024). "A Survey on LLM-Based Multi-Agent Systems: Workflow, Infrastructure, and Applications”. Computational
+Intelligence, vol. 40, no. 3, pp. 456-478.
+[27] Sadeghi, A. R., Wachsmann, C., & Waidner, M. (2015). "Security and Privacy Challenges in Industrial Internet of Things”. Proceedings of
+the 52nd Annual Design Automation Conference, pp. 1-6.
+[28] Ghosh, B. (2024). ”Al-Powered Multi-Agent Trading Workflow”. Medium. Retrieved from https://medium.com/@bijit211987/ai-poweredmulti-agent-trading-workflow.
+[29] Huang, K. (2024). "From AI Agents to Multi-Agent Systems: A Capability Framework”. Cloud Security Alliance. retrieved from
+https://cloudsecurityalliance.org/blog/2024/12/09/from-ai-agents-to-multiagent-systems-a-capability-framework.
+ACM Trans. Cyber-Phys. Syst.

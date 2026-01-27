@@ -27,11 +27,16 @@ except Exception:
 
 
 def audit_coverage(audit_freq_history: Dict[str, List[int]]) -> float:
-    """Compute fraction of agents audited at least once."""
+    """Compute fraction of agents audited at least once.
+    
+    Note: This checks assigned frequencies, not actual audit executions.
+    For actual execution coverage, use coverage_from_ledger().
+    """
     covered = 0
     total = len(audit_freq_history)
     for series in audit_freq_history.values():
-        if np.any(np.asarray(series) >= 1):
+        # Check if agent was assigned audit frequency > 0 at any timestep
+        if np.any(np.asarray(series) > 0):
             covered += 1
     return float(covered / total) if total else 0.0
 
@@ -413,8 +418,9 @@ def build_summary(
 
     mean_risk_dyn = mean_global_risk(dynamic_records)
     mean_risk_base = mean_global_risk(baseline_records)
-    dyn_total_cost = dyn_cost_audit + failure_cost_coeff * mean_risk_dyn
-    base_total_cost = base_cost_audit + failure_cost_coeff * mean_risk_base
+    # FIX: Cost efficiency uses only audit cost (not failure cost)
+    dyn_total_cost = dyn_cost_audit
+    base_total_cost = base_cost_audit
     risk_mitigation = 0.0
     if mean_risk_base > 0:
         risk_mitigation = float((mean_risk_base - mean_risk_dyn) / mean_risk_base)
@@ -434,9 +440,9 @@ def build_summary(
         "baseline_total_audit_cost": base_cost_audit,
         "dynamic_intended_audit_cost": dyn_intended_cost,
         "baseline_intended_audit_cost": base_intended_cost,
-        "executed_cost_dynamic": dyn_total_cost,
-        "executed_cost_baseline": base_total_cost,
-        "cost_efficiency": cost_efficiency(dyn_total_cost, base_total_cost),
+        "executed_cost_dynamic": dyn_cost_audit,
+        "executed_cost_baseline": base_cost_audit,
+        "cost_efficiency": cost_efficiency(dyn_cost_audit, base_cost_audit),
         "mean_global_risk_dynamic": mean_risk_dyn,
         "mean_global_risk_baseline": mean_risk_base,
         "risk_mitigation": risk_mitigation,

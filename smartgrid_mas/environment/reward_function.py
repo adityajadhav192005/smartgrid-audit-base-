@@ -43,6 +43,7 @@ def compute_reward(
     mean_baseline_delta: float,
     attacks_stopped: int = 0,
     audit_cost: float = 0.0,
+    over_budget_excess: float = 0.0,
     weights: RewardWeights = None,
     cost_scale: float | None = None,
     prev_risk: float | None = None,
@@ -93,16 +94,22 @@ def compute_reward(
     # This is the CONTINUOUS PRESSURE component
     stability_penalty = -2.0 * mean_baseline_delta
     
-    # 3) EFFICIENCY: The "Conditional" Cost (THE ANTI-STINGY FIX)
-    # If the grid is shaking (> 1.0), we DO NOT penalize spending.
-    # We want the agent to panic and audit everything.
-    # Only care about money when we are safe.
-    efficiency_penalty = 0.0
+    # 3) EFFICIENCY: Strongly penalize audit spend; heavier when stable; add over-budget penalty
+    efficiency_penalty = -5.0 * audit_cost
     if mean_baseline_delta <= SAFE_THRESHOLD:
-        # Grid is stable - now we can optimize cost
-        efficiency_penalty = -0.5 * audit_cost
+        efficiency_penalty = -10.0 * audit_cost
+    over_budget_penalty = -8.0 * max(0.0, over_budget_excess)
+
+    # 4) COVERAGE INCENTIVE: No reward for coverage; punish low-risk auditing, reward reducing low risk
+    coverage_bonus = 0.0
+    if st.risk_score < 0.2 and action == AuditAction.INC:
+        coverage_bonus = -4.0  # very strong penalty for auditing low risk
+    elif st.risk_score < 0.2 and action == AuditAction.HOLD:
+        coverage_bonus = -2.0  # discourage holding audits on low risk
+    elif st.risk_score < 0.2 and action == AuditAction.DEC:
+        coverage_bonus = 1.5   # reward reducing audits on low risk
     
-    # 4) FINAL SUM
-    total_reward = security_score + stability_penalty + efficiency_penalty
+    # 5) FINAL SUM
+    total_reward = security_score + stability_penalty + efficiency_penalty + over_budget_penalty + coverage_bonus
     
     return float(total_reward)

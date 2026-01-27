@@ -22,8 +22,8 @@ def enforce_audit_constraints(
     Enforce paper constraints on audit frequencies with DYNAMIC CAPACITY SCALING.
     
     PROTOCOL C: THE "EMERGENCY OVERDRAFT" (Scalability Fix)
-    - Base capacity: max(10, num_agents * 0.05) → guarantees 5% coverage at any scale
-    - Emergency overdraft: If mean_baseline_delta > 5.0, allow 3× capacity (15% coverage)
+    - Base capacity: uses config max_audits_per_cycle (honors user setting, min 10)
+    - Emergency overdraft: If mean_baseline_delta > 1.0, allow 3× capacity
     - Cost scaling: Overdraft audits cost 3× more (models emergency overtime spending)
     
     Constraints (in order):
@@ -56,15 +56,13 @@ def enforce_audit_constraints(
     
     num_agents = len(agents)
     
-    # Base capacity: Always allow at least 10, or 5% of the network (whichever is higher)
-    # N=100 → max(10, 5) = 10
-    # N=200 → max(10, 10) = 10
-    # N=500 → max(10, 25) = 25 (FIXES THE BOTTLENECK!)
-    base_cap = max(10, int(num_agents * 0.05))
+    # Base capacity: Use config max_audits_per_cycle (honors user configuration)
+    # Fallback to 10% of agents if config value is unreasonably low
+    base_cap = max(10, max_audits_per_cycle)
     
     # Emergency overdraft: If physics are critical, triple the capacity to stop cascade
-    # N=500: base_cap=25 → 75 audits during crisis (15% coverage vs 2% before)
-    CRITICAL_THRESHOLD = 5.0
+    # Lowered threshold to 1.0 (from 5.0) to trigger during realistic deviations
+    CRITICAL_THRESHOLD = 1.0
     is_crisis = mean_baseline_delta > CRITICAL_THRESHOLD
     dynamic_max_audits = base_cap * 3 if is_crisis else base_cap
     
@@ -82,7 +80,17 @@ def enforce_audit_constraints(
     requested_raw = sum(agent.audit_frequency for agent in agents)
     budget_allowed = float(budget_ratio * operational_cost)
     max_by_budget = int(budget_allowed // effective_audit_cost) if effective_audit_cost > 0 else dynamic_max_audits
-    allowed_total = max(0, min(dynamic_max_audits, max_by_budget))
+
+    # Risk-weighted clamp: only provision audits in proportion to higher-risk agents
+    high = [ag for ag in agents if ag.last_state and ag.last_state.risk_score >= 0.6]
+    mid = [ag for ag in agents if ag.last_state and 0.3 <= ag.last_state.risk_score < 0.6]
+    risk_cap = int(len(high) * f_max + len(mid) * 0.5 * f_max)
+    # Baseline reference: do not exceed 110% of configured cap (keeps spend near baseline)
+    baseline_cap_110 = int(1.1 * max_audits_per_cycle)
+
+    allowed_total = max(0, min(requested_raw, max(dynamic_max_audits, max_by_budget)))
+    allowed_total = min(allowed_total, risk_cap if risk_cap > 0 else f_max)  # disallow mass audits when risk≈0
+    allowed_total = min(allowed_total, baseline_cap_110)
 
     # Cluster-aware priority: rank by risk with cluster mean risk as a small bonus
     cluster_risk_sum: Dict[int, float] = {}

@@ -71,9 +71,9 @@ def _env_int(key: str, default: int) -> int:
 
 
 # Paper-aligned defaults: balance cost efficiency + risk mitigation
-AUDIT_BUDGET_RATIO = _env_float("SMARTGRID_AUDIT_BUDGET_RATIO", 0.50)  # Increased from 0.20 to give larger grids enough budget for audits
+AUDIT_BUDGET_RATIO = _env_float("SMARTGRID_AUDIT_BUDGET_RATIO", 0.15)  # tighten spend envelope
 GRADIENT_LR = 0.01
-MAX_AUDITS_PER_CYCLE = _env_int("SMARTGRID_MAX_AUDITS_PER_CYCLE", 10)  # Reduced from 50 for cost efficiency
+MAX_AUDITS_PER_CYCLE = _env_int("SMARTGRID_MAX_AUDITS_PER_CYCLE", 25)  # cap audits per cycle near baseline
 CONSTRAINT_LOG_LEVEL = os.environ.get("SMARTGRID_CONSTRAINT_LOG_LEVEL", "WARNING").upper()
 RISK_THRESHOLD = _env_float("SMARTGRID_RISK_THRESHOLD", 0.5)  # Raised back to 0.5 for balanced detection
 F_MAX_OVERRIDE = os.environ.get("SMARTGRID_F_MAX", "").strip()
@@ -91,13 +91,11 @@ BETA = _env_float("SMARTGRID_BETA", 0.1)
 # Baseline naive audit frequency (paper f=1)
 BASELINE_FIXED_F = _env_int("SMARTGRID_BASELINE_F", 1)
 
-# LSTM hyperparameters (single source of truth)
+# LSTM hyperparameters (loaded from config with env override fallback)
 ENV_CFG = GridEnvConfig()
 FEATURE_DIM = ENV_CFG.phys_dim + ENV_CFG.cyber_dim
-LSTM_HIDDEN_SIZE = 32
-LSTM_NUM_LAYERS = 2
-LSTM_DROPOUT = 0.2
 LSTM_WINDOW = _env_int("SMARTGRID_LSTM_WINDOW", 24)
+# LSTM params will be loaded from config in train_lstm_if_needed()
 
 # Attack scenario parameters
 FDI_RATE = 0.10
@@ -245,8 +243,15 @@ def generate_synthetic_training_data(
     return np.array(data, dtype=np.float32), np.array(labels, dtype=np.float32)
 
 
-def _train_lstm_with_current_config(logger: logging.Logger) -> None:
+def _train_lstm_with_current_config(logger: logging.Logger, config: Dict[str, Any]) -> None:
     """Train LSTM with the configured feature dimension and hyperparameters."""
+    lstm_cfg = config.get("anomaly_model", {}).get("lstm", {})
+    hidden_size = lstm_cfg.get("hidden_size", 64)
+    num_layers = lstm_cfg.get("num_layers", 2)
+    dropout = lstm_cfg.get("dropout", 0.2)
+    batch_size = lstm_cfg.get("batch_size", 64)
+    epochs = lstm_cfg.get("epochs", 20)
+    
     logger.info(f"  Generating synthetic training data (features={FEATURE_DIM})...")
     data, labels = generate_synthetic_training_data(
         n_samples=2000,
@@ -259,11 +264,11 @@ def _train_lstm_with_current_config(logger: logging.Logger) -> None:
         labels=labels,
         window=LSTM_WINDOW,
         model_path=str(LSTM_MODEL_PATH),
-        hidden_size=LSTM_HIDDEN_SIZE,
-        num_layers=LSTM_NUM_LAYERS,
-        dropout=LSTM_DROPOUT,
-        batch_size=32,
-        epochs=50,
+        hidden_size=hidden_size,
+        num_layers=num_layers,
+        dropout=dropout,
+        batch_size=batch_size,
+        epochs=epochs,
         lr=1e-3,
         seed=SEED,
         verbose=False,
@@ -272,8 +277,13 @@ def _train_lstm_with_current_config(logger: logging.Logger) -> None:
     logger.info(f"  Train loss: {result.train_loss:.4f}, Val loss: {result.val_loss:.4f}")
 
 
-def train_lstm_if_needed(logger: logging.Logger) -> None:
+def train_lstm_if_needed(logger: logging.Logger, config: Dict[str, Any]) -> None:
     """Ensure LSTM checkpoint exists and matches current configuration."""
+    lstm_cfg = config.get("anomaly_model", {}).get("lstm", {})
+    hidden_size = lstm_cfg.get("hidden_size", 64)
+    num_layers = lstm_cfg.get("num_layers", 2)
+    dropout = lstm_cfg.get("dropout", 0.2)
+    
     model_path = Path(LSTM_MODEL_PATH)
     retrain_reason = None
 
@@ -287,11 +297,11 @@ def train_lstm_if_needed(logger: logging.Logger) -> None:
             else:
                 if int(ckpt.get("input_size", -1)) != FEATURE_DIM:
                     retrain_reason = "input_size mismatch"
-                elif int(ckpt.get("hidden_size", -1)) != LSTM_HIDDEN_SIZE:
+                elif int(ckpt.get("hidden_size", -1)) != hidden_size:
                     retrain_reason = "hidden_size mismatch"
-                elif int(ckpt.get("num_layers", -1)) != LSTM_NUM_LAYERS:
+                elif int(ckpt.get("num_layers", -1)) != num_layers:
                     retrain_reason = "num_layers mismatch"
-                elif float(ckpt.get("dropout", -1.0)) != float(LSTM_DROPOUT):
+                elif float(ckpt.get("dropout", -1.0)) != float(dropout):
                     retrain_reason = "dropout mismatch"
                 elif int(ckpt.get("window", -1)) != LSTM_WINDOW:
                     retrain_reason = "window mismatch"
@@ -300,7 +310,7 @@ def train_lstm_if_needed(logger: logging.Logger) -> None:
 
     if retrain_reason:
         logger.info(f"Training LSTM model ({retrain_reason})...")
-        _train_lstm_with_current_config(logger)
+        _train_lstm_with_current_config(logger, config)
     else:
         logger.info(f"✓ LSTM model already exists and matches configuration: {LSTM_MODEL_PATH}")
 
@@ -309,14 +319,14 @@ def train_lstm_if_needed(logger: logging.Logger) -> None:
 # STEP 4: LOAD LSTM MODEL
 # ============================================================================
 
-def load_lstm_model(logger: logging.Logger) -> LSTMInferencer:
+def load_lstm_model(logger: logging.Logger, config: Dict[str, Any]) -> LSTMInferencer:
     """Load the trained LSTM model for inference."""
     logger.info("Loading LSTM model for inference...")
     try:
         inferencer = LSTMInferencer(model_path=LSTM_MODEL_PATH)
     except Exception as e:
         logger.warning(f"LSTM load failed after verification ({e}); retraining once more...")
-        _train_lstm_with_current_config(logger)
+        _train_lstm_with_current_config(logger, config)
         inferencer = LSTMInferencer(model_path=LSTM_MODEL_PATH)
 
     logger.info(
@@ -426,10 +436,11 @@ def run_all_simulations(
     logger: logging.Logger,
     ablation_mode: str = 'HYBRID',
     n_specific_budget_ratio: float | None = None,
+    n_agents: int | None = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
     """
     Run both dynamic (RL+gradient) and baseline (f=1) simulations.
-    
+
     Returns:
         (dynamic_metrics, dynamic_events, baseline_metrics, baseline_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, convergence_info_dyn)
     """
@@ -441,7 +452,6 @@ def run_all_simulations(
     logger.info("="*70)
     logger.info("RUNNING DYNAMIC SIMULATION (RL + Gradient + Audits + Learning)")
     logger.info("="*70)
-    
     # Optional f_max override via env
     if F_MAX_OVERRIDE:
         try:
@@ -465,6 +475,10 @@ def run_all_simulations(
     _cycle_hours = int(os.environ.get("SMARTGRID_CYCLE_HOURS", config["simulation"]["cycle_hours"]))
     _timestep_minutes = int(os.environ.get("SMARTGRID_TIMESTEP_MINUTES", config["simulation"]["timestep_minutes"]))
 
+    # Scale operational cost with grid size (Fix #5)
+    total_agents = n_agents if n_agents is not None else len(agents_dyn)
+    scaled_operational_cost = 100.0 * (total_agents / 100.0)
+
     dyn_metrics, dyn_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_simulation_24h(
         agents=agents_dyn,
         lstm_infer=lstm_infer,
@@ -476,7 +490,7 @@ def run_all_simulations(
         f_min=int(config["audit"]["f_min"]),
         f_max=int(config["audit"]["f_max"]),
         audit_cost_per_audit=1.0,
-        operational_cost=100.0,
+        operational_cost=scaled_operational_cost,
         alpha_low=ALPHA_LOW,
         alpha_high=ALPHA_HIGH,
         beta=BETA,
@@ -507,7 +521,7 @@ def run_all_simulations(
         timestep_minutes=_timestep_minutes,
         cycle_hours=_cycle_hours,
         audit_cost_per_audit=1.0,
-        operational_cost=100.0,
+        operational_cost=scaled_operational_cost,
         alpha_low=ALPHA_LOW,
         alpha_high=ALPHA_HIGH,
         beta=BETA,
@@ -884,20 +898,20 @@ def main() -> None:
             logger.info("="*70)
             validate_and_setup_environment(logger)
             
+            # Load config first
+            config = load_config(CONFIG_PATH)
+            
             # Step 3: Train LSTM if needed
             logger.info("\n" + "="*70)
             logger.info("STEP 3: LSTM Model Training (If Needed)")
             logger.info("="*70)
-            train_lstm_if_needed(logger)
+            train_lstm_if_needed(logger, config)
             
             # Step 4: Load LSTM
             logger.info("\n" + "="*70)
             logger.info("STEP 4: Loading LSTM Model")
             logger.info("="*70)
-            lstm_infer = load_lstm_model(logger)
-            
-            # Load config
-            config = load_config(CONFIG_PATH)
+            lstm_infer = load_lstm_model(logger, config)
             # Cycle length override
             cycle_override = os.environ.get("SMARTGRID_CYCLE_HOURS", "").strip()
             if cycle_override:
@@ -934,8 +948,9 @@ def main() -> None:
                 logger.info(f"✓ Chain attack rate: {CHAIN_RATE:.0%}")
                 logger.info(f"✓ Fault rate: {FAULT_RATE:.0%}")
 
-                # Step 6.5: N-specific parameter overrides
-                n_specific_budget_ratio = _env_float(f"SMARTGRID_AUDIT_BUDGET_RATIO_N{n_agents}", AUDIT_BUDGET_RATIO)
+                # Step 6.5: N-specific parameter overrides (config file > env var > default)
+                budget_per_n = config.get("audit", {}).get("budget_per_n", {})
+                n_specific_budget_ratio = budget_per_n.get(n_agents, _env_float(f"SMARTGRID_AUDIT_BUDGET_RATIO_N{n_agents}", AUDIT_BUDGET_RATIO))
                 if n_specific_budget_ratio != AUDIT_BUDGET_RATIO:
                     logger.info(f"  → Using N-specific budget ratio: {n_specific_budget_ratio:.3f} (default: {AUDIT_BUDGET_RATIO:.3f})")
                 
@@ -955,7 +970,7 @@ def main() -> None:
                     logger.info(f"\n  → Ablation mode: {ablation_mode}")
                     dyn_metrics, dyn_events, base_metrics, base_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_all_simulations(
                         agents_dyn, agents_base, lstm_infer, config, logger, ablation_mode=ablation_mode, 
-                        n_specific_budget_ratio=n_specific_budget_ratio
+                        n_specific_budget_ratio=n_specific_budget_ratio, n_agents=n_agents
                     )
                     ablation_results[ablation_mode] = {
                         'dyn_metrics': dyn_metrics, 'dyn_events': dyn_events,
@@ -1048,20 +1063,20 @@ def main() -> None:
         logger.info("="*70)
         validate_and_setup_environment(logger)
         
+        # Load config for experiment parameters
+        config = load_config(CONFIG_PATH)
+        
         # Step 3: Train LSTM if needed
         logger.info("\n" + "="*70)
         logger.info("STEP 3: LSTM Model Training (If Needed)")
         logger.info("="*70)
-        train_lstm_if_needed(logger)
+        train_lstm_if_needed(logger, config)
         
         # Step 4: Load LSTM
         logger.info("\n" + "="*70)
         logger.info("STEP 4: Loading LSTM Model")
         logger.info("="*70)
-        lstm_infer = load_lstm_model(logger)
-        
-        # Load config for experiment parameters
-        config = load_config(CONFIG_PATH)
+        lstm_infer = load_lstm_model(logger, config)
         # Agent scalability sweep per paper: N in {100, 200, 500}
         sweep_env = os.environ.get("SMARTGRID_SWEEP", "").strip()
         if sweep_env:
@@ -1193,7 +1208,13 @@ def main() -> None:
             logger.info("="*70)
             print_summary_report(summary, logger)
             
-            all_summaries.append({"seed": current_seed, "summary": summary})
+            all_summaries.append({"seed": current_seed, "n": n_agents, "summary": summary, "path": out_dir / "summary.json"})
+        
+        # Print compact multi-N table after all N values complete
+        logger.info("\n" + "="*70)
+        logger.info("FINAL MULTI-N COMPARISON TABLE")
+        logger.info("="*70)
+        print_compact_sweep_table(all_summaries, logger)
         
         # Aggregate robustness statistics if multiple seeds
         if len(all_summaries) > 1:

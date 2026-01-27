@@ -13,6 +13,7 @@ class StateEncoder:
     - agent risk_score (float) → risk bucket [0, len(risk_edges)-2]
     - anomaly_prob (0..1) → prob bucket [0, len(prob_edges)-2]
     - cluster_label (int) → cluster ID (unchanged)
+    - capacity_utilization (0..2+) → capacity bucket [0, 3] (FIX #11)
     
     Uses bisect_right for efficient bucketing.
     """
@@ -22,6 +23,10 @@ class StateEncoder:
     
     # Edges for anomaly probability bucketing
     prob_edges: Tuple[float, ...] = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+    
+    # Capacity utilization bucketing (FIX #11 - Architectural)
+    # 0: plenty of capacity (<50%), 1: moderate (50-80%), 2: tight (80-100%), 3: over-capacity (>100%)
+    capacity_edges: Tuple[float, ...] = (0.0, 0.5, 0.8, 1.0, 2.0)
 
     def bucket(self, x: float, edges: Tuple[float, ...]) -> int:
         """
@@ -41,19 +46,23 @@ class StateEncoder:
         i = bisect.bisect_right(edges, x) - 1
         return max(0, min(i, len(edges) - 2))
 
-    def encode(self, risk: float, anomaly_prob: float, cluster_label: int) -> Tuple[int, int, int]:
+    def encode(self, risk: float, anomaly_prob: float, cluster_label: int, capacity_utilization: float = 0.5) -> Tuple[int, int, int, int]:
         """
         Encode state into discrete tuple suitable for Q-table indexing.
+        
+        FIX #11: Now includes capacity utilization for constraint-aware learning.
         
         Args:
             risk: Agent risk score (float)
             anomaly_prob: Anomaly probability from LSTM [0, 1]
             cluster_label: Cluster ID from K-Means
+            capacity_utilization: Current capacity usage ratio (0.0 = empty, 1.0 = full, >1.0 = over)
         
         Returns:
-            (risk_bucket, prob_bucket, cluster_label) tuple for Q-table key
+            (risk_bucket, prob_bucket, cluster_label, capacity_bucket) tuple for Q-table key
         """
         r_bucket = self.bucket(float(risk), self.risk_edges)
         p_bucket = self.bucket(float(anomaly_prob), self.prob_edges)
         c_label = int(cluster_label)
-        return (r_bucket, p_bucket, c_label)
+        cap_bucket = self.bucket(float(capacity_utilization), self.capacity_edges)
+        return (r_bucket, p_bucket, c_label, cap_bucket)

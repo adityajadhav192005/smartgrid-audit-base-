@@ -6,7 +6,8 @@ import random
 from smartgrid_mas.audit.actions import AuditAction
 from smartgrid_mas.audit.state_encoder import StateEncoder
 
-State = Tuple[int, int, int]
+# State now includes capacity bucket: (risk, prob, cluster, capacity)
+State = Tuple[int, int, int, int]
 
 
 def apply_action_to_frequency(f: int, action: AuditAction, f_min: int, f_max: int) -> int:
@@ -222,6 +223,8 @@ class QLearningAuditScheduler:
         Prefill Q-table with small heuristic values to reduce early oscillation
         and encourage reactions at high risk. Uses encoder bucket edges and
         seeds cluster labels 0..2.
+        
+        FIX #11: Now handles 4D state space including capacity utilization.
         """
         # Low vs high buckets by edges
         low_risks = [0, 1]
@@ -229,13 +232,27 @@ class QLearningAuditScheduler:
         low_probs = [0, 1]
         high_probs = [len(self.encoder.prob_edges) - 3, len(self.encoder.prob_edges) - 2]
         clusters = [0, 1, 2]
+        capacity_levels = [0, 1, 2, 3]  # plenty, moderate, tight, over-capacity
+        
         # Baseline small preference for HOLD
         base = [0.1, 0.2, 0.1]
+        # At high capacity, prefer DEC
+        high_cap = [0.3, 0.2, 0.0]
+        
         for c in clusters:
-            for r in low_risks:
-                for p in low_probs:
-                    self.Q[(r, p, c)] = list(base)
-            for r in high_risks:
-                for p in high_probs:
-                    # Prefer INC slightly at high risk/prob
-                    self.Q[(r, p, c)] = [0.1, 0.1, 0.2]
+            for cap in capacity_levels:
+                for r in low_risks:
+                    for p in low_probs:
+                        # Low risk + high capacity → prefer DEC
+                        if cap >= 2:
+                            self.Q[(r, p, c, cap)] = list(high_cap)
+                        else:
+                            self.Q[(r, p, c, cap)] = list(base)
+                for r in high_risks:
+                    for p in high_probs:
+                        # High risk + low capacity → prefer INC
+                        if cap <= 1:
+                            self.Q[(r, p, c, cap)] = [0.1, 0.1, 0.3]
+                        # High risk + high capacity → cautious INC
+                        else:
+                            self.Q[(r, p, c, cap)] = [0.15, 0.2, 0.15]

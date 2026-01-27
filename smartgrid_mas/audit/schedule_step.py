@@ -60,6 +60,11 @@ def rl_schedule_step(
     max_by_budget = int(budget_allowed // audit_cost_per_audit) if audit_cost_per_audit > 0 else max_audits_per_cycle
     allowed_total = max(1, min(max_audits_per_cycle, max_by_budget))
 
+    # Risk-weighted throttle: cap allowed audits based on number of high-risk agents
+    risk_high = sum(1 for a in agents if a.last_state and a.last_state.risk_score >= risk_threshold)
+    if risk_high > 0:
+        allowed_total = max(1, min(allowed_total, risk_high * f_max))
+
     # ─────────────────────────────────────────────────────────
     # Step 1: Per-agent RL decision
     # ─────────────────────────────────────────────────────────
@@ -105,6 +110,10 @@ def rl_schedule_step(
         # Compute total audit cost this cycle
         total_audit_cost = float(sum(a.audit_frequency for a in agents)) * audit_cost_per_audit
 
+        # Baseline-equivalent spend (f=1) with 10% buffer; penalize above this
+        baseline_equiv_cost = float(len(agents) * audit_cost_per_audit * 1.1)
+        over_budget_excess = max(0.0, total_audit_cost - baseline_equiv_cost)
+
         r = compute_reward(
             st,
             act,
@@ -112,18 +121,22 @@ def rl_schedule_step(
             mean_baseline_delta=mean_baseline_delta,
             attacks_stopped=attacks_stopped,
             audit_cost=total_audit_cost,
+            over_budget_excess=over_budget_excess,
             prev_risk=prev_risk,
             budget_utilization=budget_utilization,
             num_agents=len(agents),
         )
 
-        # Next state (same observation for this step; will update in next cycle)
-        # In practice, we'd update state after applying the action, but here we
-        # use the same state snapshot for Q-update (baseline policy)
+        # Next state (includes updated capacity after action)
+        # FIX #11: RL now sees how its action affects capacity utilization
+        new_total_freq = sum(a.audit_frequency for a in agents if a.last_state)
+        new_capacity_utilization = float(new_total_freq) / float(max(1, allowed_total))
+        
         s_next = scheduler.encoder.encode(
             risk=st.risk_score,
             anomaly_prob=st.anomaly_prob,
             cluster_label=st.cluster_label,
+            capacity_utilization=new_capacity_utilization,
         )
 
         # Bellman update
