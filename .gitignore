@@ -12,19 +12,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
-sdist/
-var/
+/lib/
+/lib64/
 wheels/
 pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -38,32 +30,25 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb
-
 # IPython
 profile_default/
 ipython_config.py
-
 # Environments
 .env
 .venv
 env/
 venv/
-ENV/
 env.bak/
 venv.bak/
-
 # mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
 # Pyre type checker
 .pyre/
-
 # IDE
 .vscode/
 .idea/
@@ -76,17 +61,13 @@ dmypy.json
 .settings/
 *.sublime-project
 *.sublime-workspace
-
 # ========================
 # Smart Grid Audit Project
-# ========================
-
 # Logs and outputs
 logs/**/*.csv
 logs/**/*.json
 logs/**/*.log
 logs/pipeline_*.log
-
 # Data and models
 data/
 models/weights/
@@ -95,35 +76,30 @@ models/weights/
 model.pkl
 smartgrid_mas/data/anomaly_inputs/*.csv
 smartgrid_mas/data/*.pt
-
 # Cache
 cache/
 tmp/
 web/node_modules/
 web/.next/
-
 # Temporary files
 *.bak
 *.tmp
 .#*
 web/settings_payload.json
-
 # Runtime-generated settings persistence artifacts
 smartgrid_mas/config/runtime_overrides.json
 smartgrid_mas/config/runtime_env.env
-
 # Environment
 secrets.json
 config.local.json
 .streamlit/secrets.toml
 .env.*.local
 .env.local
-
 # Archive contents (keep structure)
 archive/old_scripts/
 archive/old_docs/
-
 # Keep important files
 !config_default.json
 !requirements.txt
 !logs/.gitkeep
+.vercel
