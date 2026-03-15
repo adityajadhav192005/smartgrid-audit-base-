@@ -99,6 +99,8 @@ smartgrid_mas/data/*.pt
 # Cache
 cache/
 tmp/
+web/node_modules/
+web/.next/
 
 # Temporary files
 *.bak
