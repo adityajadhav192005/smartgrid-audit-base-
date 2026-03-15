@@ -1,9 +1,14 @@
 from __future__ import annotations
 from typing import List, Dict, Tuple
 import logging
+import os
+import math
 from smartgrid_mas.agents.base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)
+
+# Dual variable for soft budget constraint (Lagrangian relaxation)
+_DUAL_LAMBDA: float = 0.0
 
 
 def enforce_audit_constraints(
@@ -16,13 +21,14 @@ def enforce_audit_constraints(
     budget_ratio: float,
     mean_baseline_delta: float = 0.0,
     ablation_mode: str = 'HYBRID',
+    cluster_budget_caps: Dict[int, int] | None = None,
     return_stats: bool = False,
 ) -> Dict[str, int] | tuple[Dict[str, int], Dict[str, float]]:
     """
     Enforce paper constraints on audit frequencies with DYNAMIC CAPACITY SCALING.
     
     PROTOCOL C: THE "EMERGENCY OVERDRAFT" (Scalability Fix)
-    - Base capacity: uses config max_audits_per_cycle (honors user setting, min 10)
+    - Base capacity: uses config max_audits_per_cycle (honors user setting exactly)
     - Emergency overdraft: If mean_baseline_delta > 1.0, allow 3× capacity
     - Cost scaling: Overdraft audits cost 3× more (models emergency overtime spending)
     
@@ -51,24 +57,46 @@ def enforce_audit_constraints(
     for agent in agents:
         agent.set_audit_frequency(agent.audit_frequency, f_min=f_min, f_max=f_max)
 
+    # Optional NO-CONSTRAINTS mode: preserve RL-selected frequencies (within f bounds)
+    # Enable with SMARTGRID_DISABLE_CONSTRAINTS=1 or ablation_mode="NO_CONSTRAINTS".
+    disable_constraints = (
+        os.environ.get("SMARTGRID_DISABLE_CONSTRAINTS", "0").strip().lower() in {"1", "true", "yes", "on"}
+        or str(ablation_mode).upper() == "NO_CONSTRAINTS"
+    )
+    if disable_constraints:
+        freqs = {agent.agent_id: agent.audit_frequency for agent in agents}
+        if not return_stats:
+            return freqs
+        assigned = float(sum(freqs.values()))
+        stats = {
+            "requested_audits": assigned,
+            "requested_audits_raw": assigned,
+            "allowed_by_cap": assigned,
+            "allowed_by_budget": assigned,
+            "allowed_final": assigned,
+            "assigned_audits": assigned,
+            "high_risk_denied": 0.0,
+            "denied_budget": 0.0,
+        }
+        return freqs, stats
+
     # ==================== DYNAMIC CAPACITY CALCULATION ====================
     # PROTOCOL C: Scale audit capacity based on grid size AND crisis severity
     
     num_agents = len(agents)
     
-    # Base capacity: Use config max_audits_per_cycle (honors user configuration)
-    # Fallback to 10% of agents if config value is unreasonably low
-    base_cap = max(10, max_audits_per_cycle)
+    # Base capacity: Use config max_audits_per_cycle exactly (no hidden floor).
+    # This keeps paper/experiment overrides (e.g., 5 audits/cycle) faithful.
+    base_cap = max(1, int(max_audits_per_cycle))
     
-    # Emergency overdraft: If physics are critical, triple the capacity to stop cascade
-    # Lowered threshold to 1.0 (from 5.0) to trigger during realistic deviations
-    CRITICAL_THRESHOLD = 1.0
-    is_crisis = mean_baseline_delta > CRITICAL_THRESHOLD
-    dynamic_max_audits = base_cap * 3 if is_crisis else base_cap
+    # Paper-aligned count cap: direct configured max audits per cycle
+    # (no hidden heuristics; budget handles cost-side control)
+    is_crisis = False
+    dynamic_max_audits = base_cap
     
     # Cost multiplier: Overdraft audits cost 3× more (emergency overtime spending)
     # This models: hiring emergency contractors, expedited processing, priority handling
-    cost_multiplier = 3.0 if is_crisis else 1.0
+    cost_multiplier = 1.0
     effective_audit_cost = audit_cost_per_audit * cost_multiplier
     
     logger.info(
@@ -76,21 +104,29 @@ def enforce_audit_constraints(
         num_agents, base_cap, mean_baseline_delta, is_crisis, dynamic_max_audits, cost_multiplier,
     )
 
-    # Compute allowed audits from both count and budget
+    # Compute cap-limited audits (budget is handled softly via Lagrangian)
     requested_raw = sum(agent.audit_frequency for agent in agents)
-    budget_allowed = float(budget_ratio * operational_cost)
-    max_by_budget = int(budget_allowed // effective_audit_cost) if effective_audit_cost > 0 else dynamic_max_audits
 
-    # Risk-weighted clamp: only provision audits in proportion to higher-risk agents
-    high = [ag for ag in agents if ag.last_state and ag.last_state.risk_score >= 0.6]
-    mid = [ag for ag in agents if ag.last_state and 0.3 <= ag.last_state.risk_score < 0.6]
-    risk_cap = int(len(high) * f_max + len(mid) * 0.5 * f_max)
-    # Baseline reference: do not exceed 110% of configured cap (keeps spend near baseline)
-    baseline_cap_110 = int(1.1 * max_audits_per_cycle)
+    # Dynamic budget scaling based on mean system risk
+    mean_risk = float(sum((a.last_state.risk_score if a.last_state else 0.0) for a in agents) / max(1, len(agents)))
+    dynamic_budget_k = float(os.environ.get("SMARTGRID_DYNAMIC_BUDGET_K", 0.5))
+    effective_budget_ratio = float(budget_ratio) * (1.0 + dynamic_budget_k * mean_risk)
+    budget_allowed = float(effective_budget_ratio * operational_cost)
 
-    allowed_total = max(0, min(requested_raw, max(dynamic_max_audits, max_by_budget)))
-    allowed_total = min(allowed_total, risk_cap if risk_cap > 0 else f_max)  # disallow mass audits when risk≈0
-    allowed_total = min(allowed_total, baseline_cap_110)
+    # Soft budget constraint via Lagrangian dual update
+    global _DUAL_LAMBDA
+    soft_dual_lr = float(os.environ.get("SMARTGRID_SOFT_BUDGET_DUAL_LR", 0.05))
+    requested_cost = float(requested_raw) * float(effective_audit_cost)
+    budget_excess = requested_cost - budget_allowed
+    norm = max(1e-6, budget_allowed)
+    _DUAL_LAMBDA = max(0.0, float(_DUAL_LAMBDA + soft_dual_lr * (budget_excess / norm)))
+
+    # Count cap remains to keep physical/operational sanity
+    allowed_total = max(0, min(requested_raw, dynamic_max_audits))
+
+    # Smooth scaling (not hard truncation) when budget is exceeded
+    excess_ratio = max(0.0, budget_excess / norm)
+    soft_scale = 1.0 / (1.0 + _DUAL_LAMBDA * excess_ratio)
 
     # Cluster-aware priority: rank by risk with cluster mean risk as a small bonus
     cluster_risk_sum: Dict[int, float] = {}
@@ -122,22 +158,39 @@ def enforce_audit_constraints(
     high_risk_denied = 0
     risk_cutoff = 0.7
 
+    cluster_remaining: Dict[int, int] = {}
+    if cluster_budget_caps:
+        cluster_remaining = {int(k): int(v) for k, v in cluster_budget_caps.items()}
+
     for agent in agents_by_priority:
         desired = max(f_min, min(f_max, agent.audit_frequency))
-
+        
+        # FIX #7: FORCE minimum audits for high-risk agents (governance override)
+        # This prevents RL from "gaming" by ignoring high-risk agents
+        is_high_risk = agent.last_state and agent.last_state.risk_score > 0.75
+        forced_minimum = 2 if is_high_risk else f_min
+        
         if remaining <= 0:
-            # No budget/cap left → zero this agent
-            agent.set_audit_frequency(0, f_min=0, f_max=f_max)
-            if desired > 0:
-                denied_budget += 1
-            if agent.last_state and agent.last_state.risk_score > risk_cutoff:
-                high_risk_denied += 1
-            continue
+            # Even with no budget, give high-risk agents emergency minimum
+            grant = forced_minimum if is_high_risk and forced_minimum <= f_min else 0
+        else:
+            # Ensure high-risk agents get at least forced_minimum
+            scaled_desired = max(0, int(round(desired * soft_scale)))
+            effective_desired = max(forced_minimum, scaled_desired)
+            grant = min(effective_desired, remaining)
 
-        grant = min(desired, remaining)
+        # Hierarchical cap per cluster (master policy)
+        if cluster_remaining:
+            c_lbl = int(getattr(agent.last_state, "cluster_label", -1)) if agent.last_state else -1
+            cap_left = cluster_remaining.get(c_lbl, 0)
+            grant = min(grant, cap_left)
+            cluster_remaining[c_lbl] = max(0, cap_left - grant)
+
         agent.set_audit_frequency(grant, f_min=0, f_max=f_max)
-        remaining -= grant
+        remaining -= max(0, grant)
 
+        if grant == 0 and desired > 0:
+            denied_budget += 1
         if grant == 0 and agent.last_state and agent.last_state.risk_score > risk_cutoff:
             high_risk_denied += 1
 
@@ -154,17 +207,60 @@ def enforce_audit_constraints(
 
     freqs = {agent.agent_id: agent.audit_frequency for agent in agents}
 
+    # ==================== GLOBAL MINIMUM COVERAGE CONSTRAINT (40% RULE) ====================
+    # Paper-aligned governance: Ensure at least 40% of agents receive audits per cycle
+    # This prevents RL from under-auditing despite cost optimization pressure
+    min_coverage_pct = float(os.environ.get("SMARTGRID_MIN_COVERAGE_PCT", "0.40"))
+    min_agents_covered = int(math.ceil(min_coverage_pct * len(agents)))
+    agents_covered = sum(1 for agent in agents if agent.audit_frequency > 0)
+    
+    if agents_covered < min_agents_covered:
+        shortfall = min_agents_covered - agents_covered
+        logger.warning(
+            "GOVERNANCE_OVERRIDE: Global minimum coverage constraint triggered | "
+            f"agents_covered={agents_covered} | min_required={min_agents_covered} | "
+            f"shortfall={shortfall} | forcing additional audits"
+        )
+        
+        # Identify agents with zero audits, sorted by priority (risk + cluster bonus)
+        zero_audit_agents = [a for a in agents if a.audit_frequency == 0]
+        zero_audit_agents_by_priority = sorted(
+            zero_audit_agents,
+            key=lambda x: (priority(x), getattr(x.last_state, "cluster_label", -1)),
+            reverse=True
+        )
+        
+        # Force minimum audit frequency (f_min) for top-priority zero-audit agents
+        forced_count = 0
+        for agent in zero_audit_agents_by_priority:
+            if forced_count >= shortfall:
+                break
+            agent.set_audit_frequency(f_min, f_min=f_min, f_max=f_max)
+            forced_count += 1
+        
+        logger.info(
+            f"GOVERNANCE_OVERRIDE: Forced {forced_count} additional agents to f_min={f_min} "
+            f"to meet {min_coverage_pct*100:.0f}% minimum coverage"
+        )
+    
+    freqs = {agent.agent_id: agent.audit_frequency for agent in agents}
+
     if not return_stats:
         return freqs
 
     stats = {
         "requested_audits": float(min(requested_raw, allowed_total)),
         "requested_audits_raw": float(requested_raw),
-        "allowed_by_cap": float(max_audits_per_cycle),
-        "allowed_by_budget": float(max_by_budget),
+        "allowed_by_cap": float(dynamic_max_audits),
+        "allowed_by_budget": float(budget_allowed / max(1e-9, effective_audit_cost)),
         "allowed_final": float(allowed_total),
         "assigned_audits": float(sum(freqs.values())),
         "high_risk_denied": float(high_risk_denied),
         "denied_budget": float(denied_budget),
+        "dual_lambda": float(_DUAL_LAMBDA),
+        "budget_ratio_effective": float(effective_budget_ratio),
+        "soft_scale": float(soft_scale),
+        "min_coverage_pct": float(min_coverage_pct),
+        "agents_covered": float(sum(1 for agent in agents if agent.audit_frequency > 0)),
     }
     return freqs, stats

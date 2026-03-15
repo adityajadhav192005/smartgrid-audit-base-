@@ -38,6 +38,7 @@ from smartgrid_mas.audit.schedule_step import rl_post_audit_update
 from smartgrid_mas.response.response_controller import response_step
 from smartgrid_mas.simulation.metrics import MetricsLogger
 from smartgrid_mas.anomaly_detection.inference import LSTMInferencer, concat_xy_window
+from smartgrid_mas.xai.explain import explain_deviation, explain_audit_decision
 
 logger = logging.getLogger(__name__)
 
@@ -145,12 +146,24 @@ def run_simulation_24h(
     t_start = time.time()
     total_lstm_time = 0.0
     total_schedule_time = 0.0
+    total_action_time = 0.0
+    step_detect_ms: List[float] = []
+    step_schedule_ms: List[float] = []
+    step_action_ms: List[float] = []
+    step_transmission_ms: List[float] = []
+    step_end_to_end_ms: List[float] = []
     
     anomaly_hist = {a.agent_id: [] for a in agents}
     audit_hist = {a.agent_id: [] for a in agents}
     
-    # Total budget across the full cycle (10% of agents per timestep, capped by max audits)
-    budget = int(len(agents) * audit_budget_ratio * steps)
+    # Budget model:
+    # - Default: soft budget only (no hard execution truncation)
+    # - Optional hard lock: set SMARTGRID_EXEC_HARD_BUDGET=1
+    exec_hard_budget = str(__import__("os").environ.get("SMARTGRID_EXEC_HARD_BUDGET", "0")).strip().lower() in {"1", "true", "yes", "on"}
+    if exec_hard_budget:
+        budget = int(len(agents) * audit_budget_ratio * steps)
+    else:
+        budget = float("inf")
     ledger = AuditLedger()
     
     if scheduler is None:
@@ -172,6 +185,7 @@ def run_simulation_24h(
     # Respect LSTM training window if available
     window_for_lstm = getattr(lstm_infer, "window", None) or 24
     window_for_lstm = max(1, min(window_for_lstm, steps))
+    agents_by_id = {a.agent_id: a for a in agents}
 
     # === VALIDITY TRACKING (THREATS-TO-VALIDITY LOGGING) ===
     validity_notes: List[str] = []
@@ -179,6 +193,20 @@ def run_simulation_24h(
     max_attack_rate = 0.0
     
     # === MAIN SIMULATION LOOP (24 hours x 60 min / 5 min = 288 timesteps) ===
+    phys_feature_names_default = [
+        "voltage",
+        "frequency",
+        "current",
+        "power",
+        "response_time",
+    ]
+    cyber_feature_names_default = [
+        "latency",
+        "packet_loss",
+        "integrity",
+        "comm_freq",
+    ]
+
     for t in range(steps):
         # === STEP 1: Data Collection ===
         obs, truth = env.step(t)
@@ -196,7 +224,8 @@ def run_simulation_24h(
             states.append(st)
         t_lstm_start = time.time()
         probs = lstm_infer.predict_proba_batch(windows)
-        total_lstm_time += time.time() - t_lstm_start
+        lstm_step_sec = time.time() - t_lstm_start
+        total_lstm_time += lstm_step_sec
         for st, p in zip(states, probs):
             st.anomaly_prob = p
         
@@ -222,20 +251,28 @@ def run_simulation_24h(
             y_pred_types.append(predicted_attack_type)  # Attack type for per-attack metrics
             
             # Derive ground truth attack type taxonomy for per-attack metrics
+            # Priority policy:
+            # 1) Keep explicit cyber attack labels from scenario engine (FDI/DOS/MITM)
+            # 2) Mark FAULT only when no cyber attack is present
+            # NOTE: CHAIN is tracked separately via convergence_info; chain members
+            # still carry their underlying attack type (MITM/FDI) for class metrics.
             atk_type = "NONE"
             if env.last_attacks:
                 at = env.last_attacks.get(a.agent_id)
                 if at is not None:
-                    # AttackType is a str Enum; use its value
                     try:
-                        atk_type = getattr(at, "value", str(at))
+                        raw = str(getattr(at, "name", getattr(at, "value", str(at)))).upper()
                     except Exception:
-                        atk_type = str(at)
-            # Chain override: classify involved agents as CHAIN
-            if env.scenario is not None and env.scenario.is_chain_attack(a.agent_id):
-                atk_type = "CHAIN"
-            # Fault override
-            if env.last_faults and env.last_faults.get(a.agent_id) and env.last_faults.get(a.agent_id) != FaultType.NONE:
+                        raw = str(at).upper()
+                    if raw in {"FDI", "DOS", "MITM"}:
+                        atk_type = raw
+
+            has_fault = bool(
+                env.last_faults
+                and env.last_faults.get(a.agent_id)
+                and env.last_faults.get(a.agent_id) != FaultType.NONE
+            )
+            if atk_type == "NONE" and has_fault:
                 atk_type = "FAULT"
             y_true_types.append(atk_type)
         
@@ -273,7 +310,8 @@ def run_simulation_24h(
             gradient_tracker=gradient_tracker,
             ablation_mode=ablation_mode,
         )
-        total_schedule_time += time.time() - t_sched_start
+        schedule_step_sec = time.time() - t_sched_start
+        total_schedule_time += schedule_step_sec
         
         # === STEP 6b: Execute Audits (Step 13 - Real Audit Events) ===
         remaining = ledger.remaining_budget(budget)
@@ -293,7 +331,9 @@ def run_simulation_24h(
         # === STEP 6c: Audit Outcome Validation (Step 14 - RL Learning from Audits) ===
         outcomes = {}
         for aid in audited_ids:
-            agent = next(a for a in agents if a.agent_id == aid)
+            agent = agents_by_id.get(aid)
+            if agent is None:
+                continue
             outcomes[aid] = evaluate_audit_outcome(agent, truth_label=truth.get(aid, 0))
         
         # === STEP 6d: Post-Audit RL Update (Step 14 - Perception-Action Loop) ===
@@ -302,13 +342,63 @@ def run_simulation_24h(
         
         # === STEP 7: Response Mechanism + Feedback Loop ===
         step_events = []
+        t_action_start = time.time()
         for a in agents:
             if a.last_state is None:
                 continue
             ev = response_step(a, anomaly_hist[a.agent_id], T=20, f_min=f_min, f_max=f_max)
+
+            # XAI augmentation for traceable simulation decisions
+            try:
+                phys_names = phys_feature_names_default[: len(a.last_state.x_phys)]
+                cyber_names = cyber_feature_names_default[: len(a.last_state.y_cyber)]
+
+                xai_phys = explain_deviation(
+                    obs=a.last_state.x_phys,
+                    base=a.bx,
+                    th=a.thx,
+                    feature_names=phys_names,
+                )
+                xai_cyber = explain_deviation(
+                    obs=a.last_state.y_cyber,
+                    base=a.by,
+                    th=a.thy,
+                    feature_names=cyber_names,
+                )
+                xai_decision = explain_audit_decision(
+                    risk_score=float(a.last_state.risk_score),
+                    risk_threshold=float(risk_threshold),
+                    action=str(ev.get("action", "UNKNOWN")),
+                    budget_remaining=float(ledger.remaining_budget(budget)) if budget != float("inf") else float("inf"),
+                    cluster_label=int(a.last_state.cluster_label),
+                )
+
+                ev["xai_decision"] = xai_decision
+                ev["xai_top_physical"] = xai_phys.get("top_features", [])[:3]
+                ev["xai_top_cyber"] = xai_cyber.get("top_features", [])[:3]
+            except Exception as ex:
+                ev["xai_error"] = str(ex)
+
             ev["t"] = t
             step_events.append(ev)
+        action_step_sec = time.time() - t_action_start
+        total_action_time += action_step_sec
         event_log.extend(step_events)
+
+        # === STEP LATENCY ACCOUNTING: detect -> schedule -> action ===
+        # Transmission latency uses observed cyber latency (y_cyber[0]) in ms.
+        tx_vals = [float(a.last_state.y_cyber[0]) for a in agents if a.last_state is not None and len(a.last_state.y_cyber) > 0]
+        transmission_ms = float(np.mean(tx_vals)) if tx_vals else 0.0
+        detect_ms = lstm_step_sec * 1000.0
+        schedule_ms = schedule_step_sec * 1000.0
+        action_ms = action_step_sec * 1000.0
+        end_to_end_ms = detect_ms + schedule_ms + action_ms + transmission_ms
+
+        step_detect_ms.append(detect_ms)
+        step_schedule_ms.append(schedule_ms)
+        step_action_ms.append(action_ms)
+        step_transmission_ms.append(transmission_ms)
+        step_end_to_end_ms.append(end_to_end_ms)
         
         # === STEP 8: Log Metrics ===
         metrics.log_step(
@@ -328,8 +418,8 @@ def run_simulation_24h(
             attack_rate_t = current_metric.get("attack_rate", 0.0)
             max_attack_rate = max(max_attack_rate, attack_rate_t)
 
-            remaining_budget = budget - ledger.total_spend
-            if budget > 0 and remaining_budget < 0.1 * budget and t < 0.8 * steps:
+            remaining_budget = (budget - ledger.total_spend) if budget != float("inf") else float("inf")
+            if budget != float("inf") and budget > 0 and remaining_budget < 0.1 * budget and t < 0.8 * steps:
                 budget_exhaustion_count += 1
 
             top_risk = sorted(
@@ -389,7 +479,7 @@ def run_simulation_24h(
     # Budget model compliance
     allowed_budget = int(len(agents) * audit_budget_ratio * steps)
     actual_audit_spend = float(ledger.total_spend)
-    budget_compliance = actual_audit_spend <= allowed_budget + 1e-9
+    budget_compliance = (actual_audit_spend <= allowed_budget + 1e-9) if exec_hard_budget else None
 
     convergence_info = {
         "rl_iterations": scheduler.iteration_count,
@@ -403,6 +493,7 @@ def run_simulation_24h(
         "operational_cost": operational_cost,
         "budget_ratio": audit_budget_ratio,
         "allowed_budget": allowed_budget,
+        "execution_hard_budget": bool(exec_hard_budget),
         "actual_audit_spend": actual_audit_spend,
         "budget_compliance": budget_compliance,
         # Threats-to-validity reporting
@@ -411,6 +502,36 @@ def run_simulation_24h(
         "total_runtime_sec": time.time() - t_start,
         "avg_lstm_inference_time_ms": (total_lstm_time / steps * 1000) if steps > 0 else 0.0,
         "avg_schedule_time_ms": (total_schedule_time / steps * 1000) if steps > 0 else 0.0,
+        "avg_action_time_ms": (total_action_time / steps * 1000) if steps > 0 else 0.0,
+        "avg_transmission_latency_ms": float(np.mean(step_transmission_ms)) if step_transmission_ms else 0.0,
+        "avg_end_to_end_delay_ms": float(np.mean(step_end_to_end_ms)) if step_end_to_end_ms else 0.0,
+        "delay_percentiles_ms": {
+            "detect": {
+                "p50": float(np.percentile(step_detect_ms, 50)) if step_detect_ms else 0.0,
+                "p95": float(np.percentile(step_detect_ms, 95)) if step_detect_ms else 0.0,
+                "max": float(np.max(step_detect_ms)) if step_detect_ms else 0.0,
+            },
+            "schedule": {
+                "p50": float(np.percentile(step_schedule_ms, 50)) if step_schedule_ms else 0.0,
+                "p95": float(np.percentile(step_schedule_ms, 95)) if step_schedule_ms else 0.0,
+                "max": float(np.max(step_schedule_ms)) if step_schedule_ms else 0.0,
+            },
+            "action": {
+                "p50": float(np.percentile(step_action_ms, 50)) if step_action_ms else 0.0,
+                "p95": float(np.percentile(step_action_ms, 95)) if step_action_ms else 0.0,
+                "max": float(np.max(step_action_ms)) if step_action_ms else 0.0,
+            },
+            "transmission": {
+                "p50": float(np.percentile(step_transmission_ms, 50)) if step_transmission_ms else 0.0,
+                "p95": float(np.percentile(step_transmission_ms, 95)) if step_transmission_ms else 0.0,
+                "max": float(np.max(step_transmission_ms)) if step_transmission_ms else 0.0,
+            },
+            "end_to_end": {
+                "p50": float(np.percentile(step_end_to_end_ms, 50)) if step_end_to_end_ms else 0.0,
+                "p95": float(np.percentile(step_end_to_end_ms, 95)) if step_end_to_end_ms else 0.0,
+                "max": float(np.max(step_end_to_end_ms)) if step_end_to_end_ms else 0.0,
+            },
+        },
         # Reproducibility snapshot
         "config": {
             "timestep_minutes": timestep_minutes,

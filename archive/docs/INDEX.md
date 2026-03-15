@@ -11,7 +11,7 @@
 ### Path 1: I Want to Verify Everything Works (5 minutes)
 1. Read: [FINAL_REPORT.md](FINAL_REPORT.md) - Complete status summary
 2. Run: `python -m pytest smartgrid_mas/tests/ -q` - All tests pass ✅
-3. Read: [README.md](README.md) - Project overview
+3. Read: [README.md](../README.md) - Project overview
 
 ### Path 2: I Want to See It Running (10 minutes)
 1. Run: `python run_demo.py` - Fast 1-hour demo
@@ -21,12 +21,12 @@
 ### Path 3: I Want Full Details (30 minutes)
 1. Read: [FINAL_REPORT.md](FINAL_REPORT.md) - Complete validation
 2. Read: [FRAMEWORK_STATUS_REPORT.md](FRAMEWORK_STATUS_REPORT.md) - Detailed analysis
-3. Read: [README.md](README.md) - Project guide
+3. Read: [README.md](../README.md) - Project guide
 4. Run: `python -m pytest smartgrid_mas/tests/ -q` - Verify tests
 5. Run: `python run_demo.py` - Watch it work
 
 ### Path 4: I'm Developing (Ongoing)
-1. Start with: [README.md](README.md) - Architecture overview
+1. Start with: [README.md](../README.md) - Architecture overview
 2. Reference: `/docs/STEP*.md` files for component details
 3. Debug with: Debug logging (automatically enabled)
 4. Validate with: `python -m pytest smartgrid_mas/tests/ -q`
@@ -41,7 +41,7 @@
 | [FINAL_REPORT.md](FINAL_REPORT.md) | Complete session summary with all details | 20 min |
 | [FRAMEWORK_STATUS_REPORT.md](FRAMEWORK_STATUS_REPORT.md) | Full validation checklist and architecture | 15 min |
 | [EXECUTION_REPORT.md](EXECUTION_REPORT.md) | This session's execution log | 10 min |
-| [README.md](README.md) | Project overview and quick start | 10 min |
+| [README.md](../README.md) | Project overview and quick start | 10 min |
 
 ### Detailed Step-by-Step Guides (in `/docs/`)
 | File | Component | Status |
@@ -163,7 +163,7 @@ smartgrid_mas/
 - Finally: Run `python run_demo.py` to see it work
 
 ### For Developers
-- Start: [README.md](README.md)
+- Start: [README.md](../README.md)
 - Reference: `/docs/` folder for detailed component guides
 - Code at: `smartgrid_mas/` (clean, well-commented)
 - Test with: `python -m pytest smartgrid_mas/tests/ -q`
@@ -174,7 +174,7 @@ smartgrid_mas/
 - Status: "✅ PRODUCTION-READY"
 
 ### For Students/Learning
-- Start: [README.md](README.md)
+- Start: [README.md](../README.md)
 - Step-by-step: `/docs/STEP1.md` → `/docs/STEP14.md`
 - Practice: Run `python run_demo.py`
 - Verify: `python -m pytest smartgrid_mas/tests/ -q`
@@ -241,18 +241,18 @@ python -m smartgrid_mas.simulation.experiment_runner
 ## 🎯 Next Steps
 
 ### If You Want to Use It
-1. Read [README.md](README.md)
+1. Read [README.md](../README.md)
 2. Run `python run_demo.py`
 3. Read [FRAMEWORK_STATUS_REPORT.md](FRAMEWORK_STATUS_REPORT.md)
 
 ### If You Want to Understand It
-1. Read [README.md](README.md) for overview
+1. Read [README.md](../README.md) for overview
 2. Go through `/docs/STEP*.md` in order
 3. Look at code in `smartgrid_mas/`
 4. Run `python run_demo.py` with debug logs
 
 ### If You Want to Develop It
-1. Read [README.md](README.md)
+1. Read [README.md](../README.md)
 2. Understand architecture in `/docs/`
 3. Run tests: `python -m pytest smartgrid_mas/tests/ -q`
 4. Modify code, then run tests again

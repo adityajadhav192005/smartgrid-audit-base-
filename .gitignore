@@ -104,10 +104,18 @@ tmp/
 *.bak
 *.tmp
 .#*
+web/settings_payload.json
+
+# Runtime-generated settings persistence artifacts
+smartgrid_mas/config/runtime_overrides.json
+smartgrid_mas/config/runtime_env.env
 
 # Environment
 secrets.json
 config.local.json
+.streamlit/secrets.toml
+.env.*.local
+.env.local
 
 # Archive contents (keep structure)
 archive/old_scripts/

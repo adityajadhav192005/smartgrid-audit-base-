@@ -16,12 +16,69 @@ methods are used together for robust audit scheduling.
 
 from __future__ import annotations
 from typing import List, Dict, Tuple
+import os
 
 from smartgrid_mas.agents.base_agent import BaseAgent
 from smartgrid_mas.audit.audit_scheduler_rl import QLearningAuditScheduler
 from smartgrid_mas.audit.schedule_step import rl_schedule_step
 from smartgrid_mas.audit.gradient_step import gradient_opt_step, GradientTracker
 from smartgrid_mas.audit.constraints import enforce_audit_constraints
+
+
+def _master_cluster_budget_allocation(
+    agents: List[BaseAgent],
+    total_budget: int,
+) -> Dict[int, int]:
+    """Allocate audit budget across clusters based on aggregate cluster risk."""
+    if total_budget <= 0 or not agents:
+        return {}
+
+    cluster_risk: Dict[int, float] = {}
+    cluster_count: Dict[int, int] = {}
+    for a in agents:
+        if a.last_state is None:
+            continue
+        c = int(getattr(a.last_state, "cluster_label", -1))
+        r = float(getattr(a.last_state, "risk_score", 0.0))
+        cluster_risk[c] = cluster_risk.get(c, 0.0) + r
+        cluster_count[c] = cluster_count.get(c, 0) + 1
+
+    if not cluster_risk:
+        return {}
+
+    total_risk = sum(cluster_risk.values())
+    eps = 1e-9
+    budgets: Dict[int, int] = {}
+
+    # proportional allocation by cluster risk
+    allocated = 0
+    for c, r in cluster_risk.items():
+        share = (r + eps) / max(total_risk, eps)
+        b = max(1, int(round(total_budget * share)))
+        budgets[c] = b
+        allocated += b
+
+    # normalize to exact total budget
+    keys = sorted(budgets.keys())
+    if allocated > total_budget:
+        overflow = allocated - total_budget
+        idx = 0
+        while overflow > 0 and keys:
+            k = keys[idx % len(keys)]
+            if budgets[k] > 1:
+                budgets[k] -= 1
+                overflow -= 1
+            idx += 1
+    elif allocated < total_budget:
+        under = total_budget - allocated
+        idx = 0
+        while under > 0 and keys:
+            k = keys[idx % len(keys)]
+            budgets[k] += 1
+            under -= 1
+            idx += 1
+
+    return budgets
 
 
 def hybrid_audit_schedule(
@@ -88,6 +145,12 @@ def hybrid_audit_schedule(
         ...     grad_lr=0.01
         ... )
     """
+    # Stage 0: Master policy allocates region/cluster budget (hierarchical control)
+    use_hierarchical = os.environ.get("SMARTGRID_HIERARCHICAL", "1").strip().lower() in {"1", "true", "yes", "on"}
+    cluster_budget_caps: Dict[int, int] | None = None
+    if use_hierarchical:
+        cluster_budget_caps = _master_cluster_budget_allocation(agents, int(max_audits_per_cycle))
+
     # Stage 1: RL directional decisions (Q-learning)
     # Proposes discrete actions: DEC/HOLD/INC for each agent
     actions, rewards, _, state_before = {}, {}, {}, {}
@@ -132,7 +195,11 @@ def hybrid_audit_schedule(
         budget_ratio=budget_ratio,
         mean_baseline_delta=mean_baseline_delta,
         ablation_mode=ablation_mode,
+        cluster_budget_caps=cluster_budget_caps,
         return_stats=True,
     )
+
+    if cluster_budget_caps is not None:
+        constraint_stats["cluster_budget_caps"] = dict(cluster_budget_caps)
     
     return actions, rewards, freqs, state_before, constraint_stats

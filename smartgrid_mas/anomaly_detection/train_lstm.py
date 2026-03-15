@@ -2,9 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, WeightedRandomSampler
 import torch.nn as nn
 import torch.optim as optim
+import os
 
 from smartgrid_mas.anomaly_detection.lstm_model import LSTMAnomalyDetector
 from smartgrid_mas.anomaly_detection.dataset import SlidingWindowDataset
@@ -69,8 +70,28 @@ def train_lstm(
     train_ds, val_ds = random_split(
         ds, [n_train, n_val], generator=torch.Generator().manual_seed(seed)
     )
+
+    # Imbalance controls: oversample attacks + cost-sensitive BCE
+    use_oversample = os.environ.get("SMARTGRID_OVERSAMPLE_ATTACKS", "1").strip().lower() in {"1", "true", "yes", "on"}
+    use_cost_sensitive = os.environ.get("SMARTGRID_COST_SENSITIVE_LOSS", "1").strip().lower() in {"1", "true", "yes", "on"}
+
+    train_indices = list(train_ds.indices)
+    train_labels = np.asarray([ds.labels[idx + ds.start] for idx in train_indices], dtype=np.float32)
+    pos_count = float(np.sum(train_labels > 0.5))
+    neg_count = float(len(train_labels) - pos_count)
+
+    sampler = None
+    if use_oversample and pos_count > 0 and neg_count > 0:
+        w_pos = neg_count / max(pos_count, 1.0)
+        sample_weights = np.where(train_labels > 0.5, w_pos, 1.0).astype(np.float64)
+        sampler = WeightedRandomSampler(weights=torch.from_numpy(sample_weights), num_samples=len(sample_weights), replacement=True)
+
     train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True, drop_last=False
+        train_ds,
+        batch_size=batch_size,
+        shuffle=(sampler is None),
+        sampler=sampler,
+        drop_last=False,
     )
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, drop_last=False)
 
@@ -83,7 +104,11 @@ def train_lstm(
         dropout=dropout,
     ).to(device)
 
-    criterion = nn.BCEWithLogitsLoss()
+    if use_cost_sensitive and pos_count > 0:
+        pos_weight = torch.tensor([neg_count / max(pos_count, 1.0)], dtype=torch.float32, device=device)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    else:
+        criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     def run_epoch(loader, train: bool):

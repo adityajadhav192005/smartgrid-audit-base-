@@ -96,7 +96,9 @@ def run_fixed_audit_24h(
     budget = float("inf")
     ledger = AuditLedger()
     
-    max_per_step = max(max_audits_per_cycle * 2, fixed_f)
+    # Baseline should be uncapped - allow all agents to be audited per fixed frequency
+    # Set a very large cap to effectively remove the limit
+    max_per_step = 10000  # Effectively unlimited for realistic grid sizes
     exec_cfg = AuditExecConfig(
         f_max=f_max,
         max_audits_per_timestep=max_per_step,

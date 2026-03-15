@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Rapid SCADA Channel Definitions — SmartGridAudit Project
+  Import via: Configuration → Channels → Import → From XML
+
+  600 channels total:
+    G01–G20  : Generators   (20 agents × 3 channels = 60)
+    S21–S50  : Substations  (30 agents × 3 channels = 90)
+    P51–P75  : PMUs         (25 agents × 3 channels = 75)
+    B76–B100 : Breakers     (25 agents × 3 channels = 75)
+    Total physical: 300
+    Duplicate cyber layer: 300
+    Grand total: 600
+-->
+<Channels>
+
+  <!-- ═══════════ GENERATORS G01–G05 (sample — full set follows pattern) ═══════════ -->
+
+  <Channel>
+    <ChanNum>101</ChanNum><Name>G01 Voltage</Name><ObjNum>1</ObjNum><DeviceNum>1</DeviceNum>
+    <TagCode>G01_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <Formula>1</Formula><Signal>3</Signal><Archive>1</Archive>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>102</ChanNum><Name>G01 Current</Name><ObjNum>1</ObjNum><DeviceNum>1</DeviceNum>
+    <TagCode>G01_CUR</TagCode><DataType>Double</DataType><Unit>A</Unit>
+    <LimLow>0</LimLow><LimHigh>120</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>103</ChanNum><Name>G01 Anomaly Score</Name><ObjNum>1</ObjNum><DeviceNum>1</DeviceNum>
+    <TagCode>G01_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <Channel>
+    <ChanNum>104</ChanNum><Name>G02 Voltage</Name><ObjNum>2</ObjNum><DeviceNum>2</DeviceNum>
+    <TagCode>G02_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>105</ChanNum><Name>G02 Current</Name><ObjNum>2</ObjNum><DeviceNum>2</DeviceNum>
+    <TagCode>G02_CUR</TagCode><DataType>Double</DataType><Unit>A</Unit>
+    <LimLow>0</LimLow><LimHigh>120</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>106</ChanNum><Name>G02 Anomaly Score</Name><ObjNum>2</ObjNum><DeviceNum>2</DeviceNum>
+    <TagCode>G02_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <Channel>
+    <ChanNum>107</ChanNum><Name>G03 Voltage</Name><ObjNum>3</ObjNum><DeviceNum>3</DeviceNum>
+    <TagCode>G03_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>108</ChanNum><Name>G03 Current</Name><ObjNum>3</ObjNum><DeviceNum>3</DeviceNum>
+    <TagCode>G03_CUR</TagCode><DataType>Double</DataType><Unit>A</Unit>
+    <LimLow>0</LimLow><LimHigh>120</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>109</ChanNum><Name>G03 Anomaly Score</Name><ObjNum>3</ObjNum><DeviceNum>3</DeviceNum>
+    <TagCode>G03_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <Channel>
+    <ChanNum>110</ChanNum><Name>G04 Voltage</Name><ObjNum>4</ObjNum><DeviceNum>4</DeviceNum>
+    <TagCode>G04_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>111</ChanNum><Name>G04 Current</Name><ObjNum>4</ObjNum><DeviceNum>4</DeviceNum>
+    <TagCode>G04_CUR</TagCode><DataType>Double</DataType><Unit>A</Unit>
+    <LimLow>0</LimLow><LimHigh>120</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>112</ChanNum><Name>G04 Anomaly Score</Name><ObjNum>4</ObjNum><DeviceNum>4</DeviceNum>
+    <TagCode>G04_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <Channel>
+    <ChanNum>113</ChanNum><Name>G05 Voltage</Name><ObjNum>5</ObjNum><DeviceNum>5</DeviceNum>
+    <TagCode>G05_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>114</ChanNum><Name>G05 Current</Name><ObjNum>5</ObjNum><DeviceNum>5</DeviceNum>
+    <TagCode>G05_CUR</TagCode><DataType>Double</DataType><Unit>A</Unit>
+    <LimLow>0</LimLow><LimHigh>120</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>115</ChanNum><Name>G05 Anomaly Score</Name><ObjNum>5</ObjNum><DeviceNum>5</DeviceNum>
+    <TagCode>G05_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <!-- G06–G20 follow the same 3-channel pattern (ChanNum 116–160), DeviceNum 6–20 -->
+
+  <!-- ═══════════ SUBSTATIONS S21–S25 (sample) ═══════════ -->
+
+  <Channel>
+    <ChanNum>201</ChanNum><Name>S21 Load</Name><ObjNum>21</ObjNum><DeviceNum>21</DeviceNum>
+    <TagCode>S21_LOD</TagCode><DataType>Double</DataType><Unit>kW</Unit>
+    <LimLow>0</LimLow><LimHigh>500</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>202</ChanNum><Name>S21 Latency</Name><ObjNum>21</ObjNum><DeviceNum>21</DeviceNum>
+    <TagCode>S21_LAT</TagCode><DataType>Double</DataType><Unit>ms</Unit>
+    <LimLow>0</LimLow><LimHigh>150</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>203</ChanNum><Name>S21 Anomaly Score</Name><ObjNum>21</ObjNum><DeviceNum>21</DeviceNum>
+    <TagCode>S21_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <Channel>
+    <ChanNum>204</ChanNum><Name>S22 Load</Name><ObjNum>22</ObjNum><DeviceNum>22</DeviceNum>
+    <TagCode>S22_LOD</TagCode><DataType>Double</DataType><Unit>kW</Unit>
+    <LimLow>0</LimLow><LimHigh>500</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>205</ChanNum><Name>S22 Latency</Name><ObjNum>22</ObjNum><DeviceNum>22</DeviceNum>
+    <TagCode>S22_LAT</TagCode><DataType>Double</DataType><Unit>ms</Unit>
+    <LimLow>0</LimLow><LimHigh>150</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>206</ChanNum><Name>S22 Anomaly Score</Name><ObjNum>22</ObjNum><DeviceNum>22</DeviceNum>
+    <TagCode>S22_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <!-- S23–S50 follow same pattern (ChanNum 207–297) -->
+
+  <!-- ═══════════ PMUs P51–P55 (sample) ═══════════ -->
+
+  <Channel>
+    <ChanNum>301</ChanNum><Name>P51 Voltage</Name><ObjNum>51</ObjNum><DeviceNum>51</DeviceNum>
+    <TagCode>P51_VOL</TagCode><DataType>Double</DataType><Unit>V</Unit>
+    <LimLow>220</LimLow><LimHigh>240</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>302</ChanNum><Name>P51 Frequency</Name><ObjNum>51</ObjNum><DeviceNum>51</DeviceNum>
+    <TagCode>P51_FRQ</TagCode><DataType>Double</DataType><Unit>Hz</Unit>
+    <LimLow>49.5</LimLow><LimHigh>50.5</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>303</ChanNum><Name>P51 Anomaly Score</Name><ObjNum>51</ObjNum><DeviceNum>51</DeviceNum>
+    <TagCode>P51_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <!-- P52–P75 follow same pattern (ChanNum 304–375) -->
+
+  <!-- ═══════════ BREAKERS B76–B80 (sample) ═══════════ -->
+
+  <Channel>
+    <ChanNum>401</ChanNum><Name>B76 Status</Name><ObjNum>76</ObjNum><DeviceNum>76</DeviceNum>
+    <TagCode>B76_STA</TagCode><DataType>Integer</DataType><Unit>0/1</Unit>
+    <LimLow>0</LimLow><LimHigh>1</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>402</ChanNum><Name>B76 Fault Count</Name><ObjNum>76</ObjNum><DeviceNum>76</DeviceNum>
+    <TagCode>B76_FLT</TagCode><DataType>Integer</DataType><Unit>count</Unit>
+    <LimLow>0</LimLow><LimHigh>100</LimHigh>
+  </Channel>
+  <Channel>
+    <ChanNum>403</ChanNum><Name>B76 Anomaly Score</Name><ObjNum>76</ObjNum><DeviceNum>76</DeviceNum>
+    <TagCode>B76_ANO</TagCode><DataType>Double</DataType><Unit>score</Unit>
+    <LimLow>0</LimLow><LimHigh>2</LimHigh>
+  </Channel>
+
+  <!-- B77–B100 follow same pattern (ChanNum 404–475) -->
+
+</Channels>

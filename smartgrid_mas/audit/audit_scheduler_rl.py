@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Tuple, List
 import random
+import math
 
 from smartgrid_mas.audit.actions import AuditAction
 from smartgrid_mas.audit.state_encoder import StateEncoder
@@ -86,6 +87,43 @@ class QLearningAuditScheduler:
     cv_stable_hits: int = 0
     cv_required_stable_windows: int = int(__import__("os").environ.get("SMARTGRID_RL_CV_STABLE_WINDOWS", 3))
 
+    # Risk-sensitive objective controls
+    risk_objective: str = __import__("os").environ.get("SMARTGRID_RISK_OBJECTIVE", "expected").lower()
+    risk_beta: float = float(__import__("os").environ.get("SMARTGRID_RISK_BETA", -0.05))
+    cvar_alpha: float = float(__import__("os").environ.get("SMARTGRID_CVAR_ALPHA", 0.10))
+    risk_variance_penalty: float = float(__import__("os").environ.get("SMARTGRID_RISK_VAR_PENALTY", 0.0))
+    recent_rewards: List[float] = field(default_factory=list)
+    reward_window: int = int(__import__("os").environ.get("SMARTGRID_REWARD_WINDOW", 200))
+
+    def _risk_adjust_reward(self, reward: float) -> float:
+        """Transform reward using risk-sensitive objective (expected / exp_utility / cvar)."""
+        r = float(reward)
+        self.recent_rewards.append(r)
+        if len(self.recent_rewards) > self.reward_window:
+            self.recent_rewards.pop(0)
+
+        obj = (self.risk_objective or "expected").lower()
+        adjusted = r
+
+        if obj == "exp_utility":
+            beta = min(-1e-9, float(self.risk_beta))
+            adjusted = (math.exp(beta * r) - 1.0) / beta
+        elif obj == "cvar":
+            if self.recent_rewards:
+                alpha = min(0.5, max(1e-3, float(self.cvar_alpha)))
+                sorted_r = sorted(self.recent_rewards)
+                k = max(1, int(math.ceil(alpha * len(sorted_r))))
+                tail = sorted_r[:k]
+                cvar_tail = sum(tail) / float(len(tail))
+                adjusted = 0.5 * r + 0.5 * cvar_tail
+
+        if self.risk_variance_penalty > 0.0 and len(self.recent_rewards) >= 5:
+            mean_r = sum(self.recent_rewards) / float(len(self.recent_rewards))
+            var_r = sum((x - mean_r) ** 2 for x in self.recent_rewards) / float(len(self.recent_rewards))
+            adjusted -= float(self.risk_variance_penalty) * math.sqrt(max(0.0, var_r))
+
+        return float(adjusted)
+
     def _ensure_state(self, s: State) -> None:
         """Ensure state exists in Q-table with zero initialization."""
         if s not in self.Q:
@@ -141,8 +179,11 @@ class QLearningAuditScheduler:
             self.Q[state][int(action)] = new_q_local
             return abs(new_q_local - q_sa_local)
 
+        # Risk-sensitive reward shaping before Bellman update
+        risk_adjusted_reward = self._risk_adjust_reward(reward)
+
         # Direct on-policy update for current transition
-        q_change = _bellman_update(s, a, reward, s_next)
+        q_change = _bellman_update(s, a, risk_adjusted_reward, s_next)
         self.iteration_count += 1
         self.recent_q_changes.append(q_change)
 
@@ -156,7 +197,7 @@ class QLearningAuditScheduler:
 
         # Push transition into replay buffer
         try:
-            self.replay_buffer.append((s, a, reward, s_next))
+            self.replay_buffer.append((s, a, risk_adjusted_reward, s_next))
             if len(self.replay_buffer) > self.replay_capacity:
                 # Remove oldest
                 self.replay_buffer.pop(0)
@@ -256,3 +297,66 @@ class QLearningAuditScheduler:
                         # High risk + high capacity → cautious INC
                         else:
                             self.Q[(r, p, c, cap)] = [0.15, 0.2, 0.15]
+
+    def save_checkpoint(self, filepath: str) -> None:
+        """
+        Save Q-table and learning state to checkpoint for persistence across runs.
+        
+        Args:
+            filepath: Path to save checkpoint JSON
+        """
+        import json
+        checkpoint = {
+            "Q": {str(k): v for k, v in self.Q.items()},  # Convert tuple keys to strings
+            "iteration_count": self.iteration_count,
+            "converged": self.converged,
+            "epsilon": self.epsilon,
+            "last_rolling_mean": self.last_rolling_mean,
+            "stable_window_hits": self.stable_window_hits,
+        }
+        try:
+            with open(filepath, "w") as f:
+                json.dump(checkpoint, f, indent=2)
+            print(f"[+] RL checkpoint saved: {filepath} (Q-table size: {len(self.Q)})")
+        except Exception as e:
+            print(f"[-] Failed to save checkpoint: {e}")
+
+    def load_checkpoint(self, filepath: str) -> bool:
+        """
+        Load Q-table and learning state from checkpoint to resume learning.
+        
+        Args:
+            filepath: Path to load checkpoint from
+        
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        import json
+        try:
+            with open(filepath, "r") as f:
+                checkpoint = json.load(f)
+            
+            # Reconstruct Q-table with tuple keys
+            self.Q = {}
+            for k_str, v in checkpoint["Q"].items():
+                # Parse string representation of tuple back to tuple
+                try:
+                    k_tuple = eval(k_str)  # Safe here since it's from our own checkpoint
+                    self.Q[k_tuple] = v
+                except:
+                    continue
+            
+            self.iteration_count = checkpoint.get("iteration_count", 0)
+            self.converged = checkpoint.get("converged", False)
+            self.epsilon = checkpoint.get("epsilon", 0.05)
+            self.last_rolling_mean = checkpoint.get("last_rolling_mean", 0.0)
+            self.stable_window_hits = checkpoint.get("stable_window_hits", 0)
+            
+            print(f"[*] RL checkpoint loaded: {filepath} (restored {len(self.Q)} states)")
+            return True
+        except FileNotFoundError:
+            print(f"[*] No checkpoint found at {filepath}, starting fresh")
+            return False
+        except Exception as e:
+            print(f"[!] Failed to load checkpoint: {e}")
+            return False

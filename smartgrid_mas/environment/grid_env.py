@@ -8,6 +8,7 @@ Paper-aligned structure for 24-hour simulation cycles.
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Tuple, List
+import os
 import numpy as np
 
 from smartgrid_mas.agents.base_agent import BaseAgent
@@ -30,6 +31,10 @@ class GridEnvConfig:
     base_packet_loss: float = 0.01  # Packet loss rate (fraction)
     base_integrity: float = 0.99  # Communication integrity score
     base_comm_freq_hz: float = 100.0  # Communication frequency (Hz)
+    # Realism controls (env-overridable)
+    # NOTE: Actual success/failure roll is handled in response.mitigation_actions.
+    audit_success_prob: float = float(os.environ.get("SMARTGRID_AUDIT_SUCCESS_PROB", "0.95"))
+    mitigation_delay: int = int(os.environ.get("SMARTGRID_MITIGATION_DELAY", "1"))
 
 
 class GridEnvironment:
@@ -98,6 +103,16 @@ class GridEnvironment:
             # Ensure mitigation status exists
             ensure_mitigation_status(a)
             m = getattr(a, "mitigation")
+
+            # Apply pending mitigation countdown (physical actuation delay)
+            if m is not None and int(getattr(m, "pending_steps", 0)) > 0:
+                m.pending_steps = int(m.pending_steps) - 1
+                if m.pending_steps <= 0:
+                    m.active = False
+                    if bool(getattr(m, "pending_shutdown", False)):
+                        m.shutdown = True
+                    m.pending_shutdown = False
+                    m.notes = "Delayed mitigation activated."
 
             # Baseline signal: slow sine + noise (24h cycle with 288 steps)
             base = 1.0 + 0.1 * np.sin(2 * np.pi * (t / 288.0))

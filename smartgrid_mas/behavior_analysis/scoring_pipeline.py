@@ -73,14 +73,58 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     except Exception:
         pass
 
-    # Hybrid flagging: deviation OR LSTM probability
-    a = anomaly_flag_from_score(s, threshold=score_threshold)
-    if not a and getattr(st, "anomaly_prob", None) is not None:
-        if float(st.anomaly_prob) >= prob_threshold:
-            a = 1
+    # Risk-aware thresholding (precision control)
+    # - Low-risk agents: more conservative threshold (reduce false positives)
+    # - High-risk agents: more sensitive threshold (reduce false negatives)
+    risk_context = float(getattr(st, "risk_score", agent.risk_score))
+    score_scale = 1.0
+    prob_scale = 1.0
+    if risk_context <= 0.3:
+        score_scale = 1.6
+        prob_scale = 1.08
+    elif risk_context >= 0.7:
+        score_scale = 1.0
+        prob_scale = 0.98
+    else:
+        score_scale = 1.25
+        prob_scale = 1.02
+
+    adaptive_score_threshold = max(1e-6, score_threshold * score_scale)
+    adaptive_prob_threshold = min(1.0, max(1e-6, prob_threshold * prob_scale))
+
+    # Confidence fusion (hybrid detector): combine deviation confidence + model confidence
+    w_dev = float(os.environ.get("SMARTGRID_HYBRID_W_DEV", 0.6))
+    w_prob = float(os.environ.get("SMARTGRID_HYBRID_W_PROB", 0.4))
+    dev_conf = min(3.0, float(s) / adaptive_score_threshold)
+    prob_conf = float(getattr(st, "anomaly_prob", 0.0) or 0.0)
+    hybrid_conf = (w_dev * dev_conf) + (w_prob * prob_conf)
+
+    prev_flag = int(getattr(agent.last_state, "anomaly_flag", 0) if agent.last_state is not None else 0)
+
+    if risk_context <= 0.3:
+        a = 1 if (
+            (s >= 1.35 * adaptive_score_threshold and prob_conf >= 0.75)
+            or (hybrid_conf >= 1.55 and prob_conf >= 0.70)
+            or (prev_flag == 1 and s >= 1.15 * adaptive_score_threshold and prob_conf >= 0.68)
+        ) else 0
+    elif risk_context >= 0.7:
+        a = 1 if (
+            (s >= 1.02 * adaptive_score_threshold and prob_conf >= 0.60)
+            or (hybrid_conf >= 1.20 and prob_conf >= 0.58)
+            or (prob_conf >= adaptive_prob_threshold and s >= 0.90 * adaptive_score_threshold)
+        ) else 0
+    else:
+        a = 1 if (
+            (s >= 1.18 * adaptive_score_threshold and prob_conf >= 0.67)
+            or (hybrid_conf >= 1.35 and prob_conf >= 0.64)
+            or (prev_flag == 1 and s >= 1.00 * adaptive_score_threshold and prob_conf >= 0.62)
+        ) else 0
 
     st.deviation_score = s
     st.anomaly_flag = a
+    st.hybrid_confidence = float(hybrid_conf)
+    st.adaptive_score_threshold = float(adaptive_score_threshold)
+    st.adaptive_prob_threshold = float(adaptive_prob_threshold)
     
     # === Attack Type Classification (Simple Physical vs Cyber Dominance) ===
     # When anomaly detected, classify attack type by which metrics are most deviated

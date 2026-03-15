@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<PlgStoreDictionaries>
+  <Dictionary key="Scada.Web.Plugins.PlgStore.Areas.Store.Pages.InstalledModel">
+    <Phrase key="PageTitle">Установленные плагины</Phrase>
+    <Phrase key="NoData">Нет данных</Phrase>
+    <Phrase key="NameColumn">Наименование</Phrase>
+    <Phrase key="DescriptionColumn">Описание</Phrase>
+    <Phrase key="VersionColumn">Версия</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Web.Plugins.PlgStore.Areas.Store.Pages.DownloadModel">
+    <Phrase key="PageTitle">Скачать плагины</Phrase>
+    <Phrase key="txtFilter_Placeholder">Поиск</Phrase>
+    <Phrase key="btnSearch">Найти</Phrase>
+    <Phrase key="NameColumn">Наименование</Phrase>
+    <Phrase key="DescriptionColumn">Описание</Phrase>
+    <Phrase key="PriceColumn">Цена</Phrase>
+    <Phrase key="AuthorColumn">Автор</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Web.Plugins.PlgStore.Areas.Store.Pages.DownloadModel.Js">
+    <Phrase key="Loading">Загрузка...</Phrase>
+    <Phrase key="LoadError">Ошибка при загрузке списка плагинов</Phrase>
+    <Phrase key="NoData">Нет данных</Phrase>
+    <Phrase key="New">Новый</Phrase>
+    <Phrase key="Details">Подробнее</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Web.Plugins.PlgStore.PlgStoreLogic">
+    <Phrase key="InstalledMenuItem">Установленные</Phrase>
+    <Phrase key="DownloadMenuItem">Скачать</Phrase>
+  </Dictionary>
+</PlgStoreDictionaries>

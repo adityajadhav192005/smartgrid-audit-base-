@@ -1,0 +1,18 @@
+﻿--------------------------------------------------------------------------------
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\FileStorage.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgChart.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgMain.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgMimic.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgMimicEditor.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgMimBasicComp.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgScheme.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgSchBasicComp.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgStore.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local\ScadaWeb\PlgWebPage.dll
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-03-15 05:06:42 [ADITYA][adity][ACT] Receive the configuration database
+2026-03-15 05:06:44 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-03-15 05:06:44 [ADITYA][adity][INF] The application is ready for operating

@@ -25,12 +25,11 @@ def compute_global_risk(agents: List[BaseAgent]) -> Tuple[float, Dict[str, float
             components[agent.agent_id] = 0.0
             continue
 
-        # Prefer dynamic risk_score (severity-scaled); fall back to paper weight × flag
-        if hasattr(agent, "risk_score"):
-            r_i = float(agent.risk_score)
-        else:
-            a_i = 1 if agent.last_state.anomaly_flag else 0
-            r_i = float(agent.criticality.weight * a_i)
+        # PAPER-FAITHFUL RISK (pinned reference):
+        # R(t) = Σ_i w_i * a_i(t)
+        # Always use binary anomaly flag and criticality weight for evaluation.
+        a_i = 1 if agent.last_state.anomaly_flag else 0
+        r_i = float(agent.criticality.weight * a_i)
 
         components[agent.agent_id] = r_i
         total += r_i

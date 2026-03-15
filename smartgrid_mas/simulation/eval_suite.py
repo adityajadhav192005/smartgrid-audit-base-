@@ -87,6 +87,18 @@ def mean_global_risk(metrics_records: List[Dict[str, Any]]) -> float:
     return float(np.mean([r.get("global_risk", 0.0) for r in metrics_records]))
 
 
+def mean_global_risk_raw(metrics_records: List[Dict[str, Any]]) -> float:
+    """Mean of RAW global_risk (before any audit mitigation) across records.
+
+    Used as the 'initial' term in the paper-aligned risk mitigation formula:
+        Risk Mitigation = (raw_risk - effective_risk) / raw_risk
+    This is the global_risk field which equals sum(w_i * a_i) before dampening.
+    """
+    if not metrics_records:
+        return 0.0
+    return float(np.mean([r.get("global_risk", 0.0) for r in metrics_records]))
+
+
 def attack_rate_reduction(dynamic_records: List[Dict[str, Any]], baseline_records: List[Dict[str, Any]]) -> float:
     baseline = mean_attack_rate(baseline_records)
     dynamic = mean_attack_rate(dynamic_records)
@@ -165,52 +177,57 @@ def per_attack_confusion(y_true_types: List[str], y_pred_input) -> Dict[str, Dic
             out[t] = {"tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0}
         return out
 
-    y_types = np.asarray(y_true_types, dtype=object)
+    def _norm_label(v: Any) -> str:
+        s = str(v).strip().upper()
+        if s in {"DOS", "DO-S", "DENIAL_OF_SERVICE", "DENIAL-OF-SERVICE"}:
+            return "DOS"
+        return s
+
+    y_types = np.asarray([_norm_label(v) for v in y_true_types], dtype=object)
     
     # Detect input type: list of strings (attack types) vs list of ints (binary flags)
     is_type_prediction = isinstance(y_pred_input[0], str) if y_pred_input else False
     
     if is_type_prediction:
         # Attack type predictions: y_pred is list of predicted attack types
-        y_pred_arr = np.asarray(y_pred_input, dtype=object)
+        y_pred_arr = np.asarray([_norm_label(v) for v in y_pred_input], dtype=object)
         
         for t in types:
-            idx = y_types == t
-            if not np.any(idx):
-                out[t] = {"tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0}
-                continue
-            
-            y_true_bin = np.ones(np.sum(idx), dtype=int)  # All are positives (attack type t)
-            y_pred_bin = (y_pred_arr[idx] == t).astype(int)  # 1 if correctly classified as t, 0 otherwise
-            
-            tp = np.sum((y_true_bin == 1) & (y_pred_bin == 1))
-            fp = np.sum((y_true_bin == 0) & (y_pred_bin == 1))  # Will be 0 since y_true_bin is all 1s
-            fn = np.sum((y_true_bin == 1) & (y_pred_bin == 0))
-            tn = 0  # No true negatives in one-vs-rest for this attack type
-            
+            y_true_bin = (y_types == t).astype(int)
+            y_pred_bin = (y_pred_arr == t).astype(int)
+
+            tp = int(np.sum((y_true_bin == 1) & (y_pred_bin == 1)))
+            tn = int(np.sum((y_true_bin == 0) & (y_pred_bin == 0)))
+            fp = int(np.sum((y_true_bin == 0) & (y_pred_bin == 1)))
+            fn = int(np.sum((y_true_bin == 1) & (y_pred_bin == 0)))
+
             tpr = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
-            accuracy = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0  # Accuracy = TP rate here
-            tnr = 0.0
-            fpr = 0.0
-            fnr = 0.0 if (tp + fn) == 0 else float(fn / (tp + fn))
-            
-            out[t] = {"tpr": tpr, "tnr": tnr, "fpr": fpr, "fnr": fnr, "accuracy": accuracy}
+            tnr = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+            fpr = float(fp / (tn + fp)) if (tn + fp) > 0 else 0.0
+            fnr = float(fn / (tp + fn)) if (tp + fn) > 0 else 0.0
+            accuracy = float((tp + tn) / (tp + tn + fp + fn)) if (tp + tn + fp + fn) > 0 else 0.0
+
+            out[t] = {
+                "tpr": tpr,
+                "tnr": tnr,
+                "fpr": fpr,
+                "fnr": fnr,
+                "accuracy": accuracy,
+                "support": int(np.sum(y_true_bin)),
+                "predicted_support": int(np.sum(y_pred_bin)),
+            }
     else:
         # Binary flag predictions: legacy behavior (y_pred is 0/1 flags)
         y_pred_arr = np.asarray(y_pred_input, dtype=int)
         
         for t in types:
-            idx = y_types == t
-            if not np.any(idx):
-                out[t] = {"tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0}
-                continue
-            y_true_bin = np.ones(np.sum(idx), dtype=int)
-            y_pred_bin = y_pred_arr[idx]
+            y_true_bin = (y_types == t).astype(int)
+            y_pred_bin = y_pred_arr
 
-            tp = np.sum((y_true_bin == 1) & (y_pred_bin == 1))
-            tn = np.sum((y_true_bin == 0) & (y_pred_bin == 0))
-            fp = np.sum((y_true_bin == 0) & (y_pred_bin == 1))
-            fn = np.sum((y_true_bin == 1) & (y_pred_bin == 0))
+            tp = int(np.sum((y_true_bin == 1) & (y_pred_bin == 1)))
+            tn = int(np.sum((y_true_bin == 0) & (y_pred_bin == 0)))
+            fp = int(np.sum((y_true_bin == 0) & (y_pred_bin == 1)))
+            fn = int(np.sum((y_true_bin == 1) & (y_pred_bin == 0)))
 
             tpr = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
             accuracy = float((tp + tn) / (tp + tn + fp + fn)) if (tp + tn + fp + fn) > 0 else 0.0
@@ -218,7 +235,15 @@ def per_attack_confusion(y_true_types: List[str], y_pred_input) -> Dict[str, Dic
             fpr = 0.0 if (tn + fp) == 0 else float(fp / (tn + fp))
             fnr = 0.0 if (tp + fn) == 0 else float(fn / (tp + fn))
 
-            out[t] = {"tpr": tpr, "tnr": tnr, "fpr": fpr, "fnr": fnr, "accuracy": accuracy}
+            out[t] = {
+                "tpr": tpr,
+                "tnr": tnr,
+                "fpr": fpr,
+                "fnr": fnr,
+                "accuracy": accuracy,
+                "support": int(np.sum(y_true_bin)),
+                "predicted_support": int(np.sum(y_pred_bin)),
+            }
 
     return out
 
@@ -418,12 +443,19 @@ def build_summary(
 
     mean_risk_dyn = mean_global_risk(dynamic_records)
     mean_risk_base = mean_global_risk(baseline_records)
+    # Paper-aligned risk mitigation formula (Section 5.4.3):
+    #   Risk Mitigation = (Initial Risk Score - Final Risk Score) / Initial Risk Score
+    # "Initial" = raw (unmitigated) risk per step = global_risk = sum(w_i * a_i)
+    # "Final"   = effective (post-audit/response) risk per step = global_risk_effective
+    # This measures: how much does the response mechanism reduce raw risk within the dynamic run?
+    mean_risk_raw_dyn = mean_global_risk_raw(dynamic_records)
+    mean_risk_eff_dyn = mean_risk_dyn  # already uses global_risk_effective
     # FIX: Cost efficiency uses only audit cost (not failure cost)
     dyn_total_cost = dyn_cost_audit
     base_total_cost = base_cost_audit
     risk_mitigation = 0.0
-    if mean_risk_base > 0:
-        risk_mitigation = float((mean_risk_base - mean_risk_dyn) / mean_risk_base)
+    if mean_risk_raw_dyn > 0:
+        risk_mitigation = float((mean_risk_raw_dyn - mean_risk_eff_dyn) / mean_risk_raw_dyn)
 
     risk_reduced_per_cost = 0.0
     if dyn_total_cost > 0:
@@ -444,6 +476,7 @@ def build_summary(
         "executed_cost_baseline": base_cost_audit,
         "cost_efficiency": cost_efficiency(dyn_cost_audit, base_cost_audit),
         "mean_global_risk_dynamic": mean_risk_dyn,
+        "mean_global_risk_raw_dynamic": mean_risk_raw_dyn,
         "mean_global_risk_baseline": mean_risk_base,
         "risk_mitigation": risk_mitigation,
         "risk_reduced_per_cost": risk_reduced_per_cost,

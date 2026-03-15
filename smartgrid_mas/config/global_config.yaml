@@ -5,18 +5,18 @@ simulation:
 
 audit:
   risk_threshold: 0.5          # paper
-  audit_budget_ratio: 0.15     # tighter spend to push cost efficiency positive
-  max_audits_per_cycle: 25     # cap audits per cycle to near-baseline envelope
-  f_min: 0                     # allow skipping audits on low-risk agents
-  f_max: 3                     # avoid over-frequency on low-risk agents
+  audit_budget_ratio: 0.07     # tuned operating point for high cost efficiency with stable detection
+  max_audits_per_cycle: 100    # informational; runtime uses paper-aligned F = n_agents * f_max
+  f_min: 1                     # paper: minimum regulatory audit frequency
+  f_max: 5                     # paper: maximum audit frequency per cycle
   baseline_fixed_f: 1          # paper baseline for comparison (overridable via SMARTGRID_BASELINE_F)
   
   # Per-N budget overrides (optional - if not specified, uses audit_budget_ratio above)
-  # Lower budgets for larger N to keep cost efficiency positive
+  # Optional per-N override; keep paper-defaults at 10% unless explicitly changed
   budget_per_n:
-    100: 0.15
-    200: 0.20
-    500: 0.25
+    100: 0.07
+    200: 0.07
+    500: 0.07
 
 thresholds:
   k_sigma: 4.0                 # Th = k * sigma (raised to reduce false positives)

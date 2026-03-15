@@ -35,7 +35,7 @@ def response_step(
     thresholds: SeverityThresholds = SeverityThresholds(),
     f_min: int = 1,
     f_max: int = 5,
-    severity_risk_scale: bool = True,
+    severity_risk_scale: bool = False,
 ) -> Dict[str, Any]:
     """
     Execute full response mechanism for one agent.
@@ -77,6 +77,21 @@ def response_step(
     # Skip if agent has no state
     if agent.last_state is None:
         return {"agent_id": agent.agent_id, "skipped": True}
+
+    # Fast path: no anomaly this timestep.
+    # Preserve paper risk component (w_i * a_i) while avoiding full severity pipeline.
+    if not bool(agent.last_state.anomaly_flag):
+        base_risk = agent.update_risk_score_from_flag(0)
+        agent.risk_score = float(base_risk)
+        agent.last_state.risk_score = agent.risk_score
+        return {
+            "agent_id": agent.agent_id,
+            "severity_score": 0.0,
+            "severity_level": "LOW",
+            "action": "NO_ANOMALY",
+            "impact_factor": 0.0,
+            "likelihood": 0.0,
+        }
     
     # 1. Extract recent history (last T timesteps)
     hist = np.asarray(anomaly_flag_history[-T:], dtype=float)
@@ -106,18 +121,13 @@ def response_step(
     event["impact_factor"] = float(impact)
     event["likelihood"] = float(likelihood)
     
-    # 7. Feedback loop: Update risk score with severity scaling
+    # 7. Feedback loop: keep paper risk component only
     # Base risk: w_i * a_i(t)
     base_risk = agent.update_risk_score_from_flag(agent.last_state.anomaly_flag)
-    
-    # Optional severity scaling: Higher severity → higher risk → more audits
-    # This creates the paper's feedback loop
-    if severity_risk_scale:
-        # Scale risk by (1 + severity_score)
-        # Example: severity=0.8 → risk multiplied by 1.8
-        agent.risk_score = float(base_risk * (1.0 + severity_score))
-    else:
-        agent.risk_score = float(base_risk)
+
+    # Keep runtime risk aligned to paper expression for consistency:
+    # R_i(t) component = w_i * a_i(t)
+    agent.risk_score = float(base_risk)
     
     # Sync state record
     agent.last_state.risk_score = agent.risk_score

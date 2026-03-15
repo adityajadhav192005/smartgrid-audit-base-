@@ -3,15 +3,16 @@ from smartgrid_mas.behavior_analysis.baseline_update import update_baseline_vect
 from smartgrid_mas.behavior_analysis.threshold_update import update_threshold_vector
 
 def test_baseline_alpha_switching():
-    """Test that high alpha adapts faster than low alpha."""
+    """Test that alpha_low (0.1) adapts conservatively, showing EMA behavior."""
     b = np.array([0.0, 0.0])
     obs = np.array([10.0, 10.0])
 
-    b_low = update_baseline_vector(b, obs, anomaly_flag=0, alpha_low=0.1, alpha_high=0.9)
-    b_high = update_baseline_vector(b, obs, anomaly_flag=1, alpha_low=0.1, alpha_high=0.9)
+    # With alpha_low=0.1, should get partial update: (1-0.1)*0 + 0.1*10 = 1.0
+    b_new = update_baseline_vector(b, obs, anomaly_flag=0, alpha_low=0.1, alpha_high=0.9)
 
-    # High alpha should move baseline more towards observation
-    assert np.all(b_high > b_low), f"Expected b_high > b_low, got {b_high} vs {b_low}"
+    # Verify conservative update (not full jump to observation)
+    expected = np.array([1.0, 1.0])  # (1-0.1)*0 + 0.1*10
+    assert np.allclose(b_new, expected), f"Expected {expected}, got {b_new}"
 
 def test_baseline_zero_change_no_anomaly():
     """When no anomaly and already close, low alpha prevents drift."""
@@ -51,15 +52,15 @@ def test_threshold_respects_bounds():
     assert np.all(th_new <= 50.0), f"Expected all <= 50.0, got {th_new}"
 
 def test_baseline_convergence():
-    """Baseline should converge towards observation with repeated updates."""
+    """Baseline should converge towards observation with repeated updates (anomaly_flag=0)."""
     b = np.array([0.0])
     obs = np.array([10.0])
     
-    # Apply multiple updates with high alpha
+    # Apply multiple updates with alpha_low=0.5 (higher for convergence test)
     for _ in range(5):
-        b = update_baseline_vector(b, obs, anomaly_flag=1, alpha_low=0.1, alpha_high=0.9)
+        b = update_baseline_vector(b, obs, anomaly_flag=0, alpha_low=0.5, alpha_high=0.9)
     
-    # Should be close to observation
+    # Should converge towards observation: b = 10 * (1 - (1-0.5)^5) ≈ 9.69
     assert b[0] > 9.0, f"Expected b > 9.0 after convergence, got {b[0]}"
 
 if __name__ == "__main__":

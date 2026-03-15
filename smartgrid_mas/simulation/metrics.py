@@ -81,6 +81,7 @@ class MetricsLogger:
         global_risk_effective = None
         if ledger is not None:
             audited_ids = {e.agent_id for e in ledger.audits_at_timestep(t)}
+            agent_by_id = {a.agent_id: a for a in agents}
             dampened = 0.0
             for aid, r_comp in components.items():
                 if aid in audited_ids:
@@ -94,14 +95,24 @@ class MetricsLogger:
                                 anomalous_flags = max(0, anomalous_flags - 1)
                                 flagged_by_id[aid] = 0
                         elif outcome == AuditOutcome.CONFIRMED_ANOMALY:
-                            r_adj = 0.5 * r_comp  # mitigated but still monitored
+                            r_adj = 0.0  # confirmed threat audited and isolated/shutdown → fully mitigated for effective risk
                         else:  # MISSED_ANOMALY
                             r_adj = r_comp
                     else:
-                        r_adj = 0.5 * r_comp  # generic mitigation when outcome unknown
+                        r_adj = 0.0  # generic audited mitigation when outcome unknown
                     dampened += r_adj
                 else:
-                    dampened += r_comp
+                    # Response mechanism effect: isolated/shutdown agents contribute
+                    # no effective risk even without an audit event in this timestep.
+                    agent_obj = agent_by_id.get(aid)
+                    mitigation = getattr(agent_obj, "mitigation", None) if agent_obj is not None else None
+                    if mitigation is not None and (
+                        bool(getattr(mitigation, "shutdown", False))
+                        or not bool(getattr(mitigation, "active", True))
+                    ):
+                        dampened += 0.0
+                    else:
+                        dampened += r_comp
             global_risk_effective = float(dampened)
             if n:
                 attack_rate_effective = float(anomalous_flags / n)

@@ -64,6 +64,21 @@ def rl_schedule_step(
     risk_high = sum(1 for a in agents if a.last_state and a.last_state.risk_score >= risk_threshold)
     if risk_high > 0:
         allowed_total = max(1, min(allowed_total, risk_high * f_max))
+    
+    # === PAPER CASCADE DETECTION (K-means clustering integration) ===
+    # When K-means identifies multiple agents in same anomalous cluster (cluster_label=1),
+    # boost audit capacity slightly for early chain-attack detection
+    cluster_counts = {}
+    for a in agents:
+        if a.last_state and hasattr(a.last_state, 'cluster_label'):
+            c_lbl = getattr(a.last_state, 'cluster_label', None)
+            if c_lbl is not None:
+                cluster_counts[c_lbl] = cluster_counts.get(c_lbl, 0) + 1
+    
+    # If anomalous cluster has 3+ agents, slightly increase audit budget for cascade detection
+    anomalous_cluster_size = cluster_counts.get(1, 0)  # cluster_label=1 is anomalous per K-means
+    if anomalous_cluster_size >= 3:
+        allowed_total = max(allowed_total, int(allowed_total * 1.15))  # 15% boost for cascade risk
 
     # ─────────────────────────────────────────────────────────
     # Step 1: Per-agent RL decision
@@ -107,11 +122,25 @@ def rl_schedule_step(
         # Count attacks stopped (for security reward)
         attacks_stopped = sum(1 for a in agents if a.last_state and a.last_state.anomaly_flag == 1 and a.audit_frequency > 0)
         
+        # v12 FIX: Compute SYSTEM-LEVEL C_failure (prevents free-rider problem)
+        # Sum of unprotected risk across ALL agents in the system
+        system_c_failure = 0.0
+        for a in agents:
+            if a.last_state:
+                # Each agent contributes their unprotected risk to system failure cost
+                agent_cost = float(a.audit_frequency) * audit_cost_per_audit
+                max_cost = 5.0 * audit_cost_per_audit  # f_max=5
+                coverage = min(1.0, agent_cost / max_cost) if max_cost > 0 else 0.0
+                system_c_failure += a.last_state.risk_score * (1.0 - coverage)
+        
+        # This agent's contribution to total audit cost
+        agent_audit_cost = float(agent.audit_frequency) * audit_cost_per_audit
+        
         # Compute total audit cost this cycle
         total_audit_cost = float(sum(a.audit_frequency for a in agents)) * audit_cost_per_audit
 
-        # Baseline-equivalent spend (f=1) with 10% buffer; penalize above this
-        baseline_equiv_cost = float(len(agents) * audit_cost_per_audit * 1.1)
+        # Baseline-equivalent spend (~10% of agents per step) with +35% target
+        baseline_equiv_cost = float(len(agents) * audit_cost_per_audit * 0.10 * 0.65)
         over_budget_excess = max(0.0, total_audit_cost - baseline_equiv_cost)
 
         r = compute_reward(
@@ -120,11 +149,12 @@ def rl_schedule_step(
             risk_threshold=risk_threshold,
             mean_baseline_delta=mean_baseline_delta,
             attacks_stopped=attacks_stopped,
-            audit_cost=total_audit_cost,
+            audit_cost=agent_audit_cost,
             over_budget_excess=over_budget_excess,
             prev_risk=prev_risk,
             budget_utilization=budget_utilization,
             num_agents=len(agents),
+            system_c_failure=system_c_failure,
         )
 
         # Next state (includes updated capacity after action)
