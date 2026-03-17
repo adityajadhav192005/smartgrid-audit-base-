@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const FASTAPI = process.env.SMARTGRID_API_URL
+const FASTAPI = process.env.SMARTGRID_API_URL ?? 'https://smartgrid-public-api-1001036509634.us-central1.run.app'
 const API_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
 
 export async function GET(req: NextRequest) {
