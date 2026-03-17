@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { runHistory } from '@/lib/mockData'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
@@ -14,12 +14,85 @@ const configPresets = [
 ]
 
 export default function RunsPage() {
-  const [n, setN]             = useState('100')
+  const [n, setN] = useState('100')
   const [attacks, setAttacks] = useState<string[]>(['FDI', 'DoS'])
   const [episodes, setEpisodes] = useState('200')
-  const [preset, setPreset]   = useState('default')
+  const [preset, setPreset] = useState('default')
+
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [launchError, setLaunchError] = useState<string | null>(null)
+  const [activeRunId, setActiveRunId] = useState<string | null>(null)
+  const [liveRun, setLiveRun] = useState<any | null>(null)
+  const [liveRuns, setLiveRuns] = useState<any[]>([])
+  const [logLines, setLogLines] = useState<string[]>([])
 
   const toggle = (a: string) => setAttacks(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])
+
+  const statusLabel = useMemo(() => {
+    if (!liveRun) return 'Idle'
+    return String(liveRun.status ?? 'unknown').toUpperCase()
+  }, [liveRun])
+
+  async function refreshRuns() {
+    const response = await fetch('/api/proxy/runs?limit=8', { cache: 'no-store' })
+    const payload = await response.json()
+    setLiveRuns(Array.isArray(payload?.runs) ? payload.runs : [])
+    if (payload?.runs?.[0] && !activeRunId) {
+      setActiveRunId(payload.runs[0].run_id)
+    }
+  }
+
+  async function refreshActiveRun(runId: string) {
+    const runRes = await fetch(`/api/proxy/runs/${encodeURIComponent(runId)}`, { cache: 'no-store' })
+    const runPayload = await runRes.json()
+    setLiveRun(runPayload?.run ?? null)
+
+    const logsRes = await fetch(`/api/proxy/runs/${encodeURIComponent(runId)}/logs?tail=40`, { cache: 'no-store' })
+    const logsPayload = await logsRes.json()
+    setLogLines(Array.isArray(logsPayload?.lines) ? logsPayload.lines : [])
+  }
+
+  async function launchRun() {
+    setIsLaunching(true)
+    setLaunchError(null)
+    try {
+      const response = await fetch('/api/proxy/runs', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          num_agents: Number(n),
+          ablation_mode: 'HYBRID',
+          notes: `preset=${preset}; attacks=${attacks.join(',')}; episodes=${episodes}`,
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.detail ?? payload?.error ?? 'Failed to launch run')
+      }
+      const runId = payload?.run_id as string
+      setActiveRunId(runId)
+      await refreshRuns()
+      await refreshActiveRun(runId)
+    } catch (error) {
+      setLaunchError(error instanceof Error ? error.message : 'Failed to launch run')
+    } finally {
+      setIsLaunching(false)
+    }
+  }
+
+  useEffect(() => {
+    void refreshRuns()
+  }, [])
+
+  useEffect(() => {
+    if (!activeRunId) return
+    void refreshActiveRun(activeRunId)
+    const interval = setInterval(() => {
+      void refreshActiveRun(activeRunId)
+      void refreshRuns()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [activeRunId])
 
   return (
     <div className="space-y-6">
@@ -93,10 +166,42 @@ export default function RunsPage() {
             </div>
           </div>
 
+          <div className="glass-card p-3 border-slate-700/40">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400">Live Run Status</span>
+              <Badge variant={statusLabel === 'RUNNING' || statusLabel === 'QUEUED' ? 'auditing' : statusLabel === 'COMPLETED' ? 'healthy' : 'low'}>
+                {statusLabel}
+              </Badge>
+            </div>
+            <div className="text-xs text-slate-400 space-y-1">
+              <div>Run ID: <span className="text-cyber-blue font-mono">{liveRun?.run_id ?? '-'}</span></div>
+              <div>Started: <span className="text-slate-300">{liveRun?.started_at ?? '-'}</span></div>
+              <div>Finished: <span className="text-slate-300">{liveRun?.finished_at ?? '-'}</span></div>
+              {liveRun?.summary && (
+                <div className="pt-1 text-slate-300">
+                  Cost Eff: {formatPct(liveRun.summary.cost_efficiency ?? 0)} · Risk Mit: {formatPct(liveRun.summary.risk_mitigation ?? 0)} · F1: {(liveRun.summary.f1 ?? 0).toFixed(3)}
+                </div>
+              )}
+              {liveRun?.error && <div className="text-cyber-red">Error: {liveRun.error}</div>}
+            </div>
+          </div>
+
           {/* Launch button */}
-          <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cyber-blue text-grid-900 font-bold text-sm hover:bg-cyber-blue/90 transition-colors">
-            <Play size={14} /> Launch Experiment
+          <button
+            onClick={launchRun}
+            disabled={isLaunching}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cyber-blue text-grid-900 font-bold text-sm hover:bg-cyber-blue/90 transition-colors disabled:opacity-70"
+          >
+            <Play size={14} /> {isLaunching ? 'Launching…' : 'Launch Experiment'}
           </button>
+          {launchError && <p className="text-xs text-cyber-red">{launchError}</p>}
+
+          {logLines.length > 0 && (
+            <div className="bg-grid-900 border border-slate-700/40 rounded-lg p-3 max-h-52 overflow-auto">
+              <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-wider">Live Run Log (tail)</p>
+              <pre className="text-[10px] text-slate-300 whitespace-pre-wrap">{logLines.join('\n')}</pre>
+            </div>
+          )}
         </div>
 
         {/* Recent runs */}
@@ -106,16 +211,16 @@ export default function RunsPage() {
             <h3 className="text-sm font-semibold text-slate-200">Recent Runs</h3>
           </div>
           <div className="space-y-2">
-            {runHistory.slice(0, 4).map(r => (
-              <div key={r.id} className="glass-card p-2.5 border-slate-700/30 text-xs">
+            {(liveRuns.length > 0 ? liveRuns.slice(0, 4) : runHistory.slice(0, 4)).map((r: any) => (
+              <div key={r.run_id ?? r.id} className="glass-card p-2.5 border-slate-700/30 text-xs">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono text-cyber-blue text-[10px]">{r.id}</span>
-                  <Badge variant={r.status === 'Running' ? 'auditing' : 'low'} pulse={r.status === 'Running'}>{r.status}</Badge>
+                  <span className="font-mono text-cyber-blue text-[10px]">{r.run_id ?? r.id}</span>
+                  <Badge variant={(r.status === 'running' || r.status === 'queued' || r.status === 'Running') ? 'auditing' : (r.status === 'completed' ? 'healthy' : 'low')} pulse={r.status === 'running' || r.status === 'Running'}>{r.status}</Badge>
                 </div>
-                <div className="text-slate-400">N={r.agents} — {r.attacks}</div>
+                <div className="text-slate-400">N={r.params?.num_agents ?? r.agents ?? '-'} — {r.params?.ablation_mode ?? r.attacks ?? '-'}</div>
                 <div className="flex gap-3 mt-1 text-slate-500">
-                  <span>Cost: {formatPct(r.costEfficiency)}</span>
-                  <span>Risk: {formatPct(r.riskMitigation)}</span>
+                  <span>Cost: {formatPct(r.summary?.cost_efficiency ?? r.costEfficiency ?? 0)}</span>
+                  <span>Risk: {formatPct(r.summary?.risk_mitigation ?? r.riskMitigation ?? 0)}</span>
                 </div>
               </div>
             ))}
