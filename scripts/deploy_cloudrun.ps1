@@ -22,6 +22,8 @@ gcloud run deploy $Service `
   --platform managed `
   --allow-unauthenticated `
   --port 8080 `
+  --min-instances 1 `
+  --no-cpu-throttling `
   --set-env-vars "SMARTGRID_API_KEY=$ApiKey"
 
 Write-Host "Done. Fetching service URL..."

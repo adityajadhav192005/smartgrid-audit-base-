@@ -6,6 +6,12 @@ __pycache__
 .vercel
 .streamlit
 .pip
+*.pyc
+*.pyo
+*.pyd
+backend_railway/data/*.db
+backend_railway/__pycache__/
+smartgrid_mas/**/__pycache__/
 
 web
 docs

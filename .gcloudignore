@@ -7,6 +7,11 @@
 !backend_railway/**
 !smartgrid_mas/**
 
+# Exclude runtime/cache artifacts even inside included trees
+backend_railway/data/*.db
+backend_railway/__pycache__/**
+smartgrid_mas/**/__pycache__/**
+
 # Keep ignore files visible for tooling/debug
 !.gcloudignore
 !.dockerignore
