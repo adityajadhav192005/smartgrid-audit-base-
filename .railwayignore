@@ -1,0 +1,27 @@
+.git/
+.venv/
+.pytest_cache/
+__pycache__/
+.vercel/
+.streamlit/
+.pip/
+
+# Frontend and docs not needed for backend service deploy
+web/
+docs/
+future_updates/
+archive/
+Test Result/
+
+# Very large local simulation assets not needed in Railway runtime
+rapidscada_demo/
+rapidscada_local/
+rapidscada_local_web/
+
+# Local runtime/output files
+logs/
+*.log
+*.tmp
+.env*
+
+# Keep backend + algorithm + root config files only
