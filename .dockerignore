@@ -1,0 +1,29 @@
+.git
+.gitignore
+.venv
+.pytest_cache
+__pycache__
+.vercel
+.streamlit
+.pip
+
+web
+docs
+future_updates
+archive
+Test Result
+rapidscada_demo
+rapidscada_local
+rapidscada_local_web
+logs
+
+*.log
+*.tmp
+.env
+.env.*
+
+# Keep runtime app code only
+!backend_railway/**
+!smartgrid_mas/**
+!requirements.txt
+!config_default.json
