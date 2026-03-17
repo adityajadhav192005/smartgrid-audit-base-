@@ -9,4 +9,3 @@ tqdm>=4.66
 matplotlib>=3.9
 scipy>=1.11
 psutil>=5.9
-torch>=2.5.0,<2.11
