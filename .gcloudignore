@@ -1,0 +1,12 @@
+# Exclude everything by default for Cloud Build source upload
+*
+
+# Include only files needed by Docker build
+!Dockerfile
+!requirements.txt
+!backend_railway/**
+!smartgrid_mas/**
+
+# Keep ignore files visible for tooling/debug
+!.gcloudignore
+!.dockerignore

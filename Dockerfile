@@ -11,7 +11,6 @@ RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
 COPY backend_railway /app/backend_railway
 COPY smartgrid_mas /app/smartgrid_mas
-COPY config_default.json /app/config_default.json
 
 EXPOSE 8080
 
