@@ -1,0 +1,2 @@
+-r backend_railway/requirements.txt
+-r smartgrid_mas/requirements.txt
