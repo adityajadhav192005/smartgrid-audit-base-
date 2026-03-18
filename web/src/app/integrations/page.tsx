@@ -8,6 +8,7 @@ import {
   CheckCircle2, XCircle, Clock, RefreshCw, Wifi, WifiOff,
   MonitorPlay, Link2, Zap, ExternalLink,
 } from 'lucide-react'
+import { useDashboard } from '@/lib/dashboardContext'
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,7 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function IntegrationsPage() {
+  const { setScadaConnected, refreshTick } = useDashboard()
   const [scadaConn, setScadaConn] = useState<ConnState>('checking')
   const [lastCheck, setLastCheck] = useState<string>('—')
 
@@ -96,15 +98,18 @@ export default function IntegrationsPage() {
         signal: AbortSignal.timeout(3500),
         cache: 'no-store',
       })
-      setScadaConn(r.ok ? 'connected' : 'error')
+      const ok = r.ok
+      setScadaConn(ok ? 'connected' : 'error')
+      setScadaConnected(ok)
     } catch {
       setScadaConn('error')
+      setScadaConnected(false)
     }
     setLastCheck(new Date().toLocaleTimeString())
-  }, [])
+  }, [setScadaConnected])
 
   // Auto-connect on mount
-  useEffect(() => { testScada() }, [testScada])
+  useEffect(() => { testScada() }, [testScada, refreshTick])
 
   return (
     <div className="space-y-6">

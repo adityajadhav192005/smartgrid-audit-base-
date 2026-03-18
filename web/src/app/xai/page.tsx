@@ -4,9 +4,19 @@ import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
 import { FeatureImportanceChart } from '@/components/charts'
 import { Cpu, BarChart2, CheckCircle, Zap } from 'lucide-react'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 export default function XAIPage() {
+  const { viewMode, scadaConnected } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
   const xai = xaiExplanations[0]
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const explanationCount = latestRun?.auditsTriggered ?? 218
+  const xaiConfidence = latestRun?.detectionAccuracy ?? xai.confidence
+
   return (
     <div className="space-y-6">
       <div>
@@ -14,11 +24,28 @@ export default function XAIPage() {
         <p className="text-sm text-slate-400 mt-1">SHAP-style feature attribution and model decision audit trail</p>
       </div>
 
+      <ViewModeBanner section="Explainability (XAI)" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
+      {latestRun && (
+        <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-300">
+          Latest run verification: <span className="font-mono text-cyber-blue">{latestRun.runId ?? 'n/a'}</span> · detection {Math.round(xaiConfidence * 100)}%
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <KPIStatCard label="Model Version"      value="LSTM-v2.1"  color="blue"   icon={<Cpu size={14} />}      />
-        <KPIStatCard label="Explanations"        value={218}        color="teal"   icon={<BarChart2 size={14} />} />
+        <KPIStatCard label="Explanations"        value={explanationCount} color="teal"   icon={<BarChart2 size={14} />} />
         <KPIStatCard label="Top Agent"           value={xai.agentId} color="red"  icon={<Zap size={14} />}      />
-        <KPIStatCard label="XAI Confidence"      value={`${(xai.confidence * 100).toFixed(0)}%`} color="green" icon={<CheckCircle size={14} />} />
+        <KPIStatCard label="XAI Confidence"      value={`${(xaiConfidence * 100).toFixed(0)}%`} color="green" icon={<CheckCircle size={14} />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -92,6 +119,8 @@ export default function XAIPage() {
           </tbody>
         </table>
       </div>
+      </>
+      )}
     </div>
   )
 }

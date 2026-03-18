@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AppShell } from '@/components/layout/AppShell'
+import { DashboardProvider } from '@/lib/dashboardContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -14,7 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-grid-900 text-slate-200 min-h-screen overflow-hidden`}>
-        <AppShell>{children}</AppShell>
+        <DashboardProvider>
+          <AppShell>{children}</AppShell>
+        </DashboardProvider>
       </body>
     </html>
   )

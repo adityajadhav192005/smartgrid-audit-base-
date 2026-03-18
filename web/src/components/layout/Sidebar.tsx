@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Activity, Shield, Zap, BarChart3, Brain,
-  FlaskConical, History, Settings, Database, Code2, Plug2,
-  FileBarChart2, AlertTriangle, ChevronRight, Cpu, MonitorPlay, Link2
+  FlaskConical, History, Settings, AlertTriangle, ChevronRight,
+  Cpu, MonitorPlay, Boxes
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDashboard } from '@/lib/dashboardContext'
 
 const navGroups = [
   {
@@ -33,16 +34,12 @@ const navGroups = [
     items: [
       { href: '/runs', label: 'Run Configuration', icon: FlaskConical },
       { href: '/history', label: 'Run History', icon: History },
-      { href: '/datasets', label: 'Datasets', icon: Database },
     ],
   },
   {
     label: 'Platform',
     items: [
-      { href: '/api-studio',  label: 'API Studio',        icon: Code2        },
-      { href: '/integrations', label: 'Integrations',        icon: Plug2        },
-      { href: '/blockchain',   label: 'Blockchain Ledger',  icon: Link2        },
-      { href: '/reports',      label: 'Reports & Export',   icon: FileBarChart2},
+      { href: '/advanced', label: 'Advanced Tools', icon: Boxes },
       { href: '/settings',     label: 'Settings',           icon: Settings     },
     ],
   },
@@ -50,6 +47,7 @@ const navGroups = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { viewMode, scadaConnected } = useDashboard()
 
   return (
     <aside className="w-60 flex-shrink-0 flex flex-col bg-grid-800 border-r border-white/5 overflow-y-auto">
@@ -78,7 +76,7 @@ export function Sidebar() {
                   <li key={href}>
                     <Link href={href} className={cn('nav-link', active && 'nav-link-active')}>
                       <Icon className="w-4 h-4 flex-shrink-0" />
-                      <span className="flex-1 truncate">{label}</span>
+                        <span className="flex-1 truncate">{label}</span>
                       {active && <ChevronRight className="w-3 h-3 opacity-50" />}
                     </Link>
                   </li>
@@ -95,7 +93,15 @@ export function Sidebar() {
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           Backend: Online
         </div>
-          <div className="text-[10px] text-slate-600 mt-0.5">API: deployment-configured</div>
+        <div className="text-[10px] mt-0.5">
+          <span className="text-slate-500">SCADA:</span>{' '}
+          <span className={scadaConnected ? 'text-emerald-400' : 'text-amber-400'}>
+            {scadaConnected ? 'Connected' : 'Disconnected'}
+          </span>
+        </div>
+        <div className="text-[10px] mt-0.5 text-slate-600">
+          Mode: {viewMode === 'scada' ? 'Rapid SCADA' : 'Experiment'}
+        </div>
       </div>
     </aside>
   )

@@ -1,10 +1,11 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
-import { runHistory } from '@/lib/mockData'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
 import { formatPct } from '@/lib/utils'
 import { Play, Settings2, Clock } from 'lucide-react'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
 
 const configPresets = [
   { id: 'default',  label: 'Default (N=100, FDI+DoS)' },
@@ -14,7 +15,9 @@ const configPresets = [
 ]
 
 export default function RunsPage() {
+  const { viewMode, scadaConnected, searchQuery, refreshTick, addNotification } = useDashboard()
   const [n, setN] = useState('100')
+  const [cycleHours, setCycleHours] = useState('1')
   const [attacks, setAttacks] = useState<string[]>(['FDI', 'DoS'])
   const [episodes, setEpisodes] = useState('200')
   const [preset, setPreset] = useState('default')
@@ -25,6 +28,10 @@ export default function RunsPage() {
   const [liveRun, setLiveRun] = useState<any | null>(null)
   const [liveRuns, setLiveRuns] = useState<any[]>([])
   const [logLines, setLogLines] = useState<string[]>([])
+  const [lastNotifiedRun, setLastNotifiedRun] = useState<string | null>(null)
+  const lastRunSignatureRef = useRef<string | null>(null)
+
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
 
   const toggle = (a: string) => setAttacks(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])
 
@@ -36,16 +43,30 @@ export default function RunsPage() {
   async function refreshRuns() {
     const response = await fetch('/api/proxy/runs?limit=8', { cache: 'no-store' })
     const payload = await response.json()
-    setLiveRuns(Array.isArray(payload?.runs) ? payload.runs : [])
-    if (payload?.runs?.[0] && !activeRunId) {
-      setActiveRunId(payload.runs[0].run_id)
+    const runs = Array.isArray(payload?.runs) ? payload.runs : []
+    const q = searchQuery.trim().toLowerCase()
+    const filtered = q
+      ? runs.filter((r: any) => `${r.run_id} ${r.status} ${r.params?.ablation_mode ?? ''}`.toLowerCase().includes(q))
+      : runs
+    setLiveRuns(filtered)
+    if (runs[0] && !activeRunId) {
+      setActiveRunId(runs[0].run_id)
     }
   }
 
   async function refreshActiveRun(runId: string) {
     const runRes = await fetch(`/api/proxy/runs/${encodeURIComponent(runId)}`, { cache: 'no-store' })
     const runPayload = await runRes.json()
-    setLiveRun(runPayload?.run ?? null)
+    const nextRun = runPayload?.run ?? null
+    setLiveRun(nextRun)
+
+    if (typeof window !== 'undefined' && nextRun?.run_id) {
+      const sig = `${nextRun.run_id}|${nextRun.status ?? 'unknown'}|${nextRun.finished_at ?? ''}|${nextRun.updated_at ?? ''}`
+      if (lastRunSignatureRef.current !== sig) {
+        lastRunSignatureRef.current = sig
+        window.dispatchEvent(new Event('sg:run-updated'))
+      }
+    }
 
     const logsRes = await fetch(`/api/proxy/runs/${encodeURIComponent(runId)}/logs?tail=40`, { cache: 'no-store' })
     const logsPayload = await logsRes.json()
@@ -56,12 +77,16 @@ export default function RunsPage() {
     setIsLaunching(true)
     setLaunchError(null)
     try {
+      const safeN = Math.max(1, Math.min(500, Number(n) || 100))
+      const safeHours = Math.max(1, Math.min(24, Number(cycleHours) || 1))
       const response = await fetch('/api/proxy/runs', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          num_agents: Number(n),
+          num_agents: safeN,
+          cycle_hours: safeHours,
           ablation_mode: 'HYBRID',
+          attack_profile: attacks.length ? attacks.join(',') : 'mixed',
           notes: `preset=${preset}; attacks=${attacks.join(',')}; episodes=${episodes}`,
         }),
       })
@@ -71,6 +96,9 @@ export default function RunsPage() {
       }
       const runId = payload?.run_id as string
       setActiveRunId(runId)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sg:run-updated'))
+      }
       await refreshRuns()
       await refreshActiveRun(runId)
     } catch (error) {
@@ -82,7 +110,7 @@ export default function RunsPage() {
 
   useEffect(() => {
     void refreshRuns()
-  }, [])
+  }, [searchQuery, refreshTick])
 
   useEffect(() => {
     if (!activeRunId) return
@@ -92,7 +120,20 @@ export default function RunsPage() {
       void refreshRuns()
     }, 5000)
     return () => clearInterval(interval)
-  }, [activeRunId])
+  }, [activeRunId, refreshTick])
+
+  useEffect(() => {
+    if (!liveRun?.run_id || !liveRun?.status) return
+    const status = String(liveRun.status).toLowerCase()
+    if ((status === 'completed' || status === 'failed') && lastNotifiedRun !== liveRun.run_id) {
+      addNotification({
+        title: status === 'completed' ? 'Run completed' : 'Run failed',
+        message: `${liveRun.run_id} ${status}${liveRun?.summary ? ` · Cost ${formatPct(liveRun.summary.cost_efficiency ?? 0)}` : ''}`,
+        level: status === 'completed' ? 'success' : 'error',
+      })
+      setLastNotifiedRun(liveRun.run_id)
+    }
+  }, [liveRun, lastNotifiedRun, addNotification])
 
   return (
     <div className="space-y-6">
@@ -100,6 +141,17 @@ export default function RunsPage() {
         <h1 className="section-header">Run Configuration</h1>
         <p className="text-sm text-slate-400 mt-1">Configure and launch simulation experiments</p>
       </div>
+
+      <ViewModeBanner section="Run Configuration" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Config card */}
@@ -125,11 +177,15 @@ export default function RunsPage() {
           <div className="grid grid-cols-2 gap-4">
             {/* N agents */}
             <div>
-              <label className="text-xs text-slate-500 block mb-1.5 font-medium">Number of Agents (N)</label>
-              <select value={n} onChange={e => setN(e.target.value)}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyber-blue/50">
-                {['100', '200', '500'].map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
+              <label className="text-xs text-slate-500 block mb-1.5 font-medium">Number of Agents (N) · 1 to 500</label>
+              <input
+                type="number"
+                value={n}
+                min={1}
+                max={500}
+                onChange={e => setN(String(Math.max(1, Math.min(500, Number(e.target.value) || 1))))}
+                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyber-blue/50"
+              />
             </div>
             {/* Training episodes */}
             <div>
@@ -137,6 +193,18 @@ export default function RunsPage() {
               <input type="number" value={episodes} onChange={e => setEpisodes(e.target.value)}
                 className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyber-blue/50" />
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-500 block mb-1.5 font-medium">Cycle Hours</label>
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={cycleHours}
+              onChange={e => setCycleHours(String(Math.max(1, Math.min(24, Number(e.target.value) || 1))))}
+              className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyber-blue/50"
+            />
           </div>
 
           {/* Attack types */}
@@ -211,7 +279,7 @@ export default function RunsPage() {
             <h3 className="text-sm font-semibold text-slate-200">Recent Runs</h3>
           </div>
           <div className="space-y-2">
-            {(liveRuns.length > 0 ? liveRuns.slice(0, 4) : runHistory.slice(0, 4)).map((r: any) => (
+            {(liveRuns.length > 0 ? liveRuns.slice(0, 4) : []).map((r: any) => (
               <div key={r.run_id ?? r.id} className="glass-card p-2.5 border-slate-700/30 text-xs">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-cyber-blue text-[10px]">{r.run_id ?? r.id}</span>
@@ -224,9 +292,14 @@ export default function RunsPage() {
                 </div>
               </div>
             ))}
+            {liveRuns.length === 0 && (
+              <div className="text-xs text-slate-500">No live runs found yet. Launch an experiment to begin.</div>
+            )}
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -5,16 +5,27 @@ import { StateBadge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Activity, Filter, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 const TYPES = ['All', 'Generator', 'Substation', 'PMU', 'Breaker']
 const STATES = ['All', 'Healthy', 'Anomalous', 'Under Audit', 'Attacked', 'Suspect']
 
 export default function LivePage() {
+  const { viewMode, scadaConnected, searchQuery, triggerRefresh } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
   const [typeFilter, setTypeFilter]   = useState('All')
   const [stateFilter, setStateFilter] = useState('All')
   const [sortBy, setSortBy]           = useState<'riskScore' | 'anomalyScore'>('riskScore')
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
 
   const filtered = liveAgents
+    .filter(a => {
+      const q = searchQuery.trim().toLowerCase()
+      if (!q) return true
+      return `${a.id} ${a.type} ${a.state}`.toLowerCase().includes(q)
+    })
     .filter(a => typeFilter  === 'All' || a.type  === typeFilter)
     .filter(a => stateFilter === 'All' || a.state === stateFilter)
     .sort((a, b) => b[sortBy] - a[sortBy])
@@ -22,6 +33,10 @@ export default function LivePage() {
   const healthy  = liveAgents.filter(a => a.state === 'Healthy').length
   const flagged  = liveAgents.filter(a => a.state === 'Anomalous' || a.state === 'Attacked').length
   const auditing = liveAgents.filter(a => a.state === 'Under Audit').length
+
+  const totalAgents = latestRun?.totalAgents || liveAgents.length
+  const latestFlagged = latestRun?.activeIncidents ?? flagged
+  const latestAudits = latestRun?.auditsTriggered ?? auditing
 
   return (
     <div className="space-y-6">
@@ -31,17 +46,31 @@ export default function LivePage() {
           <h1 className="section-header">Live Agent Monitoring</h1>
           <p className="text-sm text-slate-400 mt-1">Real-time state, anomaly scores, and risk for all agents</p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border border-cyber-blue/30 text-cyber-blue hover:bg-cyber-blue/10 transition-colors">
+        <button
+          onClick={triggerRefresh}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border border-cyber-blue/30 text-cyber-blue hover:bg-cyber-blue/10 transition-colors"
+        >
           <RefreshCw size={12} /> Refresh
         </button>
       </div>
 
+      <ViewModeBanner section="Live Monitoring" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPIStatCard label="Total Agents" value={liveAgents.length}  color="blue"  icon={<Activity size={14} />} />
+        <KPIStatCard label="Total Agents" value={totalAgents}  color="blue"  icon={<Activity size={14} />} />
         <KPIStatCard label="Healthy"      value={healthy}            color="green"  />
-        <KPIStatCard label="Flagged"      value={flagged}            color="red"    />
-        <KPIStatCard label="Under Audit"  value={auditing}           color="teal"   />
+        <KPIStatCard label="Flagged"      value={latestFlagged}      color="red"    />
+        <KPIStatCard label="Under Audit"  value={latestAudits}       color="teal"   />
       </div>
 
       {/* Filters */}
@@ -138,6 +167,8 @@ export default function LivePage() {
           <div className="py-12 text-center text-sm text-slate-500">No agents match current filters</div>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }

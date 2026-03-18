@@ -4,8 +4,20 @@ import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { AnomalyTrendChart, AgentRadarChart, SystemHealthAreaChart } from '@/components/charts'
 import { Activity, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react'
 import { formatPct } from '@/lib/utils'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 export default function AnomaliesPage() {
+  const { viewMode, scadaConnected } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const activeAnomalies = latestRun?.activeIncidents ?? 9
+  const avgAnomaly = latestRun?.f1 ? (latestRun.f1 + latestRun.precision + latestRun.recall) / 3 : 0.72
+  const crossLayerStability = latestRun?.crossLayerStability ?? 0.871
+  const baselineDrift = latestRun?.f1 ? Math.max(0.001, 1 - latestRun.f1) / 100 : 0.0082
+
   return (
     <div className="space-y-6">
       <div>
@@ -13,11 +25,22 @@ export default function AnomaliesPage() {
         <p className="text-sm text-slate-400 mt-1">Deviation trends, risk scores, and cross-layer stability</p>
       </div>
 
+      <ViewModeBanner section="Anomaly & Risk" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPIStatCard label="Active Anomalies"    value={9}        color="red"    icon={<AlertTriangle size={14} />} />
-        <KPIStatCard label="Avg Anomaly Score"   value="0.72"     color="amber"  icon={<Activity size={14} />} />
-        <KPIStatCard label="Cross-Layer Stab."   value="87.1%"    color="blue"   icon={<TrendingDown size={14} />} />
-        <KPIStatCard label="Baseline Drift"      value="0.0082"   color="teal"   icon={<TrendingUp size={14} />} sub="Q-delta" />
+        <KPIStatCard label="Active Anomalies"    value={activeAnomalies}                         color="red"    icon={<AlertTriangle size={14} />} />
+        <KPIStatCard label="Avg Anomaly Score"   value={avgAnomaly.toFixed(3)}                   color="amber"  icon={<Activity size={14} />} />
+        <KPIStatCard label="Cross-Layer Stab."   value={formatPct(crossLayerStability, 1)}       color="blue"   icon={<TrendingDown size={14} />} />
+        <KPIStatCard label="Baseline Drift"      value={baselineDrift.toFixed(4)}                color="teal"   icon={<TrendingUp size={14} />} sub="Q-delta" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -87,6 +110,8 @@ export default function AnomaliesPage() {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

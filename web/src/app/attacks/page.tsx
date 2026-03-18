@@ -6,9 +6,34 @@ import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { AttackBarChart, AttackTypePie } from '@/components/charts'
 import { attackTypeDistribution } from '@/lib/mockData'
 import { AlertTriangle, Zap, Shield, Activity } from 'lucide-react'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 export default function AttacksPage() {
+  const { viewMode, scadaConnected, searchQuery } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
   const [selected, setSelected] = useState(attackEvents[0])
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const visibleAttacks = attackEvents.filter(atk => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
+    return `${atk.id} ${atk.type} ${atk.status} ${atk.affectedLayer} ${atk.targetAgents.join(' ')}`.toLowerCase().includes(q)
+  })
+
+  const fallbackPriority = {
+    critical: attackEvents.filter(a => a.severity.toLowerCase() === 'critical').length,
+    high: attackEvents.filter(a => a.severity.toLowerCase() === 'high').length,
+    medium: attackEvents.filter(a => a.severity.toLowerCase() === 'medium').length,
+    low: attackEvents.filter(a => a.severity.toLowerCase() === 'low').length,
+  }
+
+  const attacksIdentified = latestRun?.attacksIdentified ?? attackEvents.length
+  const auditsTriggered = latestRun?.auditsTriggered ?? attackEvents.reduce((acc, item) => acc + item.audits.length, 0)
+  const attacksDetected = latestRun?.attacksDetected ?? attackEvents.length
+  const attacksResolved = latestRun?.attacksResolved ?? 2
+  const priority = latestRun?.priority ?? fallbackPriority
 
   return (
     <div className="space-y-6">
@@ -17,11 +42,29 @@ export default function AttacksPage() {
         <p className="text-sm text-slate-400 mt-1">Confirmed and suspected attack events — detection, taxonomy, and impact</p>
       </div>
 
+      <ViewModeBanner section="Attack Analysis" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPIStatCard label="Attacks Detected"  value={5}   color="red"    icon={<Zap size={14} />} />
-        <KPIStatCard label="Confirmed"          value={3}   color="red"    />
-        <KPIStatCard label="Mitigated"          value={2}   color="green"  icon={<Shield size={14} />} />
-        <KPIStatCard label="Agents Impacted"    value={7}   color="amber"  icon={<AlertTriangle size={14} />} />
+        <KPIStatCard label="Identified"        value={attacksIdentified} color="red"   icon={<AlertTriangle size={14} />} />
+        <KPIStatCard label="Audits Triggered"  value={auditsTriggered}   color="blue"  icon={<Activity size={14} />} />
+        <KPIStatCard label="Detected"          value={attacksDetected}   color="amber" icon={<Zap size={14} />} />
+        <KPIStatCard label="Resolved"          value={attacksResolved}   color="green" icon={<Shield size={14} />} />
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <KPIStatCard label="Priority Critical" value={priority.critical} color="red" />
+        <KPIStatCard label="Priority High"     value={priority.high}     color="amber" />
+        <KPIStatCard label="Priority Medium"   value={priority.medium}   color="blue" />
+        <KPIStatCard label="Priority Low"      value={priority.low}      color="green" />
       </div>
 
       {/* Charts row */}
@@ -41,7 +84,7 @@ export default function AttacksPage() {
         <div className="lg:col-span-2 glass-card p-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-700/50 text-sm font-semibold text-slate-200">Attack Events</div>
           <div className="divide-y divide-slate-800/60">
-            {attackEvents.map(atk => (
+            {visibleAttacks.map(atk => (
               <button key={atk.id} onClick={() => setSelected(atk)}
                 className={`w-full text-left p-4 hover:bg-slate-800/30 transition-colors ${selected.id === atk.id ? 'bg-cyber-red/5 border-l-2 border-l-cyber-red' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
@@ -112,6 +155,8 @@ export default function AttacksPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

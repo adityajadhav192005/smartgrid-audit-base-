@@ -27,8 +27,26 @@ import {
   Shield,
   Zap,
 } from 'lucide-react'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 export default function RootPage() {
+  const { viewMode, scadaConnected } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const totalAgents = latestRun?.totalAgents || kpiData.totalAgents
+  const detectionAccuracy = latestRun?.detectionAccuracy ?? kpiData.detectionAccuracy
+  const riskMitigation = latestRun?.riskMitigation ?? kpiData.riskMitigation
+  const costEfficiency = latestRun?.costEfficiency ?? kpiData.costEfficiency
+  const activeIncidents = latestRun?.activeIncidents ?? kpiData.currentAnomalies
+  const attacksDetected = latestRun?.attacksDetected ?? kpiData.attacksDetected
+  const auditCoverage = latestRun?.auditCoverage ?? kpiData.auditCoverage
+  const precision = latestRun?.precision ?? kpiData.precision
+  const recall = latestRun?.recall ?? kpiData.recall
+  const runId = latestRun?.runId ?? kpiData.currentRunId
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -40,24 +58,41 @@ export default function RootPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="healthy" pulse>{kpiData.modelHealth}</Badge>
+          <Badge variant="healthy" pulse>{latestRun ? String(latestRun.status).toUpperCase() : kpiData.modelHealth}</Badge>
           <Badge variant="info">XAI {kpiData.xaiStatus}</Badge>
-          <Badge variant="auditing">Run {kpiData.currentRunId}</Badge>
+          <Badge variant="auditing">Run {runId}</Badge>
         </div>
       </div>
 
+      <ViewModeBanner section="Executive Overview" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
+      {latestRun && (
+        <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-300">
+          Latest run verification: <span className="font-mono text-cyber-blue">{runId}</span> · detected {attacksDetected} · resolved {latestRun.attacksResolved}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        <KPIStatCard label="Total Agents" value={kpiData.totalAgents} color="blue" icon={<Activity size={14} />} />
-        <KPIStatCard label="Detection Accuracy" value={formatPct(kpiData.detectionAccuracy, 2)} color="green" icon={<Radar size={14} />} />
-        <KPIStatCard label="Risk Mitigation" value={formatPct(kpiData.riskMitigation, 1)} color="teal" icon={<Shield size={14} />} />
-        <KPIStatCard label="Cost Efficiency" value={formatPct(kpiData.costEfficiency, 1)} color="amber" icon={<DollarSign size={14} />} />
+        <KPIStatCard label="Total Agents" value={totalAgents} color="blue" icon={<Activity size={14} />} />
+        <KPIStatCard label="Detection Accuracy" value={formatPct(detectionAccuracy, 2)} color="green" icon={<Radar size={14} />} />
+        <KPIStatCard label="Risk Mitigation" value={formatPct(riskMitigation, 1)} color="teal" icon={<Shield size={14} />} />
+        <KPIStatCard label="Cost Efficiency" value={formatPct(costEfficiency, 1)} color="amber" icon={<DollarSign size={14} />} />
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        <KPIStatCard label="Active Anomalies" value={kpiData.currentAnomalies} color="red" icon={<AlertTriangle size={14} />} />
-        <KPIStatCard label="Attacks Detected" value={kpiData.attacksDetected} color="red" icon={<Zap size={14} />} />
-        <KPIStatCard label="Audit Coverage" value={formatPct(kpiData.auditCoverage, 1)} color="purple" icon={<Shield size={14} />} />
-        <KPIStatCard label="Precision / Recall" value={`${kpiData.precision.toFixed(2)} / ${kpiData.recall.toFixed(2)}`} color="blue" icon={<Brain size={14} />} />
+        <KPIStatCard label="Active Anomalies" value={activeIncidents} color="red" icon={<AlertTriangle size={14} />} />
+        <KPIStatCard label="Attacks Detected" value={attacksDetected} color="red" icon={<Zap size={14} />} />
+        <KPIStatCard label="Audit Coverage" value={formatPct(auditCoverage, 1)} color="purple" icon={<Shield size={14} />} />
+        <KPIStatCard label="Precision / Recall" value={`${precision.toFixed(2)} / ${recall.toFixed(2)}`} color="blue" icon={<Brain size={14} />} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -147,6 +182,8 @@ export default function RootPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

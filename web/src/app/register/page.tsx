@@ -16,10 +16,6 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   function normalizeAuthError(message: string): string {
-    const lower = message.toLowerCase()
-    if (lower.includes('unsupported provider') || lower.includes('provider is not enabled')) {
-      return 'Google login is not enabled in Supabase yet. Enable Google provider in Supabase Auth > Providers and add this redirect URL: ' + `${window.location.origin}/live`
-    }
     return message
   }
 
@@ -50,24 +46,6 @@ export default function RegisterPage() {
     }
     setSuccess('Registration successful. Check your email for confirmation if required.')
     router.push('/login')
-  }
-
-  async function onGoogleSignIn() {
-    setError(null)
-    let supabase
-    try {
-      supabase = getSupabaseClient()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Supabase client not configured')
-      return
-    }
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/live` },
-    })
-    if (oauthError) {
-      setError(normalizeAuthError(oauthError.message))
-    }
   }
 
   return (
@@ -134,20 +112,6 @@ export default function RegisterPage() {
 
         {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
         {success && <p className="mt-3 text-xs text-emerald-400">{success}</p>}
-
-        <div className="my-4 flex items-center gap-2">
-          <div className="h-px bg-slate-700/60 flex-1" />
-          <span className="text-[11px] text-slate-500">or</span>
-          <div className="h-px bg-slate-700/60 flex-1" />
-        </div>
-
-        <button
-          type="button"
-          onClick={onGoogleSignIn}
-          className="w-full rounded bg-white/5 border border-slate-600/50 text-slate-200 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
-        >
-          Continue with Google
-        </button>
 
         <p className="mt-5 text-xs text-slate-400">
           Already have an account?{' '}

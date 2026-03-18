@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 interface KPIStatCardProps {
   label: string
   value: string | number
+  help?: string
   sub?: string
   trend?: 'up' | 'down' | 'flat'
   trendValue?: string
@@ -21,13 +22,24 @@ const styleMap = {
   purple: { border: 'border-purple-500/30',   text: 'text-purple-400',   glow: 'group-hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]' },
 }
 
-export function KPIStatCard({ label, value, sub, trend, trendValue, color = 'blue', icon, className }: KPIStatCardProps) {
+const DEFAULT_HELP: Record<string, string> = {
+  'Detection Accuracy': 'Share of correctly classified events over all evaluated events.',
+  'Risk Mitigation': 'Relative reduction in risk after applying adaptive audits and response.',
+  'Cost Efficiency': 'Cost reduction achieved compared to baseline audit strategy.',
+  'Precision / Recall': 'Precision = correctness of positive detections; Recall = coverage of true incidents.',
+  'Active Anomalies': 'Current count of agents/events flagged as abnormal.',
+  'Audit Coverage': 'Portion of priority/high-risk agents that received audits.',
+  'Cross-Layer Stab.': 'Combined physical + cyber stability consistency index.',
+  'Avg Anomaly Score': 'Average normalized anomaly score across monitored agents.',
+}
+
+export function KPIStatCard({ label, value, help, sub, trend, trendValue, color = 'blue', icon, className }: KPIStatCardProps) {
   const s = styleMap[color]
   return (
     <div className={cn(
       'group glass-card p-4 flex flex-col gap-1 transition-all duration-200',
       s.border, s.glow, className
-    )}>
+    )} title={help ?? DEFAULT_HELP[label] ?? label}>
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">{label}</span>
         {icon && <span className={cn('opacity-60 group-hover:opacity-100', s.text)}>{icon}</span>}

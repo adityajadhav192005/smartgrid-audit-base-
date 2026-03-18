@@ -5,9 +5,26 @@ import { Badge, SeverityBadge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Shield, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
 
 export default function AuditsPage() {
+  const { viewMode, scadaConnected, searchQuery } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
   const [selected, setSelected] = useState(auditRecords[0])
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const visibleAudits = auditRecords.filter(a => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
+    return `${a.id} ${a.agentId} ${a.agentType} ${a.severity} ${a.status} ${a.suspectedAttack}`.toLowerCase().includes(q)
+  })
+
+  const totalAudits = latestRun?.auditsTriggered ?? 218
+  const activeIncidents = latestRun?.activeIncidents ?? 1
+  const threatsFound = latestRun?.attacksDetected ?? 15
+  const resolved = latestRun?.attacksResolved ?? 202
 
   return (
     <div className="space-y-6">
@@ -16,12 +33,23 @@ export default function AuditsPage() {
         <p className="text-sm text-slate-400 mt-1">Full audit record — triggers, evidence, and descriptions</p>
       </div>
 
+      <ViewModeBanner section="Audit Intelligence" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPIStatCard label="Total Audits"   value={218}   color="blue"   icon={<Shield size={14} />} />
-        <KPIStatCard label="Active"         value={1}     color="teal"   icon={<Clock size={14} />} />
-        <KPIStatCard label="Threats Found"  value={15}    color="red"    icon={<AlertTriangle size={14} />} />
-        <KPIStatCard label="Resolved"       value={202}   color="green"  icon={<CheckCircle size={14} />} />
+        <KPIStatCard label="Total Audits"   value={totalAudits}      color="blue"   icon={<Shield size={14} />} />
+        <KPIStatCard label="Active"         value={activeIncidents}  color="teal"   icon={<Clock size={14} />} />
+        <KPIStatCard label="Threats Found"  value={threatsFound}     color="red"    icon={<AlertTriangle size={14} />} />
+        <KPIStatCard label="Resolved"       value={resolved}         color="green"  icon={<CheckCircle size={14} />} />
       </div>
 
       {/* Split layout */}
@@ -30,7 +58,7 @@ export default function AuditsPage() {
         <div className="lg:col-span-2 glass-card p-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-700/50 text-sm font-semibold text-slate-200">Recent Audits</div>
           <div className="divide-y divide-slate-800/60">
-            {auditRecords.map(a => (
+            {visibleAudits.map(a => (
               <button key={a.id} onClick={() => setSelected(a)}
                 className={cn('w-full text-left p-4 hover:bg-slate-800/30 transition-colors',
                   selected.id === a.id && 'bg-cyber-blue/5 border-l-2 border-l-cyber-blue'
@@ -116,6 +144,8 @@ export default function AuditsPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

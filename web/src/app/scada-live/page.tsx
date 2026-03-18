@@ -5,8 +5,11 @@ import { cn } from '@/lib/utils'
 import {
   Wifi, WifiOff, Activity, AlertTriangle, Zap, Radio,
   RefreshCw, MonitorStop, Play, Gauge, ArrowUpDown, ShieldAlert,
-  CheckCircle2, Cpu, ExternalLink,
+  Cpu,
 } from 'lucide-react'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
+import { formatPct } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -159,6 +162,8 @@ const EVENT_STATE_COLOR: Record<AgentState, string> = {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ScadaLivePage() {
+  const { setScadaConnected } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
   const [grid, setGrid] = useState<GridSnapshot>({ agents: buildGrid(), events: [], tick: 0 })
   const [channels, setChannels] = useState<Channels>({
     voltage: 230.2, frequency: 50.010, current: 82.4,
@@ -204,19 +209,20 @@ export default function ScadaLivePage() {
       setConnError('FastAPI offline — running in local demo mode')
     }
     setIsConnected(true)
+    setScadaConnected(true)
     startPolling()
     setIsConnecting(false)
-  }, [startPolling])
+  }, [setScadaConnected, startPolling])
 
   const disconnect = useCallback(() => {
     setIsConnected(false)
+    setScadaConnected(false)
     setConnError(null)
     stopPolling()
-  }, [stopPolling])
+  }, [setScadaConnected, stopPolling])
 
-  // Auto-connect on mount
+  // Cleanup on unmount
   useEffect(() => {
-    connect()
     return () => stopPolling()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -283,6 +289,17 @@ export default function ScadaLivePage() {
       {connError && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-950/25 border border-amber-500/25 text-amber-300 text-xs flex-shrink-0">
           <AlertTriangle size={11} /> {connError}
+        </div>
+      )}
+
+      {latestRun && (
+        <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-300 flex items-center justify-between">
+          <span>
+            Latest run verification: <span className="font-mono text-cyber-blue">{latestRun.runId ?? 'n/a'}</span> · status <span className="font-semibold">{latestRun.status}</span>
+          </span>
+          <span className="text-slate-400">
+            Detected {latestRun.attacksDetected} · Resolved {latestRun.attacksResolved} · Risk {formatPct(latestRun.riskMitigation, 1)}
+          </span>
         </div>
       )}
 

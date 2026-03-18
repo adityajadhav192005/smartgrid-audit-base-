@@ -3,6 +3,10 @@ import { recentEvents } from '@/lib/mockData'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
 import { Shield, Zap, Clock, CheckCircle } from 'lucide-react'
+import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useDashboard } from '@/lib/dashboardContext'
+import { useLatestRun } from '@/lib/latestRun'
+import { formatPct } from '@/lib/utils'
 
 const responseSteps = [
   { step: 1, action: 'Anomaly Detected', icon: '🔍', detail: 'S(GEN-04) = 1.42 > threshold 1.0', time: '14:20:00', done: true  },
@@ -14,6 +18,15 @@ const responseSteps = [
 ]
 
 export default function ResponsePage() {
+  const { viewMode, scadaConnected } = useDashboard()
+  const { latestRun } = useLatestRun(12000)
+  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+
+  const riskMitigation = latestRun?.riskMitigation ?? 0.712
+  const avgResponseSeconds = latestRun?.avgResponseSeconds || 12
+  const threatsResolved = latestRun?.attacksResolved ?? 14
+  const activeIncidents = latestRun?.activeIncidents ?? 1
+
   return (
     <div className="space-y-6">
       <div>
@@ -21,11 +34,28 @@ export default function ResponsePage() {
         <p className="text-sm text-slate-400 mt-1">Automated response pipeline, mitigation actions, and feedback loops</p>
       </div>
 
+      <ViewModeBanner section="Response & Mitigation" />
+
+      {scadaBlocked && (
+        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
+          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
+        </div>
+      )}
+
+      {!scadaBlocked && (
+      <>
+
+      {latestRun && (
+        <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-300">
+          Latest run verification: <span className="font-mono text-cyber-blue">{latestRun.runId ?? 'n/a'}</span> · response window {avgResponseSeconds.toFixed(1)}s
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPIStatCard label="Risk Mitigation"  value="71.2%"  color="green"  icon={<Shield size={14} />} />
-        <KPIStatCard label="Avg Response Time" value="12s"   color="teal"   icon={<Clock size={14} />}  />
-        <KPIStatCard label="Threats Resolved" value={14}     color="green"  icon={<CheckCircle size={14} />} />
-        <KPIStatCard label="Active Incidents"  value={1}     color="red"    icon={<Zap size={14} />}    />
+        <KPIStatCard label="Risk Mitigation"  value={formatPct(riskMitigation, 1)} color="green"  icon={<Shield size={14} />} />
+        <KPIStatCard label="Avg Response Time" value={`${avgResponseSeconds.toFixed(1)}s`} color="teal"   icon={<Clock size={14} />}  />
+        <KPIStatCard label="Threats Resolved" value={threatsResolved} color="green"  icon={<CheckCircle size={14} />} />
+        <KPIStatCard label="Active Incidents"  value={activeIncidents} color="red"    icon={<Zap size={14} />}    />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -96,6 +126,8 @@ export default function ResponsePage() {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

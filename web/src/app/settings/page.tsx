@@ -10,6 +10,7 @@ type Tab = typeof TABS[number]
 
 const PARAMS: Record<Tab, Param[]> = {
   'Model Parameters': [
+    { key: 'num_agents',       label: 'Number of Agents (N)', value: 100, type: 'number', min: 1, max: 500, step: 1, desc: 'Global agent count for experiments. Allowed range: 1 to 500.' },
     { key: 'learning_rate',    label: 'Learning Rate (α)', value: 0.01, type: 'number', min: 0.0001, max: 1, step: 0.001, desc: 'Step size for gradient-based audit frequency updates.' },
     { key: 'discount_factor',  label: 'Discount Factor (γ)', value: 0.9, type: 'number', min: 0.1, max: 1, step: 0.01, desc: 'RL discount factor controlling long-term reward weight.' },
     { key: 'epsilon',          label: 'Epsilon (ε-greedy)',  value: 0.1, type: 'number', min: 0.0, max: 1, step: 0.01, desc: 'Exploration rate for ε-greedy action selection.' },
@@ -209,7 +210,11 @@ export default function SettingsPage() {
                 value={vals[p.key]}
                 min={p.min} max={p.max} step={p.step}
                 onChange={e => {
-                  const nextValue = p.type === 'number' ? parseFloat(e.target.value) : e.target.value
+                  let nextValue: string | number = p.type === 'number' ? parseFloat(e.target.value) : e.target.value
+                  if (p.type === 'number' && typeof nextValue === 'number' && !Number.isNaN(nextValue)) {
+                    if (typeof p.min === 'number') nextValue = Math.max(p.min, nextValue)
+                    if (typeof p.max === 'number') nextValue = Math.min(p.max, nextValue)
+                  }
                   setVals(prev => {
                     if (p.key === 'audit_success_prob' && typeof nextValue === 'number' && !Number.isNaN(nextValue)) {
                       return {
