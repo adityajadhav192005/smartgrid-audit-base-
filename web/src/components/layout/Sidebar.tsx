@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Activity, Shield, Zap, BarChart3, Brain,
-  FlaskConical, History, Settings, AlertTriangle, ChevronRight,
+  FlaskConical, History, AlertTriangle, ChevronRight,
   Cpu, MonitorPlay, Boxes
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -40,7 +40,6 @@ const navGroups = [
     label: 'Platform',
     items: [
       { href: '/advanced', label: 'Advanced Tools', icon: Boxes },
-      { href: '/settings',     label: 'Settings',           icon: Settings     },
     ],
   },
 ]

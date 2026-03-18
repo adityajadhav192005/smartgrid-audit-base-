@@ -17,7 +17,6 @@ const SEARCH_ROUTES: Array<{ label: string; href: string }> = [
   { label: 'Run Configuration', href: '/runs' },
   { label: 'Run History', href: '/history' },
   { label: 'Advanced Tools', href: '/advanced' },
-  { label: 'Settings', href: '/settings' },
 ]
 
 export function TopBar() {

@@ -6,6 +6,7 @@ import { formatPct } from '@/lib/utils'
 import { Play, Settings2, Clock } from 'lucide-react'
 import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
 import { useDashboard } from '@/lib/dashboardContext'
+import { SettingsConfigurationPanel } from '@/components/settings/SettingsConfigurationPanel'
 
 const configPresets = [
   { id: 'default',  label: 'Default (N=100, FDI+DoS)' },
@@ -298,6 +299,8 @@ export default function RunsPage() {
           </div>
         </div>
       </div>
+
+      <SettingsConfigurationPanel />
       </>
       )}
     </div>
