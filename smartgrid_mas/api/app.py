@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import time
+import threading
+from datetime import datetime, timezone
 from collections import defaultdict, deque
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib import error as urlerror
+from urllib import parse as urlparse
+from urllib import request as urlrequest
+import json
 
 import numpy as np
 import pandas as pd
@@ -162,6 +168,168 @@ coordinator = FederatedCoordinator()
 blockchain_logger = BlockchainLogger()
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+class RapidScadaLiveClient:
+    def __init__(self) -> None:
+        self.enabled = _env_bool("SMARTGRID_SCADA_LIVE_ENABLED", False)
+        self.source_url = os.environ.get("SMARTGRID_SCADA_SOURCE_URL", "").strip()
+        self.agent_id = os.environ.get("SMARTGRID_SCADA_AGENT_ID", "rapidscada-agent").strip() or "rapidscada-agent"
+        self.poll_sec = max(1.0, float(os.environ.get("SMARTGRID_SCADA_POLL_SEC", "5")))
+        self.timeout_sec = max(1.0, float(os.environ.get("SMARTGRID_SCADA_HTTP_TIMEOUT_SEC", "4")))
+        self.criticality_weight = float(os.environ.get("SMARTGRID_SCADA_CRITICALITY_WEIGHT", "1.0"))
+        self.score_threshold = float(os.environ.get("SMARTGRID_SCADA_SCORE_THRESHOLD", "1.0"))
+
+        self._lock = threading.Lock()
+        self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
+
+        self.last_attempt_ts: float | None = None
+        self.last_success_ts: float | None = None
+        self.consecutive_failures: int = 0
+        self.last_error: str | None = None
+        self.last_tags: Dict[str, float] = {}
+        self.last_score: Dict[str, Any] | None = None
+
+    def configured(self) -> bool:
+        return bool(self.enabled and self.source_url)
+
+    def _as_iso(self, ts: float | None) -> str | None:
+        if ts is None:
+            return None
+        return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+
+    def _build_request_url(self) -> str:
+        ts_ms = int(time.time() * 1000)
+        parsed = urlparse.urlparse(self.source_url)
+        query = dict(urlparse.parse_qsl(parsed.query, keep_blank_values=True))
+        query["_ts"] = str(ts_ms)
+        new_query = urlparse.urlencode(query)
+        return urlparse.urlunparse(parsed._replace(query=new_query))
+
+    def _extract_tags(self, payload: Any) -> Dict[str, float]:
+        if not isinstance(payload, dict):
+            raise ValueError("Rapid SCADA response must be a JSON object")
+
+        # Accept either {"tags": {...}} or direct tag map
+        candidate = payload.get("tags") if isinstance(payload.get("tags"), dict) else payload
+        if not isinstance(candidate, dict):
+            raise ValueError("Rapid SCADA response must contain a tag dictionary")
+
+        tags: Dict[str, float] = {}
+        for key, val in candidate.items():
+            try:
+                tags[str(key)] = float(val)
+            except Exception:
+                continue
+
+        if not tags:
+            raise ValueError("Rapid SCADA response contains no numeric tags")
+        return tags
+
+    def _fetch_tags(self) -> Dict[str, float]:
+        url = self._build_request_url()
+        req = urlrequest.Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
+        with urlrequest.urlopen(req, timeout=self.timeout_sec) as resp:
+            data = resp.read()
+            payload = json.loads(data.decode("utf-8"))
+        return self._extract_tags(payload)
+
+    def poll_once(self) -> None:
+        now = time.time()
+        with self._lock:
+            self.last_attempt_ts = now
+
+        try:
+            tags = self._fetch_tags()
+            req_dict = scada_tags_to_score_request(
+                agent_id=self.agent_id,
+                tags=tags,
+                criticality_weight=self.criticality_weight,
+                score_threshold=self.score_threshold,
+            )
+            req = ScoreRequest(**req_dict)
+            score = _score_core(req, anchor_event=False)
+            with self._lock:
+                self.last_tags = tags
+                self.last_score = score
+                self.last_success_ts = time.time()
+                self.consecutive_failures = 0
+                self.last_error = None
+        except (urlerror.URLError, TimeoutError, ValueError, json.JSONDecodeError) as e:
+            with self._lock:
+                self.consecutive_failures += 1
+                self.last_error = str(e)
+
+    def _run_loop(self) -> None:
+        while not self._stop.is_set():
+            self.poll_once()
+            self._stop.wait(self.poll_sec)
+
+    def start(self) -> None:
+        if not self.configured() or self._thread is not None:
+            return
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._run_loop, name="rapid-scada-live", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        if self._thread is None:
+            return
+        self._stop.set()
+        self._thread.join(timeout=2.0)
+        self._thread = None
+
+    def status(self) -> Dict[str, Any]:
+        with self._lock:
+            now = time.time()
+            max_age = self.poll_sec * 3.0
+            connected = self.last_success_ts is not None and (now - self.last_success_ts) <= max_age
+            age_sec = (now - self.last_success_ts) if self.last_success_ts is not None else None
+            return {
+                "enabled": self.enabled,
+                "configured": bool(self.source_url),
+                "source_url": self.source_url,
+                "agent_id": self.agent_id,
+                "poll_sec": self.poll_sec,
+                "timeout_sec": self.timeout_sec,
+                "connected": connected,
+                "last_attempt_utc": self._as_iso(self.last_attempt_ts),
+                "last_success_utc": self._as_iso(self.last_success_ts),
+                "data_age_sec": age_sec,
+                "consecutive_failures": self.consecutive_failures,
+                "last_error": self.last_error,
+            }
+
+    def snapshot(self) -> Dict[str, Any]:
+        connection = self.status()
+        with self._lock:
+            tags = dict(self.last_tags)
+            score = dict(self.last_score) if isinstance(self.last_score, dict) else None
+        return {
+            "connection": connection,
+            "live_tags": tags,
+            "live_score": score,
+            "server_time_utc": datetime.now(tz=timezone.utc).isoformat(),
+        }
+
+
+rapid_scada_live = RapidScadaLiveClient()
+
+
 def _severity_from_score(score: float, threshold: float) -> str:
     if threshold <= 0:
         return "LOW"
@@ -201,7 +369,7 @@ def _explanations_path() -> Path:
     raise FileNotFoundError("No explanations CSV found. Set SMARTGRID_EXPLANATIONS_PATH or generate logs/audit_explanations.csv")
 
 
-def _score_core(payload: ScoreRequest) -> Dict[str, Any]:
+def _score_core(payload: ScoreRequest, anchor_event: bool = True) -> Dict[str, Any]:
     score = deviation_score(
         x_phys=np.asarray(payload.x_phys, dtype=float),
         bx=np.asarray(payload.bx, dtype=float),
@@ -247,25 +415,36 @@ def _score_core(payload: ScoreRequest) -> Dict[str, Any]:
     }
 
     severity = _severity_from_score(float(score), float(payload.score_threshold))
-    anchor_payload = {
-        "agent_id": payload.agent_id,
-        "deviation_score": float(score),
-        "anomaly_flag": int(flag),
-        "risk_score": float(score),
-        "decision": action,
-        "score_threshold": float(payload.score_threshold),
-        "criticality_weight": float(payload.criticality_weight),
-        "xai_decision": decision_xai,
-    }
-    ledger_meta = blockchain_logger.anchor_event(
-        event_type="audit_decision",
-        agent_id=payload.agent_id,
-        severity=severity,
-        payload=anchor_payload,
-    )
     result["severity"] = severity
-    result["ledger"] = ledger_meta
+    if anchor_event:
+        anchor_payload = {
+            "agent_id": payload.agent_id,
+            "deviation_score": float(score),
+            "anomaly_flag": int(flag),
+            "risk_score": float(score),
+            "decision": action,
+            "score_threshold": float(payload.score_threshold),
+            "criticality_weight": float(payload.criticality_weight),
+            "xai_decision": decision_xai,
+        }
+        ledger_meta = blockchain_logger.anchor_event(
+            event_type="audit_decision",
+            agent_id=payload.agent_id,
+            severity=severity,
+            payload=anchor_payload,
+        )
+        result["ledger"] = ledger_meta
     return result
+
+
+@app.on_event("startup")
+def startup_event() -> None:
+    rapid_scada_live.start()
+
+
+@app.on_event("shutdown")
+def shutdown_event() -> None:
+    rapid_scada_live.stop()
 
 
 @app.get("/health")
@@ -319,11 +498,15 @@ def blockchain_anchor(payload: BlockchainAnchorRequest, _: str = Depends(_securi
 @app.get("/grid/status")
 def grid_status() -> Dict[str, Any]:
     """Dashboard-friendly endpoint with core run status metrics."""
+    server_time_utc = datetime.now(tz=timezone.utc).isoformat()
+    live_snapshot = rapid_scada_live.snapshot()
+
     try:
         summary_path = _latest_summary_path()
         summary = pd.read_json(summary_path, typ="series")
         return {
             "source": str(summary_path),
+            "server_time_utc": server_time_utc,
             "n_agents": int(summary.get("n_agents", 0)),
             "risk_threshold": float(summary.get("config", {}).get("risk_threshold", 0.0)) if isinstance(summary.get("config", {}), dict) else None,
             "global_risk": float(summary.get("mean_global_risk_dynamic", 0.0)),
@@ -335,9 +518,27 @@ def grid_status() -> Dict[str, Any]:
             "recall": float(summary.get("recall", 0.0)),
             "f1": float(summary.get("f1", 0.0)),
             "avg_end_to_end_delay_ms": float(summary.get("avg_end_to_end_delay_ms", 0.0)),
+            "rapid_scada": live_snapshot,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load grid status: {e}")
+        # Keep endpoint live even when summary is missing; return live SCADA state + error context.
+        return {
+            "source": None,
+            "server_time_utc": server_time_utc,
+            "summary_error": str(e),
+            "rapid_scada": live_snapshot,
+        }
+
+
+@app.get("/v1/scada/live")
+def scada_live(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return rapid_scada_live.snapshot()
+
+
+@app.post("/v1/scada/live/refresh")
+def scada_live_refresh(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    rapid_scada_live.poll_once()
+    return rapid_scada_live.snapshot()
 
 
 @app.get("/audit/explain/{agent_id}")
