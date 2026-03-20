@@ -55,7 +55,7 @@
 #>
 
 param(
-    [string]$RapidScadaUrl       = "http://localhost:10008",
+    [string]$RapidScadaUrl       = "http://127.0.0.1:10109",
     [string]$SmartGridApiUrl     = "http://127.0.0.1:8000/v1/scada/ingest/tags",
     [string]$AgentId             = "1",
     [double]$CriticalityWeight   = 1.0,

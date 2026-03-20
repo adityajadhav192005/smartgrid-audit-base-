@@ -24,7 +24,7 @@ if (-not $env:SMARTGRID_API_KEY) {
     Write-Host "Example: `$env:SMARTGRID_API_KEY = 'smartgrid-dev-key'" -ForegroundColor Yellow
 }
 
-$rapidUrl = if ($env:RAPID_SCADA_URL) { $env:RAPID_SCADA_URL } else { "http://localhost:10008" }
+$rapidUrl = if ($env:RAPID_SCADA_URL) { $env:RAPID_SCADA_URL } else { "http://127.0.0.1:10109" }
 $apiUrl   = if ($env:SMARTGRID_SCADA_INGEST_URL) { $env:SMARTGRID_SCADA_INGEST_URL } else { "http://127.0.0.1:8000/v1/scada/ingest/tags" }
 $agentId  = if ($env:SMARTGRID_SCADA_AGENT_ID) { $env:SMARTGRID_SCADA_AGENT_ID } else { "1" }
 $pollSec  = if ($env:SMARTGRID_SCADA_POLL_SECONDS) { [int]$env:SMARTGRID_SCADA_POLL_SECONDS } else { 10 }
