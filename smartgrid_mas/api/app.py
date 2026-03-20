@@ -234,6 +234,7 @@ class RapidScadaLiveClient:
 
     def _fetch_tags(self) -> Dict[str, float]:
         url = self._build_request_url()
+        user_agent = os.environ.get("SMARTGRID_SCADA_USER_AGENT", "smartgrid-mas-scada-poller/1.0")
         req = urlrequest.Request(
             url,
             headers={
@@ -241,6 +242,8 @@ class RapidScadaLiveClient:
                 "Cache-Control": "no-cache, no-store, must-revalidate",
                 "Pragma": "no-cache",
                 "Expires": "0",
+                "User-Agent": user_agent,
+                "bypass-tunnel-reminder": "1",
             },
         )
         with urlrequest.urlopen(req, timeout=self.timeout_sec) as resp:
