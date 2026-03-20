@@ -16,4 +16,4 @@ COPY smartgrid_mas /app/smartgrid_mas
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn backend_railway.app:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "uvicorn smartgrid_mas.api.app:app --host 0.0.0.0 --port ${PORT:-8080}"]
