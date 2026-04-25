@@ -2,7 +2,6 @@
 import { Bell, Search, RefreshCw, Play, Clock, ToggleLeft, ToggleRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboard } from '@/lib/dashboardContext'
 
 const SEARCH_ROUTES: Array<{ label: string; href: string }> = [
@@ -36,15 +35,6 @@ export function TopBar() {
     markAllNotificationsRead,
     clearNotifications,
   } = useDashboard()
-
-  const onSignOut = async () => {
-    try {
-      const supabase = getSupabaseClient()
-      await supabase.auth.signOut()
-    } finally {
-      router.push('/login')
-    }
-  }
 
   useEffect(() => {
     const tick = () => setTime(new Date().toLocaleTimeString('en-GB', { hour12: false }))
@@ -114,12 +104,6 @@ export function TopBar() {
             {viewMode === 'experiment' ? <ToggleLeft className="w-3 h-3" /> : <ToggleRight className="w-3 h-3" />}
             {viewMode === 'experiment' ? 'Experiment' : 'SCADA'}
           </span>
-        </button>
-        <button
-          onClick={onSignOut}
-          className="px-2.5 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-slate-300 hover:text-cyan-300 hover:border-cyan-400/30 transition-colors"
-        >
-          Sign Out
         </button>
         <button
           title="Refresh data"
