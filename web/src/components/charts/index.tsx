@@ -4,6 +4,7 @@ import {
   PieChart, Pie, Cell, RadarChart, Radar, PolarGrid,
   PolarAngleAxis, RadialBarChart, RadialBar, Tooltip,
   ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend,
+  ScatterChart, Scatter, ZAxis,
 } from 'recharts'
 import { cn } from '@/lib/utils'
 
@@ -151,6 +152,128 @@ export function SystemHealthAreaChart({ data }: { data: any[] }) {
 }
 
 // ---------- Gauge: single metric (0-100 style radial bar) ----------
+// ---------- Per-attack TPR/FNR grouped bars ----------
+export function PerAttackBarChart({ data }: { data: { name: string; tpr: number; fnr: number; fpr: number }[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+        <CartesianGrid stroke={GRID_COLOR} vertical={false} />
+        <XAxis dataKey="name" stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <YAxis stroke={AXIS_COLOR} tick={LABEL_STYLE} domain={[0, 1]} tickFormatter={v => `${Math.round(Number(v) * 100)}%`} />
+        <Tooltip contentStyle={TIP_STYLE} formatter={(value: any) => `${(Number(value) * 100).toFixed(1)}%`} />
+        <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+        <Bar dataKey="tpr" name="TPR (Recall)" fill="#10b981" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="fnr" name="FNR (Missed)" fill="#ef4444" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="fpr" name="FPR (False Alarm)" fill="#f59e0b" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ---------- Attack family distribution ----------
+export function AttackFamilyChart({ data }: { data: { name: string; support: number; detected: number }[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+        <CartesianGrid stroke={GRID_COLOR} vertical={false} />
+        <XAxis dataKey="name" stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <YAxis stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <Tooltip contentStyle={TIP_STYLE} />
+        <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+        <Bar dataKey="support" name="Ground Truth" fill="#00d4ff" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="detected" name="Detected" fill="#a855f7" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ---------- Pareto frontier scatter (cost vs accuracy) ----------
+export function ParetoFrontierChart({
+  data,
+}: {
+  data: { profile: string; costEfficiency: number; detectionAccuracy: number; color: string }[]
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ScatterChart margin={{ top: 8, right: 8, bottom: 24, left: 8 }}>
+        <CartesianGrid stroke={GRID_COLOR} />
+        <XAxis
+          type="number"
+          dataKey="costEfficiency"
+          stroke={AXIS_COLOR}
+          tick={LABEL_STYLE}
+          domain={[0, 1]}
+          tickFormatter={v => `${Math.round(Number(v) * 100)}%`}
+          label={{ value: 'Cost Efficiency', position: 'bottom', fill: '#94a3b8', fontSize: 11, offset: 8 }}
+        />
+        <YAxis
+          type="number"
+          dataKey="detectionAccuracy"
+          stroke={AXIS_COLOR}
+          tick={LABEL_STYLE}
+          domain={[0, 1]}
+          tickFormatter={v => `${Math.round(Number(v) * 100)}%`}
+          label={{ value: 'Detection Accuracy', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11 }}
+        />
+        <ZAxis range={[160, 220]} />
+        <Tooltip
+          contentStyle={TIP_STYLE}
+          formatter={(value: any) => `${(Number(value) * 100).toFixed(1)}%`}
+          labelFormatter={(_, payload: any) => payload?.[0]?.payload?.profile ?? ''}
+        />
+        {data.map(d => (
+          <Scatter key={d.profile} name={d.profile} data={[d]} fill={d.color} />
+        ))}
+        <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+      </ScatterChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ---------- Audit frequency by agent type (heatmap-style bar) ----------
+export function AuditFrequencyByTypeChart({
+  data,
+}: {
+  data: { agentType: string; meanAuditCount: number; meanCriticality: number; meanRisk: number; count: number }[]
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+        <CartesianGrid stroke={GRID_COLOR} vertical={false} />
+        <XAxis dataKey="agentType" stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <YAxis stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <Tooltip contentStyle={TIP_STYLE} formatter={(value: any) => Number(value).toFixed(3)} />
+        <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+        <Bar dataKey="meanAuditCount" name="Mean Audit Count" fill="#00d4ff" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="meanRisk" name="Mean Risk" fill="#ef4444" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="meanCriticality" name="Mean Criticality" fill="#10b981" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ---------- LSTM training curve ----------
+export function LSTMTrainingCurveChart({
+  data,
+}: {
+  data: { epoch: number; loss: number; valAccuracy: number }[]
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 8, right: 24, bottom: 4, left: 0 }}>
+        <CartesianGrid stroke={GRID_COLOR} vertical={false} />
+        <XAxis dataKey="epoch" stroke={AXIS_COLOR} tick={LABEL_STYLE} label={{ value: 'Epoch', position: 'bottom', fill: '#94a3b8', fontSize: 11, offset: -4 }} />
+        <YAxis yAxisId="loss" stroke={AXIS_COLOR} tick={LABEL_STYLE} />
+        <YAxis yAxisId="acc" orientation="right" stroke={AXIS_COLOR} tick={LABEL_STYLE} domain={[0, 1]} tickFormatter={v => `${Math.round(Number(v) * 100)}%`} />
+        <Tooltip contentStyle={TIP_STYLE} />
+        <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
+        <Line yAxisId="loss" type="monotone" dataKey="loss" name="Training Loss" stroke="#f59e0b" strokeWidth={2} dot={false} />
+        <Line yAxisId="acc" type="monotone" dataKey="valAccuracy" name="Val Accuracy" stroke="#10b981" strokeWidth={2} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
 export function GaugeChart({ value, label, color = '#00d4ff' }: { value: number; label: string; color?: string }) {
   const pct = Math.round(value * 100)
   const data = [{ value: pct }, { value: 100 - pct }]

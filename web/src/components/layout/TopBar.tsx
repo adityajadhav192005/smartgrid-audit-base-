@@ -1,22 +1,37 @@
 'use client'
-import { Bell, Search, RefreshCw, Play, Clock, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Bell, Search, RefreshCw, Play, Clock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboard } from '@/lib/dashboardContext'
 
 const SEARCH_ROUTES: Array<{ label: string; href: string }> = [
-  { label: 'Executive Overview', href: '/' },
-  { label: 'Live Monitoring', href: '/live' },
-  { label: 'SCADA Live Grid', href: '/scada-live' },
-  { label: 'Audit Intelligence', href: '/audits' },
-  { label: 'Attack Analysis', href: '/attacks' },
-  { label: 'Anomaly & Risk', href: '/anomalies' },
-  { label: 'Explainability (XAI)', href: '/xai' },
-  { label: 'Response & Mitigation', href: '/response' },
-  { label: 'Run Configuration', href: '/runs' },
-  { label: 'Run History', href: '/history' },
-  { label: 'Advanced Tools', href: '/advanced' },
+  { label: 'Experiment Operations Overview', href: '/experiment/overview' },
+  { label: 'Experiment Risk Analytics', href: '/experiment/risk' },
+  { label: 'Experiment Threat Events', href: '/experiment/threats' },
+  { label: 'Experiment Audit Trail', href: '/experiment/audits' },
+  { label: 'Experiment Response Workflow', href: '/experiment/response' },
+  { label: 'Experiment Decision Explainability', href: '/experiment/xai' },
+  { label: 'Experiment Asset Topology View', href: '/experiment/assets' },
+  { label: 'Experiment Algorithm Config Methodology View', href: '/experiment/methodology' },
+  { label: 'Experiment Incident Timeline', href: '/experiment/timeline' },
+  { label: 'Experiment System Health Pipeline Health', href: '/experiment/system' },
+  { label: 'Experiment Monitor', href: '/experiment/monitor' },
+  { label: 'Experiment Control', href: '/experiment/control' },
+  { label: 'Experiment History', href: '/experiment/history' },
+  { label: 'Rapid SCADA Operations Overview', href: '/rapid-scada/overview' },
+  { label: 'Rapid SCADA Risk Analytics', href: '/rapid-scada/risk' },
+  { label: 'Rapid SCADA Monitor', href: '/rapid-scada/monitor' },
+  { label: 'Rapid SCADA Threat Events', href: '/rapid-scada/threats' },
+  { label: 'Rapid SCADA Audit Trail', href: '/rapid-scada/audits' },
+  { label: 'Rapid SCADA Response Workflow', href: '/rapid-scada/response' },
+  { label: 'Rapid SCADA Decision Explainability', href: '/rapid-scada/xai' },
+  { label: 'Rapid SCADA Asset Topology View', href: '/rapid-scada/assets' },
+  { label: 'Rapid SCADA Algorithm Config Methodology View', href: '/rapid-scada/methodology' },
+  { label: 'Rapid SCADA Incident Timeline', href: '/rapid-scada/timeline' },
+  { label: 'Rapid SCADA System Health Pipeline Health', href: '/rapid-scada/system' },
+  { label: 'Rapid SCADA Grid', href: '/rapid-scada/grid' },
+  { label: 'SCADA Connectivity', href: '/rapid-scada/connectivity' },
+  { label: 'Platform Center', href: '/advanced' },
 ]
 
 export function TopBar() {
@@ -25,9 +40,6 @@ export function TopBar() {
   const [uptime, setUptime] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
   const {
-    viewMode,
-    setViewMode,
-    scadaConnected,
     searchQuery,
     setSearchQuery,
     triggerRefresh,
@@ -36,15 +48,6 @@ export function TopBar() {
     markAllNotificationsRead,
     clearNotifications,
   } = useDashboard()
-
-  const onSignOut = async () => {
-    try {
-      const supabase = getSupabaseClient()
-      await supabase.auth.signOut()
-    } finally {
-      router.push('/login')
-    }
-  }
 
   useEffect(() => {
     const tick = () => setTime(new Date().toLocaleTimeString('en-GB', { hour12: false }))
@@ -72,7 +75,7 @@ export function TopBar() {
   }
 
   return (
-    <div className="h-12 flex items-center px-4 gap-4 bg-grid-800 border-b border-white/5 flex-shrink-0 relative">
+    <div className="h-11 flex items-center px-4 gap-4 bg-slate-950 border-b border-slate-800 flex-shrink-0 relative">
       {/* Search */}
       <div className="flex items-center gap-2 flex-1 max-w-sm">
         <Search className="w-3.5 h-3.5 text-slate-500" />
@@ -81,50 +84,33 @@ export function TopBar() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleSearchSubmit}
-          className="bg-transparent text-xs text-slate-400 placeholder:text-slate-600 outline-none flex-1"
+          className="bg-transparent text-sm text-slate-300 placeholder:text-slate-600 outline-none flex-1"
         />
       </div>
 
       <div className="flex-1" />
 
       {/* Status chips */}
-      <div className="hidden lg:flex items-center gap-3 text-xs">
-        <span className="flex items-center gap-1.5 text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          System Online
+      <div className="hidden lg:flex items-center gap-3 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          System online
         </span>
-        <span className="text-slate-600">|</span>
-        <span className="flex items-center gap-1.5 text-cyan-400">
+        <span>·</span>
+        <span className="flex items-center gap-1.5">
           <Clock className="w-3 h-3" />
-          UPTIME: {formatUptime(uptime)}
+          {formatUptime(uptime)}
         </span>
-        <span className="text-slate-600">|</span>
-        <span className="font-mono text-slate-400">{time}</span>
+        <span>·</span>
+        <span className="font-mono">{time}</span>
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2">
         <button
-          title={scadaConnected ? 'Switch to Rapid SCADA view' : 'Connect SCADA Live first'}
-          disabled={!scadaConnected}
-          onClick={() => setViewMode(viewMode === 'experiment' ? 'scada' : 'experiment')}
-          className="px-2.5 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-slate-300 hover:text-cyan-300 hover:border-cyan-400/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <span className="inline-flex items-center gap-1">
-            {viewMode === 'experiment' ? <ToggleLeft className="w-3 h-3" /> : <ToggleRight className="w-3 h-3" />}
-            {viewMode === 'experiment' ? 'Experiment' : 'SCADA'}
-          </span>
-        </button>
-        <button
-          onClick={onSignOut}
-          className="px-2.5 py-1.5 rounded text-xs bg-white/5 border border-white/10 text-slate-300 hover:text-cyan-300 hover:border-cyan-400/30 transition-colors"
-        >
-          Sign Out
-        </button>
-        <button
           title="Refresh data"
           onClick={triggerRefresh}
-          className="p-1.5 rounded text-slate-500 hover:text-cyan-400 hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
@@ -134,17 +120,17 @@ export function TopBar() {
             setShowNotifications(v => !v)
             markAllNotificationsRead()
           }}
-          className="p-1.5 rounded text-slate-500 hover:text-cyan-400 hover:bg-white/5 transition-colors relative"
+          className="p-1.5 rounded text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors relative"
         >
           <Bell className="w-3.5 h-3.5" />
-          {unreadCount > 0 && <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full" />}
+          {unreadCount > 0 && <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-rose-500 rounded-full" />}
         </button>
         <button
-          onClick={() => router.push('/runs')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs hover:bg-cyan-500/20 transition-colors"
+          onClick={() => router.push('/experiment/control')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-700 text-slate-300 text-xs hover:border-slate-500 hover:text-slate-100 transition-colors"
         >
           <Play className="w-3 h-3" />
-          Launch Run
+          Launch run
         </button>
       </div>
 
