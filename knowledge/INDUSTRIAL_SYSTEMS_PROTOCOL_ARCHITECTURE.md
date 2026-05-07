@@ -1,283 +1,247 @@
-# Industrial Systems and Protocol Architecture Manual
+# Industrial Systems and Protocol Architecture
 
-## Project: SmartGrid AI Audit Framework
-
-This document explains the deployed cyber-physical architecture of the project as it exists now. The system has two operational workspaces:
-
-- `Experiment Running`: latest-run simulation, evaluation, and policy analysis
-- `Rapid SCADA Live`: live Rapid SCADA telemetry, scoring, audit decisions, and operator dashboards
-
-The key architectural point is simple:
-
-- the experiment workspace is driven by latest run artifacts
-- the Rapid SCADA workspace is driven by live Rapid SCADA channels
-
-They are separated intentionally so experiment telemetry does not conflict with live SCADA telemetry.
+**Project:** SmartGrid AI Audit Framework
+**Context:** M.Tech final year project viva reference
 
 ---
 
-## 1. Control Layer
+## 1. What A Smart Grid Is
 
-### 1.1 Actual Control Stack
+A smart grid is a modernised electrical power network that uses digital communication, sensor networks, and intelligent control to:
 
-The control stack is:
+- Monitor the state of generation, transmission, and distribution assets in real time
+- Detect and respond to faults, overloads, and cyber attacks automatically
+- Enable bidirectional energy flows (solar, wind, storage, EVs feeding back to grid)
+- Reduce operational cost through dynamic routing and demand response
 
-- Rapid SCADA Webstation on `http://127.0.0.1:10109`
-- PowerShell bridge in [`scripts/pull_rapidscada_to_api.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/pull_rapidscada_to_api.ps1)
-- FastAPI backend in [`smartgrid_mas/api/app.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/api/app.py)
-- Next.js dashboard in [`web`](d:/Mtech%20Main%20project/smartgrid-audit-base-/web)
+**Why it is a cyber-physical system (CPS):**
 
-Rapid SCADA is the OT telemetry source. The backend is the AI scoring and audit-decision layer. The dashboard is the operator-facing analysis and response layer.
-
-### 1.2 Live SCADA Model
-
-The Rapid SCADA live workspace now runs on a fixed `10 x 10` asset model:
-
-- `GEN-01` to `GEN-20`
-- `SUB-21` to `SUB-50`
-- `PMU-51` to `PMU-75`
-- `BRK-76` to `BRK-100`
-
-Total live SCADA agents:
-
-- `100`
-
-Rapid SCADA currently exposes all 100 agents as live calculated channels. These are live SCADA values in the transport/runtime sense, but they are still simulated/calculated values inside Rapid SCADA rather than measurements from physical field devices.
-
-### 1.3 Update Logic
-
-The dashboard uses two distinct update modes:
-
-- experiment pages: latest run summaries and experiment telemetry
-- Rapid SCADA pages: continuous live polling and SCADA ingest snapshots
-
-The SCADA bridge polls Rapid SCADA every configured interval and batches the full 100-agent state into the backend. The backend then updates:
-
-- live score snapshots
-- per-agent states
-- anomaly events
-- audit decisions
-- explainability summaries
+A smart grid combines physical processes (electricity flowing through wires, transformers, breakers) with cyber processes (communication, control, monitoring). An attack on the cyber layer can cause physical damage — and vice versa. This is what makes security so difficult.
 
 ---
 
-## 2. Communication and Protocol Architecture
+## 2. Key Asset Types In This Project
 
-### 2.1 Protocol Roles in This Project
-
-This project uses a layered protocol model:
-
-- Rapid SCADA Web API for live telemetry extraction
-- internal HTTP batch ingest from bridge to backend
-- dashboard HTTP polling through backend proxy routes
-
-This is not yet a field-device deployment using Modbus, OPC UA, or MQTT end to end. Instead, Rapid SCADA acts as the OT supervisory platform, and the SmartGrid backend acts as the analytics and audit layer above it.
-
-### 2.2 Practical Protocol Mapping
-
-Current practical data path:
-
-1. Rapid SCADA calculated channels produce current values
-2. bridge authenticates to Rapid SCADA Web API
-3. bridge reads current data using `GetCurData`
-4. bridge posts a batched 100-agent payload to `/v1/scada/ingest/tags/batch`
-5. backend scores and stores results
-6. dashboard pages consume the processed result set
-
-### 2.3 Why Batch Ingest Was Required
-
-Earlier, the bridge posted one request per agent and triggered `429 Too Many Requests`. The final architecture now uses batch ingest so one SCADA polling cycle maps to one backend request. This reduced request pressure and stabilized the live SCADA path.
+| Asset | Role | What Goes Wrong Under Attack |
+|-------|------|------------------------------|
+| **Generator (GEN)** | Produces electricity | False data injection fakes voltage/current readings, masking overload or shutdown |
+| **Substation (SUB)** | Steps up/down voltage, routes power | DoS attack overwhelms communication, delays fault detection |
+| **PMU (Phasor Measurement Unit)** | Measures voltage/current phase angles at 30-120 samples/sec | Phase desynchronisation attack corrupts state estimation |
+| **Breaker (BRK)** | Switches circuits on/off for protection | Spurious trip commands cause blackouts |
 
 ---
 
-## 3. Rapid SCADA Engineering Model
+## 3. The OT/IT Architecture Layers
 
-### 3.1 Channel Design
+Smart grids follow a layered architecture. Understanding this is important for the viva because examiners will ask about where your system sits.
 
-The Rapid SCADA project now contains `300` defined channels for the `100`-agent grid:
+```
+┌─────────────────────────────────────────────────────────┐
+│  Layer 5: Enterprise/IT (ERP, billing, analytics)        │
+├─────────────────────────────────────────────────────────┤
+│  Layer 4: Supervisory (SCADA, DMS, EMS) ← This project  │
+├─────────────────────────────────────────────────────────┤
+│  Layer 3: Site Control (HMI, historians, local servers)  │
+├─────────────────────────────────────────────────────────┤
+│  Layer 2: Control Devices (PLCs, RTUs, IEDs)             │
+├─────────────────────────────────────────────────────────┤
+│  Layer 1: Field Instrumentation (sensors, transducers)   │
+├─────────────────────────────────────────────────────────┤
+│  Layer 0: Physical Process (wires, transformers, meters) │
+└─────────────────────────────────────────────────────────┘
+```
 
-- generators: voltage, current, anomaly score
-- substations: load, latency, anomaly score
-- PMUs: voltage, frequency, anomaly score
-- breakers: status, fault, anomaly score
+**This project operates at Layer 4 (Supervisory):**
+- Rapid SCADA is the supervisory platform (like a real utility's SCADA/EMS)
+- The AI backend is an analytics layer sitting above SCADA
+- The dashboard is the operator interface
 
-The generated project files live in:
-
-- [`rapidscada_demo/ProjectBaseXML/Cnl.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Cnl.xml)
-- [`rapidscada_demo/ProjectBaseXML/Obj.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Obj.xml)
-- [`rapidscada_demo/ProjectBaseXML/Device.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Device.xml)
-- [`rapidscada_demo/ProjectBaseXML/CommLine.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/CommLine.xml)
-
-### 3.2 Critical Runtime Lesson
-
-The main engineering issue discovered during integration was:
-
-- formulas alone were not enough
-- channels had to be imported as `Calculated` channels, not plain `Input` channels
-
-Once the generated channels used `CnlTypeID = 3`, Rapid SCADA began publishing current data for all 100 agents.
-
-### 3.3 Current Reading Reality
-
-The current Rapid SCADA values are:
-
-- live
-- valid through the SCADA runtime and API
-- generated by formulas inside Rapid SCADA
-
-So the system now demonstrates:
-
-- real SCADA pipeline integration
-- real live current-data retrieval
-- simulated grid behavior
-
-It does not yet demonstrate:
-
-- physical PLC/RTU/PMU device integration
-- direct field protocol acquisition from real electrical hardware
+In a real deployment:
+- Layer 0–2 would be actual electrical hardware (generators, PLCs, RTUs)
+- Layer 3 would have Modbus/OPC UA communication from field to SCADA
+- Layer 4 is where this project connects
 
 ---
 
-## 4. AI and Audit Layer
+## 4. Industrial Communication Protocols
 
-### 4.1 What the Backend Does
+Examiners may ask about protocols. Know these:
 
-The backend receives SCADA tags and converts them into the SmartGrid scoring schema:
+| Protocol | Layer | Role | Used In This Project? |
+|----------|-------|------|----------------------|
+| **Modbus TCP/RTU** | 2-3 | Simple serial/TCP protocol for reading registers from PLCs/RTUs | No — would be used for field devices |
+| **OPC UA** | 3-4 | Modern, secure, platform-independent process data exchange | No — production path for SCADA integration |
+| **IEC 61850** | 2-4 | Standard for substation automation and protection | No — used in real substations |
+| **DNP3** | 2-4 | SCADA-to-field protocol for utility grade systems | No |
+| **MQTT** | 4-5 | Lightweight publish-subscribe for IoT/edge monitoring | No |
+| **HTTP REST** | 4-5 | Web API for SCADA data extraction | **Yes** — Rapid SCADA GetCurData API |
 
-- physical features
-- cyber features
-- baselines
-- thresholds
-- criticality weights
-
-This logic is implemented in:
-
-- [`smartgrid_mas/integration/scada_adapter.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/integration/scada_adapter.py)
-- [`smartgrid_mas/api/app.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/api/app.py)
-
-### 4.2 Active Detection Model
-
-The live SCADA path currently uses an explainable deviation model:
-
-$$
-S_i(t)=w_i\left(d_x+d_y\right)
-$$
-
-where:
-
-- `d_x` is physical deviation from baseline
-- `d_y` is cyber deviation from baseline
-- `w_i` is agent criticality weight
-
-Audit decision logic:
-
-- if `score > threshold`, increase audit
-- otherwise maintain audit
-
-### 4.3 Explainability
-
-The system computes feature contribution from normalized deviation and surfaces the top contributing features in the dashboard. This is important for viva defense because the system can explain why an agent was flagged rather than only reporting a score.
+**Why we use HTTP REST and not Modbus/OPC UA:**
+- Rapid SCADA exposes its data through a web API
+- This is sufficient for the supervisory monitoring purpose of this project
+- Modbus/OPC UA would be needed if we were reading directly from PLCs
 
 ---
 
-## 5. Operator Dashboards
+## 5. This Project's Protocol Stack
 
-### 5.1 Workspace Split
+```
+Physical: calculated channels in Rapid SCADA (simulated process values)
+     ↓
+Transport: HTTP REST (GetCurData)
+     ↓
+Bridge: PowerShell → normalise → batch JSON payload
+     ↓
+API: HTTP POST to FastAPI (/v1/scada/ingest/tags/batch)
+     ↓
+Processing: Python — scoring, LSTM, scheduling, XAI
+     ↓
+Dashboard: HTTP polling from Next.js → FastAPI proxy routes
+```
 
-The dashboard was restructured into two separate workspaces:
-
-#### Experiment Running
-
-- Operations Overview
-- Risk Analytics
-- Threat Events
-- Audit Trail
-- Response Workflow
-- Decision Explainability
-- Asset / Topology View
-- Algorithm Config / Methodology View
-- Incident Timeline
-- System Health / Pipeline Health
-- Experiment Monitor
-- Experiment Control
-- Experiment History
-
-#### Rapid SCADA Live
-
-- Operations Overview
-- Risk Analytics
-- Monitor
-- Threat Events
-- Audit Trail
-- Response Workflow
-- Decision Explainability
-- Asset / Topology View
-- Algorithm Config / Methodology View
-- Incident Timeline
-- System Health / Pipeline Health
-- Rapid SCADA Grid
-- SCADA Connectivity
-
-### 5.2 Why the Split Matters
-
-This separation solves an earlier design problem where experiment-mode views and live SCADA views competed for the same top-level state. Now:
-
-- experiment dashboards stay tied to latest run data
-- SCADA dashboards stay tied to live SCADA data
-
-This is more defensible both technically and academically.
+This is a valid industrial architecture pattern. Real SCADA analytics platforms (OSIsoft PI, AspenTech, GE Predix) use exactly this layered approach — SCADA provides data, an analytics layer processes it, a dashboard presents it.
 
 ---
 
-## 6. Reliability and Fallback Policy
+## 6. Comparison With Alternatives
 
-Fallback is still allowed, but it is now transparent.
+### 6.1 Why Not Use A Real PLC/RTU?
 
-The system distinguishes:
+| Reason | Explanation |
+|--------|-------------|
+| Cost | Siemens S7-1200 PLC costs ₹15,000–₹50,000, not available for M.Tech budget |
+| Safety | Real electrical equipment requires lab certification and safety training |
+| Scope | Our contribution is the AI algorithm, not the hardware integration |
+| Precedent | The base paper (Priyadarsini et al.) uses pure Python simulation with no hardware |
 
-- `live`
-- `mixed`
-- `fallback`
+A real PLC would make the project stronger for industry, but it is not necessary for an M.Tech research contribution.
 
-This means the platform can stay operational when SCADA is temporarily unavailable, without pretending that fallback values are real field telemetry.
+### 6.2 Why Not Use OpenADR or DERMS?
 
-This is the correct industrial behavior:
+OpenADR (Open Automated Demand Response) and DERMS (Distributed Energy Resource Management Systems) are real-time demand-response protocols. They are relevant for smart grid energy management but not for the anomaly detection and security audit problem this project solves.
 
-- resilience without deception
-- continuity without hiding data provenance
+### 6.3 Why Not Use Modbus Instead of HTTP?
 
----
-
-## 7. Verification and Deployment Notes
-
-### 7.1 Key Verification Scripts
-
-- full demo startup:
-  - [`scripts/start_local_demo.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/start_local_demo.ps1)
-- Rapid SCADA bridge:
-  - [`scripts/start_rapidscada_bridge.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/start_rapidscada_bridge.ps1)
-- live-agent verification:
-  - [`scripts/trace_rapidscada_live_agents.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/trace_rapidscada_live_agents.ps1)
-
-### 7.2 Verified Final State
-
-Rapid SCADA live-agent trace reached:
-
-- `Live agents: 100`
-- `Non-live: 0`
-
-This confirms the final `10 x 10` live SCADA grid is operational.
+- Rapid SCADA's primary external interface for analytics is its HTTP API
+- Modbus would require a different SCADA product or custom driver
+- HTTP REST is perfectly appropriate for supervisory analytics (not field control)
 
 ---
 
-## 8. Practical Viva Position
+## 7. The AI Layer Architecture
 
-The strongest accurate summary is:
+### 7.1 Why Multi-Agent And Not A Central Model
 
-This project implements a real live SCADA-to-AI audit pipeline. Rapid SCADA provides live calculated telemetry for a 100-agent smart-grid model, the SmartGrid backend performs explainable anomaly scoring and audit decisions, and the dashboard presents separated experiment and SCADA workspaces for operational clarity.
+**Alternative: One central LSTM over all agents**
+- Problem: Different agent types (GEN/SUB/PMU/BRK) have different physics, different baselines, different attack signatures
+- A single model conflates them and reduces sensitivity
+- Harder to explain which agent is anomalous
 
-If asked whether it is a physical grid deployment, the honest answer is:
+**Why multi-agent:**
+- Each agent maintains its own state, baseline, and anomaly score
+- Per-agent-type profiles allow different thresholds for different asset classes
+- Results are per-agent, not grid-average — operationally useful
 
-- the SCADA pipeline is real
-- the current telemetry is simulated/calculated inside Rapid SCADA
-- the same architecture can later be connected to real industrial protocols and field devices
+### 7.2 Why Deviation Scoring And Not Pure Deep Learning
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Pure threshold rules | Explainable, fast | No adaptation, misses novel attacks |
+| Pure LSTM/deep learning | Learns complex patterns | Black box, needs lots of data, fragile |
+| **Deviation scoring (ours)** | Explainable, interpretable, auditable | Needs good baselines |
+| SVM/Random Forest | Reasonable accuracy | No temporal awareness, not per-agent |
+| Isolation Forest | Unsupervised anomaly detection | No audit scheduling integration |
+
+The paper's approach (and ours) uses deviation scoring as the explainable core, with LSTM as a secondary confirmation signal. This hybrid gives both explainability and sensitivity.
+
+### 7.3 Why Q-Learning For Audit Scheduling
+
+**Alternative: Fixed periodic audit** — audit every agent every K timesteps
+- Wastes budget on low-risk agents
+- Misses high-risk agents that spike between audits
+
+**Alternative: Pure heuristic** — audit if score > threshold
+- Reactive, not predictive
+- No budget awareness
+
+**Why Q-learning:**
+- Learns to anticipate risk rather than just react
+- Handles budget constraints naturally through reward shaping
+- Adapts over time as attack patterns change
+
+**Why hybrid (Q-learning + gradient descent):**
+- Q-learning gives discrete directional action (increase/decrease/hold)
+- Gradient descent refines the continuous frequency value
+- Constraints enforce hard budget and capacity limits
+- Together: discrete direction + continuous precision + feasibility = hybrid scheduler
+
+---
+
+## 8. Deployment Context
+
+### 8.1 Where This Would Sit In A Real Utility
+
+```
+Substation (Modbus/OPC UA) → Rapid SCADA → SmartGrid Backend → Operator Dashboard
+Control Room EMS           ↗               ↓
+PMU Measurement System    ↗               Blockchain Ledger
+IDS/SIEM (Snort)         ↗               Federated Learning Hub
+```
+
+### 8.2 What Would Change In Production
+
+| Component | Research Prototype | Production |
+|-----------|-------------------|-----------|
+| SCADA values | Calculated channels | Real PLC/RTU/PMU measurements |
+| Cyber metrics | Engineered baselines | Snort/Suricata IDS feed |
+| Baselines | Hand-set | Learned from historical data |
+| LSTM checkpoint | Trained on simulation | Retrained on real utility data |
+| Blockchain | SQLite-backed audit chain | Hyperledger Fabric or Ethereum |
+| Federated learning | FedAvg across simulated clusters | Real distributed deployment |
+
+---
+
+## 9. Security Architecture
+
+### 9.1 Attack Types Handled
+
+| Attack Type | Layer | Detection Mechanism |
+|-------------|-------|---------------------|
+| False Data Injection (FDI) | Physical | Voltage/current deviation exceeds threshold |
+| DoS on substation communication | Cyber | Latency spike, comm_freq drop |
+| PMU phase desynchronisation | Physical + Cyber | Frequency deviation, integrity ↓ |
+| Spurious breaker trip | Physical | Status → 0 with no current explanation |
+| Replay attack | Cyber | Integrity score degradation |
+| Coordinated multi-point attack | Physical + Cyber | Multiple agents flag simultaneously |
+
+### 9.2 Defense In Depth
+
+This project implements multiple layers of detection (defense in depth):
+
+1. **Deviation scoring** — first line, explainable, fast
+2. **LSTM anomaly probability** — second line, temporal pattern detection
+3. **Behavioral signature** — third line, temporal step/ramp/oscillation patterns
+4. **Tier-A FP suppression** — reduces false positives from physical-only outliers
+5. **Blockchain audit ledger** — tamper-evident record of all audit decisions
+6. **Federated learning** — aggregated knowledge across agent clusters
+
+---
+
+## 10. Standards And Regulatory Context
+
+Examiners may ask about standards:
+
+| Standard | What It Covers | Relevance |
+|----------|---------------|-----------|
+| **IEC 62351** | Security for power system communication | Cyber security at the protocol level |
+| **IEC 62443** | Industrial cybersecurity management | IACS security levels framework |
+| **NERC CIP** | North American grid reliability standards | Critical infrastructure protection |
+| **NIST Cybersecurity Framework** | Identify, Protect, Detect, Respond, Recover | Framework our project maps onto |
+| **IEEE 1686** | Substation IED cyber security | Device-level security |
+
+**How our project maps to NIST CSF:**
+- **Identify:** Asset inventory through the 100-agent topology view
+- **Protect:** Audit scheduling increases inspection of high-risk assets
+- **Detect:** 3-modality anomaly detection (deviation + LSTM + behavioral)
+- **Respond:** Response workflow and mitigation actions
+- **Recover:** Audit trail and blockchain ledger for post-incident analysis
