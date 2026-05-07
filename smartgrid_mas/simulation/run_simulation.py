@@ -37,7 +37,12 @@ from smartgrid_mas.audit.audit_validator import evaluate_audit_outcome
 from smartgrid_mas.audit.schedule_step import rl_post_audit_update
 from smartgrid_mas.response.response_controller import response_step
 from smartgrid_mas.simulation.metrics import MetricsLogger
-from smartgrid_mas.anomaly_detection.inference import LSTMInferencer, concat_xy_window
+from smartgrid_mas.anomaly_detection.inference import LSTMInferencer
+from smartgrid_mas.anomaly_detection.dual_branch import (
+    build_grid_branch_window,
+    build_network_branch_window,
+    fuse_branch_probabilities,
+)
 from smartgrid_mas.xai.explain import explain_deviation, explain_audit_decision
 
 logger = logging.getLogger(__name__)
@@ -46,6 +51,7 @@ logger = logging.getLogger(__name__)
 def run_simulation_24h(
     agents: List[BaseAgent],
     lstm_infer: LSTMInferencer,
+    network_lstm_infer: LSTMInferencer | None = None,
     timestep_minutes: int = 5,
     cycle_hours: int = 24,
     # audit params
@@ -212,22 +218,33 @@ def run_simulation_24h(
         obs, truth = env.step(t)
         
         # === STEP 2: LSTM Anomaly Probability ===
-        # Batch LSTM anomaly probability across agents for latency optimization
-        windows = []
+        # Batch anomaly probability across branches for latency optimization
+        grid_windows = []
+        network_windows = []
         states = []
         for a in agents:
             x, y = obs[a.agent_id]
             st = a.observe(x, y)
             w = a.get_history_window(window=window_for_lstm)
-            feat = concat_xy_window(w["X"], w["Y"])  # (W, F)
-            windows.append(feat)
+            grid_windows.append(build_grid_branch_window(w))
+            if network_lstm_infer is not None:
+                network_windows.append(build_network_branch_window(w))
             states.append(st)
         t_lstm_start = time.time()
-        probs = lstm_infer.predict_proba_batch(windows)
+        grid_probs = lstm_infer.predict_proba_batch(grid_windows)
+        network_probs = (
+            network_lstm_infer.predict_proba_batch(network_windows)
+            if network_lstm_infer is not None and network_windows
+            else [0.0] * len(grid_probs)
+        )
         lstm_step_sec = time.time() - t_lstm_start
         total_lstm_time += lstm_step_sec
-        for st, p in zip(states, probs):
-            st.anomaly_prob = p
+        for st, grid_p, net_p in zip(states, grid_probs, network_probs):
+            fused = fuse_branch_probabilities(grid_p, net_p)
+            st.grid_anomaly_prob = fused.grid_prob
+            st.network_intrusion_prob = fused.network_prob
+            st.fusion_agreement = fused.agreement
+            st.anomaly_prob = fused.fused_prob
         
         # === STEP 3: Deviation Score + Anomaly Flag ===
         for a in agents:

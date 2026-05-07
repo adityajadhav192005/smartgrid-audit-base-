@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ArrayOfCommLine>
+  <CommLine>
+    <CommLineNum>1</CommLineNum>
+    <Name>Generator Line</Name>
+    <Descr />
+  </CommLine>
+  <CommLine>
+    <CommLineNum>2</CommLineNum>
+    <Name>Substation Line</Name>
+    <Descr />
+  </CommLine>
+  <CommLine>
+    <CommLineNum>3</CommLineNum>
+    <Name>PMU Line</Name>
+    <Descr />
+  </CommLine>
+  <CommLine>
+    <CommLineNum>4</CommLineNum>
+    <Name>Breaker Line</Name>
+    <Descr />
+  </CommLine>
+</ArrayOfCommLine>

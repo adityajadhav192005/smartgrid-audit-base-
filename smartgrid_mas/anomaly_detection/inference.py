@@ -3,6 +3,7 @@ import numpy as np
 import torch
 
 from smartgrid_mas.anomaly_detection.lstm_model import LSTMAnomalyDetector
+from smartgrid_mas.anomaly_detection.train_lstm import _IN_MEMORY_CHECKPOINTS
 from typing import List
 
 def concat_xy_window(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
@@ -55,7 +56,10 @@ class LSTMInferencer:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
 
-        ckpt = torch.load(model_path, map_location=self.device)
+        if model_path in _IN_MEMORY_CHECKPOINTS:
+            ckpt = _IN_MEMORY_CHECKPOINTS[model_path]
+        else:
+            ckpt = torch.load(model_path, map_location=self.device)
 
         # New-format checkpoint with metadata
         if isinstance(ckpt, dict) and "state_dict" in ckpt:
@@ -65,6 +69,8 @@ class LSTMInferencer:
             ckpt_layers = meta.get("num_layers")
             ckpt_dropout = meta.get("dropout")
             self.window = meta.get("window")
+            self.calibration_temperature = float(meta.get("calibration_temperature", 1.0) or 1.0)
+            self.calibration_threshold = float(meta.get("calibration_threshold", 0.5) or 0.5)
             state_dict = meta["state_dict"]
         else:
             # Legacy checkpoint: only state_dict present
@@ -74,6 +80,8 @@ class LSTMInferencer:
             ckpt_layers = None
             ckpt_dropout = None
             self.window = None
+            self.calibration_temperature = 1.0
+            self.calibration_threshold = 0.5
             state_dict = ckpt
 
         resolved_input = ckpt_input if ckpt_input is not None else input_size
@@ -125,7 +133,9 @@ class LSTMInferencer:
         x = torch.from_numpy(arr)
         x = x.unsqueeze(0).to(self.device)  # (1, W, F)
         logits, probs = self.model(x)
-        return float(probs[0].item())
+        logit = logits / max(self.calibration_temperature, 1e-6)
+        cal_prob = torch.sigmoid(logit)
+        return float(cal_prob[0].item())
 
     @torch.no_grad()
     def predict_proba_batch(self, window_feats: List[np.ndarray]) -> List[float]:
@@ -155,4 +165,6 @@ class LSTMInferencer:
         x = torch.from_numpy(np.stack(arrs, axis=0))  # (B, W, F)
         x = x.to(self.device)
         logits, probs = self.model(x)
-        return [float(p.item()) for p in probs]
+        cal_logits = logits / max(self.calibration_temperature, 1e-6)
+        cal_probs = torch.sigmoid(cal_logits)
+        return [float(p.item()) for p in cal_probs]

@@ -1,0 +1,1660 @@
+[
+  {
+    "file": "monitor_redesign.py",
+    "imports": [
+      "datetime",
+      "json",
+      "os"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "railway.json",
+    "imports": [],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/__init__.py",
+    "imports": [],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/__main__.py",
+    "imports": [
+      "smartgrid_mas.run_all",
+      "sys"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/run_all.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/__init__.py",
+    "imports": [
+      ".base_agent",
+      ".breaker_agent",
+      ".generator_agent",
+      ".pmu_agent",
+      ".substation_agent",
+      ".types"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/base_agent.py",
+    "imports": [
+      "__future__",
+      "collections",
+      "dataclasses",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.agents.types",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/agents/breaker_agent.py",
+      "smartgrid_mas/agents/generator_agent.py",
+      "smartgrid_mas/agents/pmu_agent.py",
+      "smartgrid_mas/agents/substation_agent.py",
+      "smartgrid_mas/audit/audit_executor.py",
+      "smartgrid_mas/audit/audit_validator.py",
+      "smartgrid_mas/audit/constraints.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/audit/risk_score.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/behavior_analysis/baseline_update.py",
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+      "smartgrid_mas/behavior_analysis/threshold_update.py",
+      "smartgrid_mas/behavior_analysis/trend_clustering.py",
+      "smartgrid_mas/behavior_analysis/trend_features.py",
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/response/mitigation_actions.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/metrics.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_agent.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py",
+      "smartgrid_mas/tests/test_response.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py",
+      "smartgrid_mas/tests/test_sanity_constraints.py",
+      "smartgrid_mas/tests/test_trend_clustering.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/agents/breaker_agent.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/generator_agent.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/pmu_agent.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/state.py",
+    "imports": [
+      "__future__",
+      "dataclasses"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/behavior_analysis/baseline_update.py",
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+      "smartgrid_mas/behavior_analysis/threshold_update.py",
+      "smartgrid_mas/environment/reward_function.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py",
+      "smartgrid_mas/tests/test_sanity_constraints.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/agents/substation_agent.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/agents/types.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/breaker_agent.py",
+      "smartgrid_mas/agents/generator_agent.py",
+      "smartgrid_mas/agents/pmu_agent.py",
+      "smartgrid_mas/agents/substation_agent.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/response/impact_factor.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/tests/test_agent.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py",
+      "smartgrid_mas/tests/test_response.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py",
+      "smartgrid_mas/tests/test_sanity_constraints.py",
+      "smartgrid_mas/tests/test_trend_clustering.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/anomaly_detection/__init__.py",
+    "imports": [
+      "smartgrid_mas.anomaly_detection.dataset",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.anomaly_detection.lstm_model",
+      "smartgrid_mas.anomaly_detection.train_lstm"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/dataset.py",
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/anomaly_detection/lstm_model.py",
+      "smartgrid_mas/anomaly_detection/train_lstm.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/anomaly_detection/dataset.py",
+    "imports": [
+      "__future__",
+      "torch",
+      "torch.utils.data"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/anomaly_detection/__init__.py",
+      "smartgrid_mas/anomaly_detection/train_lstm.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/anomaly_detection/inference.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.anomaly_detection.lstm_model",
+      "torch",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/lstm_model.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/anomaly_detection/__init__.py",
+      "smartgrid_mas/detection/unified_detector.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_lstm_smoke.py",
+      "smartgrid_mas/xai/export_shap_reasons.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/anomaly_detection/lstm_model.py",
+    "imports": [
+      "__future__",
+      "torch"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/anomaly_detection/__init__.py",
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/anomaly_detection/train_lstm.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/anomaly_detection/train_lstm.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "smartgrid_mas.anomaly_detection.dataset",
+      "smartgrid_mas.anomaly_detection.lstm_model",
+      "torch",
+      "torch.utils.data"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/dataset.py",
+      "smartgrid_mas/anomaly_detection/lstm_model.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/anomaly_detection/__init__.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/tests/test_lstm_smoke.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/api/__init__.py",
+    "imports": [
+      ".app"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/api/app.py",
+    "imports": [
+      "__future__",
+      "collections",
+      "datetime",
+      "fastapi",
+      "json",
+      "os",
+      "pathlib",
+      "pydantic",
+      "shlex",
+      "smartgrid_mas.behavior_analysis.deviation_score",
+      "smartgrid_mas.federated.fedavg",
+      "smartgrid_mas.federated.orchestrator",
+      "smartgrid_mas.integration.blockchain_logger",
+      "smartgrid_mas.integration.ids_adapter",
+      "smartgrid_mas.integration.scada_adapter",
+      "smartgrid_mas.xai.explain",
+      "subprocess",
+      "threading",
+      "time",
+      "typing",
+      "urllib",
+      "uuid"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/behavior_analysis/deviation_score.py",
+      "smartgrid_mas/federated/fedavg.py",
+      "smartgrid_mas/federated/orchestrator.py",
+      "smartgrid_mas/integration/blockchain_logger.py",
+      "smartgrid_mas/integration/ids_adapter.py",
+      "smartgrid_mas/integration/scada_adapter.py",
+      "smartgrid_mas/xai/explain.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/api_server.py",
+    "imports": [
+      "__future__",
+      "logging",
+      "os",
+      "uvicorn"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/audit/__init__.py",
+    "imports": [
+      "smartgrid_mas.audit.actions",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.constraints",
+      "smartgrid_mas.audit.gradient_step",
+      "smartgrid_mas.audit.gradient_update",
+      "smartgrid_mas.audit.hybrid_scheduler",
+      "smartgrid_mas.audit.risk_score",
+      "smartgrid_mas.audit.schedule_step",
+      "smartgrid_mas.audit.state_encoder"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/audit/actions.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/constraints.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/audit/gradient_update.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/audit/risk_score.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/audit/state_encoder.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/audit/actions.py",
+    "imports": [
+      "__future__",
+      "enum"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/environment/reward_function.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/audit_executor.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.audit_ledger",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/audit_ledger.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/audit_ledger.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/audit/audit_executor.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/audit_outcomes.py",
+    "imports": [
+      "__future__",
+      "enum"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/audit/audit_validator.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/environment/reward_outcome.py",
+      "smartgrid_mas/simulation/metrics.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/audit_scheduler_rl.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "json",
+      "math",
+      "random",
+      "smartgrid_mas.audit.actions",
+      "smartgrid_mas.audit.state_encoder",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/audit/actions.py",
+      "smartgrid_mas/audit/state_encoder.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/audit_validator.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.audit_outcomes"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/audit_outcomes.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/constraints.py",
+    "imports": [
+      "__future__",
+      "logging",
+      "math",
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/tests/test_sanity_constraints.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/gradient_step.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.gradient_update",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/gradient_update.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/gradient_update.py",
+    "imports": [
+      "__future__"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/hybrid_scheduler.py",
+    "imports": [
+      "__future__",
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.constraints",
+      "smartgrid_mas.audit.gradient_step",
+      "smartgrid_mas.audit.schedule_step",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/constraints.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/audit/schedule_step.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_gradient_hybrid.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/risk_score.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/simulation/metrics.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/schedule_step.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.actions",
+      "smartgrid_mas.audit.audit_outcomes",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.constraints",
+      "smartgrid_mas.environment.reward_function",
+      "smartgrid_mas.environment.reward_outcome",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/actions.py",
+      "smartgrid_mas/audit/audit_outcomes.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/constraints.py",
+      "smartgrid_mas/environment/reward_function.py",
+      "smartgrid_mas/environment/reward_outcome.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/audit/state_encoder.py",
+    "imports": [
+      "__future__",
+      "bisect",
+      "dataclasses",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/audit/__init__.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/tests/test_rl_scheduler.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/__init__.py",
+    "imports": [
+      ".baseline_update",
+      ".behavior_pipeline",
+      ".deviation_score",
+      ".scoring_pipeline",
+      ".threshold_update",
+      ".trend_clustering",
+      ".trend_features"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/baseline_update.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/tests/test_behavior_updates.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.behavior_analysis.baseline_update",
+      "smartgrid_mas.behavior_analysis.threshold_update"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/behavior_analysis/baseline_update.py",
+      "smartgrid_mas/behavior_analysis/threshold_update.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/deviation_score.py",
+    "imports": [
+      "__future__"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+      "smartgrid_mas/tests/test_deviation_score.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+    "imports": [
+      "__future__",
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.behavior_analysis.deviation_score"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/behavior_analysis/deviation_score.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_sanity_constraints.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/threshold_update.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/tests/test_behavior_updates.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/trend_clustering.py",
+    "imports": [
+      "__future__",
+      "sklearn.cluster",
+      "sklearn.preprocessing",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.behavior_analysis.trend_features",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/behavior_analysis/trend_features.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_trend_clustering.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/behavior_analysis/trend_features.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/behavior_analysis/trend_clustering.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/config/__init__.py",
+    "imports": [
+      ".loader"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/config/global_config.yaml",
+    "imports": [],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/config/loader.py",
+    "imports": [
+      "__future__",
+      "os",
+      "pathlib",
+      "yaml"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/tests/test_config.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/config/test_config.yaml",
+    "imports": [],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/data/__init__.py",
+    "imports": [
+      ".cyber_attacks",
+      ".real_dataset",
+      ".synthetic_faults"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/data/cyber_attacks.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/data/prepare_uci_grid_stability.py",
+    "imports": [
+      "__future__",
+      "argparse",
+      "pathlib"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/data/real_dataset.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "pathlib",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/data/synthetic_faults.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/detection/__init__.py",
+    "imports": [
+      ".integrity_validator",
+      ".load_pretrained",
+      ".lstm_pretraining",
+      ".unified_detector"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/detection/integrity_validator.py",
+    "imports": [
+      "dataclasses",
+      "hashlib",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/detection/unified_detector.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/detection/load_pretrained.py",
+    "imports": [
+      "logging",
+      "pathlib",
+      "torch",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/detection/lstm_pretraining.py",
+    "imports": [
+      "logging",
+      "torch",
+      "torch.utils.data",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/detection/pretrain_lstm.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/detection/pretrain_lstm.py",
+    "imports": [
+      "argparse",
+      "logging",
+      "pathlib",
+      "smartgrid_mas.detection.lstm_pretraining",
+      "torch"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/detection/lstm_pretraining.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/detection/unified_detector.py",
+    "imports": [
+      "logging",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.detection.integrity_validator",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/detection/integrity_validator.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/environment/__init__.py",
+    "imports": [
+      "smartgrid_mas.environment.grid_env"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/environment/grid_env.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/environment/grid_env.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.data.cyber_attacks",
+      "smartgrid_mas.data.synthetic_faults",
+      "smartgrid_mas.environment.scenario_engine",
+      "smartgrid_mas.response.mitigation_actions",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/data/cyber_attacks.py",
+      "smartgrid_mas/data/synthetic_faults.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/response/mitigation_actions.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/environment/__init__.py",
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/environment/reward_function.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.audit.actions"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/audit/actions.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/schedule_step.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/environment/reward_outcome.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "smartgrid_mas.audit.audit_outcomes"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/audit/audit_outcomes.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/audit/schedule_step.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/environment/scenario_engine.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.data.cyber_attacks",
+      "smartgrid_mas.data.synthetic_faults",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/data/cyber_attacks.py",
+      "smartgrid_mas/data/synthetic_faults.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/federated/__init__.py",
+    "imports": [
+      ".fedavg",
+      ".orchestrator"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/federated/fedavg.py",
+    "imports": [
+      "__future__",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py",
+      "smartgrid_mas/federated/orchestrator.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/federated/orchestrator.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "datetime",
+      "smartgrid_mas.federated.fedavg",
+      "threading",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/federated/fedavg.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/integration/__init__.py",
+    "imports": [
+      ".blockchain_logger",
+      ".event_store",
+      ".ids_adapter",
+      ".scada_adapter"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/integration/blockchain_logger.py",
+    "imports": [
+      ".event_store",
+      "__future__",
+      "os",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/integration/event_store.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "datetime",
+      "hashlib",
+      "json",
+      "os",
+      "pathlib",
+      "sqlite3",
+      "threading",
+      "typing",
+      "urllib.error",
+      "urllib.request",
+      "uuid"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/integration/ids_adapter.py",
+    "imports": [
+      "__future__",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/integration/scada_adapter.py",
+    "imports": [
+      "__future__",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/pipeline/__init__.py",
+    "imports": [
+      ".config_manager",
+      ".main_pipeline",
+      "smartgrid_mas.pipeline"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/pipeline/config_manager.py",
+    "imports": [
+      "dataclasses",
+      "json",
+      "pathlib",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/pipeline/main_pipeline.py",
+    "imports": [
+      "..simulation.eval_suite",
+      "..simulation.run_simulation",
+      ".config_manager",
+      "datetime",
+      "json",
+      "logging",
+      "pathlib",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/response/__init__.py",
+    "imports": [
+      "smartgrid_mas.response.impact_factor",
+      "smartgrid_mas.response.mitigation_actions",
+      "smartgrid_mas.response.response_controller",
+      "smartgrid_mas.response.severity_scoring"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/response/impact_factor.py",
+      "smartgrid_mas/response/mitigation_actions.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/response/severity_scoring.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/response/impact_factor.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/response/__init__.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/tests/test_response.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/response/mitigation_actions.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "os",
+      "random",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.response.severity_scoring",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/response/severity_scoring.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/response/__init__.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/tests/test_response.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/response/response_controller.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.response.impact_factor",
+      "smartgrid_mas.response.mitigation_actions",
+      "smartgrid_mas.response.severity_scoring",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/response/impact_factor.py",
+      "smartgrid_mas/response/mitigation_actions.py",
+      "smartgrid_mas/response/severity_scoring.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/response/__init__.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py",
+      "smartgrid_mas/tests/test_response.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/response/severity_scoring.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/response/__init__.py",
+      "smartgrid_mas/response/mitigation_actions.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/tests/test_response.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/run_all.py",
+    "imports": [
+      "__future__",
+      "datetime",
+      "json",
+      "logging",
+      "os",
+      "pathlib",
+      "random",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.anomaly_detection.train_lstm",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.config.loader",
+      "smartgrid_mas.data.cyber_attacks",
+      "smartgrid_mas.data.real_dataset",
+      "smartgrid_mas.data.synthetic_faults",
+      "smartgrid_mas.environment.grid_env",
+      "smartgrid_mas.simulation.debug_logger",
+      "smartgrid_mas.simulation.eval_suite",
+      "smartgrid_mas.simulation.export",
+      "smartgrid_mas.simulation.run_baseline_fixed",
+      "smartgrid_mas.simulation.run_simulation",
+      "sys",
+      "torch",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/anomaly_detection/train_lstm.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/config/loader.py",
+      "smartgrid_mas/data/cyber_attacks.py",
+      "smartgrid_mas/data/real_dataset.py",
+      "smartgrid_mas/data/synthetic_faults.py",
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/simulation/debug_logger.py",
+      "smartgrid_mas/simulation/eval_suite.py",
+      "smartgrid_mas/simulation/export.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/__main__.py",
+      "smartgrid_mas/tests/test_alignment.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/__init__.py",
+    "imports": [
+      "smartgrid_mas.simulation.metrics",
+      "smartgrid_mas.simulation.run_simulation"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/simulation/metrics.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/simulation/debug_logger.py",
+    "imports": [
+      "logging"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/eval_suite.py",
+    "imports": [
+      "__future__",
+      "os",
+      "scipy",
+      "sklearn.cluster",
+      "sklearn.preprocessing",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/tests/quick_effective_rate_check.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/export.py",
+    "imports": [
+      "__future__",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/metrics.py",
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.audit.audit_outcomes",
+      "smartgrid_mas.audit.risk_score",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/audit/audit_outcomes.py",
+      "smartgrid_mas/audit/risk_score.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/simulation/__init__.py",
+      "smartgrid_mas/simulation/run_baseline_fixed.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/run_baseline_fixed.py",
+    "imports": [
+      "__future__",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.audit.audit_executor",
+      "smartgrid_mas.audit.audit_ledger",
+      "smartgrid_mas.behavior_analysis.behavior_pipeline",
+      "smartgrid_mas.behavior_analysis.scoring_pipeline",
+      "smartgrid_mas.behavior_analysis.trend_clustering",
+      "smartgrid_mas.data.cyber_attacks",
+      "smartgrid_mas.data.synthetic_faults",
+      "smartgrid_mas.environment.grid_env",
+      "smartgrid_mas.environment.scenario_engine",
+      "smartgrid_mas.response.response_controller",
+      "smartgrid_mas.simulation.metrics",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/audit/audit_executor.py",
+      "smartgrid_mas/audit/audit_ledger.py",
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+      "smartgrid_mas/behavior_analysis/trend_clustering.py",
+      "smartgrid_mas/data/cyber_attacks.py",
+      "smartgrid_mas/data/synthetic_faults.py",
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/simulation/metrics.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/simulation/run_simulation.py",
+    "imports": [
+      "__future__",
+      "logging",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.audit.audit_executor",
+      "smartgrid_mas.audit.audit_ledger",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.audit_validator",
+      "smartgrid_mas.audit.gradient_step",
+      "smartgrid_mas.audit.hybrid_scheduler",
+      "smartgrid_mas.audit.schedule_step",
+      "smartgrid_mas.behavior_analysis.behavior_pipeline",
+      "smartgrid_mas.behavior_analysis.scoring_pipeline",
+      "smartgrid_mas.behavior_analysis.trend_clustering",
+      "smartgrid_mas.data.cyber_attacks",
+      "smartgrid_mas.data.synthetic_faults",
+      "smartgrid_mas.environment.grid_env",
+      "smartgrid_mas.environment.scenario_engine",
+      "smartgrid_mas.response.response_controller",
+      "smartgrid_mas.simulation.metrics",
+      "smartgrid_mas.xai.explain",
+      "time",
+      "typing"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/audit/audit_executor.py",
+      "smartgrid_mas/audit/audit_ledger.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/audit_validator.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/behavior_analysis/behavior_pipeline.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py",
+      "smartgrid_mas/behavior_analysis/trend_clustering.py",
+      "smartgrid_mas/data/cyber_attacks.py",
+      "smartgrid_mas/data/synthetic_faults.py",
+      "smartgrid_mas/environment/grid_env.py",
+      "smartgrid_mas/environment/scenario_engine.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/simulation/metrics.py",
+      "smartgrid_mas/xai/explain.py"
+    ],
+    "internal_downstream": [
+      "smartgrid_mas/run_all.py",
+      "smartgrid_mas/simulation/__init__.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/tests/__init__.py",
+    "imports": [],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/quick_effective_rate_check.py",
+    "imports": [
+      "os",
+      "smartgrid_mas.simulation.eval_suite"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/simulation/eval_suite.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_agent.py",
+    "imports": [
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_alignment.py",
+    "imports": [
+      "importlib",
+      "os",
+      "pathlib",
+      "pytest",
+      "smartgrid_mas.run_all",
+      "sys"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/run_all.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_behavior_updates.py",
+    "imports": [
+      "smartgrid_mas.behavior_analysis.baseline_update",
+      "smartgrid_mas.behavior_analysis.threshold_update"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/behavior_analysis/baseline_update.py",
+      "smartgrid_mas/behavior_analysis/threshold_update.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_config.py",
+    "imports": [
+      "smartgrid_mas.config.loader"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/config/loader.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_deviation_score.py",
+    "imports": [
+      "smartgrid_mas.behavior_analysis.deviation_score"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/behavior_analysis/deviation_score.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_gradient_hybrid.py",
+    "imports": [
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.gradient_step",
+      "smartgrid_mas.audit.gradient_update",
+      "smartgrid_mas.audit.hybrid_scheduler"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/gradient_step.py",
+      "smartgrid_mas/audit/gradient_update.py",
+      "smartgrid_mas/audit/hybrid_scheduler.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_lstm_smoke.py",
+    "imports": [
+      "os",
+      "smartgrid_mas.anomaly_detection.inference",
+      "smartgrid_mas.anomaly_detection.train_lstm",
+      "tempfile"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/inference.py",
+      "smartgrid_mas/anomaly_detection/train_lstm.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_response.py",
+    "imports": [
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.response.impact_factor",
+      "smartgrid_mas.response.mitigation_actions",
+      "smartgrid_mas.response.response_controller",
+      "smartgrid_mas.response.severity_scoring"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/response/impact_factor.py",
+      "smartgrid_mas/response/mitigation_actions.py",
+      "smartgrid_mas/response/response_controller.py",
+      "smartgrid_mas/response/severity_scoring.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_rl_scheduler.py",
+    "imports": [
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.audit.actions",
+      "smartgrid_mas.audit.audit_scheduler_rl",
+      "smartgrid_mas.audit.risk_score",
+      "smartgrid_mas.audit.schedule_step",
+      "smartgrid_mas.audit.state_encoder"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/audit/actions.py",
+      "smartgrid_mas/audit/audit_scheduler_rl.py",
+      "smartgrid_mas/audit/risk_score.py",
+      "smartgrid_mas/audit/schedule_step.py",
+      "smartgrid_mas/audit/state_encoder.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_sanity_constraints.py",
+    "imports": [
+      "os",
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.state",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.audit.constraints",
+      "smartgrid_mas.behavior_analysis.scoring_pipeline"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/state.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/audit/constraints.py",
+      "smartgrid_mas/behavior_analysis/scoring_pipeline.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/tests/test_trend_clustering.py",
+    "imports": [
+      "smartgrid_mas.agents.base_agent",
+      "smartgrid_mas.agents.types",
+      "smartgrid_mas.behavior_analysis.trend_clustering"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/agents/base_agent.py",
+      "smartgrid_mas/agents/types.py",
+      "smartgrid_mas/behavior_analysis/trend_clustering.py"
+    ],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/xai/__init__.py",
+    "imports": [
+      ".explain"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": []
+  },
+  {
+    "file": "smartgrid_mas/xai/explain.py",
+    "imports": [
+      "__future__",
+      "typing"
+    ],
+    "internal_upstream": [],
+    "internal_downstream": [
+      "smartgrid_mas/api/app.py",
+      "smartgrid_mas/simulation/run_simulation.py"
+    ]
+  },
+  {
+    "file": "smartgrid_mas/xai/export_shap_reasons.py",
+    "imports": [
+      "__future__",
+      "argparse",
+      "json",
+      "pathlib",
+      "smartgrid_mas.anomaly_detection.inference"
+    ],
+    "internal_upstream": [
+      "smartgrid_mas/anomaly_detection/inference.py"
+    ],
+    "internal_downstream": []
+  }
+]

@@ -27,7 +27,37 @@ export type LatestRunSnapshot = {
   activeIncidents: number
   crossLayerStability: number
   avgResponseSeconds: number
+  runtimeSeconds: number
+  convergenceIterations: number
   priority: PriorityBreakdown
+}
+
+type GridStatusPayload = {
+  n_agents?: number
+  cost_efficiency?: number
+  risk_mitigation?: number
+  attack_rate?: number
+  coverage?: number
+  precision?: number
+  recall?: number
+  f1?: number
+  live_verification?: {
+    run_id?: string | null
+    status?: string
+    attacks_detected?: number
+    attacks_resolved?: number
+    risk_mitigation?: number
+    total_agents?: number
+  }
+  rapid_scada?: {
+    live_score?: {
+      anomaly_flag?: number
+      anomaly_score?: number
+      risk_score?: number
+      decision?: string
+      severity?: string
+    }
+  }
 }
 
 const DEFAULT_PRIORITY: PriorityBreakdown = {
@@ -123,6 +153,54 @@ function extractPriority(summary: Record<string, any>, run: Record<string, any>)
   return counts
 }
 
+function normalizeGridStatus(payload: unknown): LatestRunSnapshot | null {
+  const grid = toObject(payload) as GridStatusPayload
+  const runLike = toObject(grid)
+  if (!Object.keys(runLike).length) return null
+
+  const verification = toObject(grid.live_verification)
+  const nAgents = Math.max(0, Math.floor(pickNumber(grid.n_agents, verification.total_agents) ?? 0))
+  const attackRate = asRatio(pickNumber(grid.attack_rate), 0)
+  const detected = Math.max(0, Math.round(pickNumber(verification.attacks_detected, attackRate * nAgents) ?? 0))
+  const mitigated = asRatio(pickNumber(grid.risk_mitigation, verification.risk_mitigation), 0)
+  const resolved = Math.max(0, Math.round(detected * mitigated))
+  const resolvedExact = Math.max(0, Math.round(pickNumber(verification.attacks_resolved, resolved) ?? 0))
+  const active = Math.max(0, detected - resolvedExact)
+  const coverage = asRatio(pickNumber(grid.coverage), 0)
+  const auditsTriggered = Math.max(detected, Math.round(coverage * nAgents))
+  const liveScore = toObject(toObject(grid.rapid_scada).live_score)
+  const liveSeverity = String(liveScore.severity ?? '').toLowerCase()
+  const priority: PriorityBreakdown = {
+    critical: liveSeverity.includes('critical') ? 1 : 0,
+    high: liveSeverity.includes('high') ? 1 : 0,
+    medium: liveSeverity.includes('medium') ? 1 : 0,
+    low: liveSeverity.includes('low') ? 1 : 0,
+  }
+
+  return {
+    runId: pickString(verification.run_id),
+    status: pickString(verification.status) ?? 'live',
+    totalAgents: nAgents,
+    costEfficiency: asRatio(pickNumber(grid.cost_efficiency), 0),
+    riskMitigation: mitigated,
+    detectionAccuracy: asRatio(pickNumber(grid.f1), 0),
+    auditCoverage: coverage,
+    precision: asRatio(pickNumber(grid.precision), 0),
+    recall: asRatio(pickNumber(grid.recall), 0),
+    f1: asRatio(pickNumber(grid.f1), 0),
+    attacksIdentified: detected,
+    attacksDetected: detected,
+    attacksResolved: resolvedExact,
+    auditsTriggered,
+    activeIncidents: active,
+    crossLayerStability: 0,
+    avgResponseSeconds: 0,
+    runtimeSeconds: 0,
+    convergenceIterations: 0,
+    priority,
+  }
+}
+
 export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
   const root = toObject(payload)
   const maybeRun = toObject(root.run)
@@ -152,7 +230,7 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
 
   let attacksIdentified = Math.max(
     0,
-    Math.floor(
+    Math.round(
       pickNumber(
         summary.attacks_identified,
         summary.identified_attacks,
@@ -178,7 +256,7 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
 
   let attacksDetected = Math.max(
     0,
-    Math.floor(
+    Math.round(
       pickNumber(
         summary.attacks_detected,
         summary.detected_attacks,
@@ -197,7 +275,7 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
 
   let auditsTriggered = Math.max(
     0,
-    Math.floor(
+    Math.round(
       pickNumber(
         summary.audits_triggered,
         summary.total_audits,
@@ -216,7 +294,7 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
 
   let attacksResolved = Math.max(
     0,
-    Math.floor(
+    Math.round(
       pickNumber(
         summary.attacks_resolved,
         summary.resolved_attacks,
@@ -239,7 +317,7 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
   if (auditsTriggered === 0 && attacksDetected > 0) auditsTriggered = attacksDetected
   if (attacksResolved === 0 && attacksDetected > 0) {
     const mitigation = asRatio(pickNumber(summary.risk_mitigation, run.risk_mitigation), 0)
-    attacksResolved = Math.floor(attacksDetected * mitigation)
+    attacksResolved = Math.round(attacksDetected * mitigation)
   }
   if (attacksResolved > attacksIdentified) attacksResolved = attacksIdentified
 
@@ -263,6 +341,8 @@ export function normalizeLatestRun(payload: unknown): LatestRunSnapshot | null {
     activeIncidents,
     crossLayerStability: asRatio(pickNumber(summary.cross_layer_stability, run.cross_layer_stability, crossLayer.index), 0),
     avgResponseSeconds: Math.max(0, pickNumber(summary.avg_response_seconds, summary.response_time_seconds, summary.avg_response_time, run.avg_response_seconds, run.response_time_seconds, run.avg_response_time) ?? 0),
+    runtimeSeconds: Math.max(0, pickNumber(summary.runtime_seconds, summary.execution_seconds, summary.total_runtime_sec, run.runtime_seconds, run.execution_seconds, run.total_runtime_sec) ?? 0),
+    convergenceIterations: Math.max(0, Math.floor(pickNumber(summary.convergence_iterations, summary.convergence_steps, summary.iterations, run.convergence_iterations, run.convergence_steps, run.iterations) ?? 0)),
     priority,
   }
 }
@@ -285,14 +365,21 @@ export function useLatestRun(pollMs = 15000) {
       if (!normalized) {
         const fallbackResponse = await fetch('/api/proxy/runs?limit=1', { cache: 'no-store' })
         const fallbackPayload = await fallbackResponse.json()
-        if (!fallbackResponse.ok) {
-          throw new Error(fallbackPayload?.detail ?? fallbackPayload?.error ?? `HTTP ${fallbackResponse.status}`)
+        if (fallbackResponse.ok) {
+          const latest = Array.isArray(fallbackPayload?.runs) ? fallbackPayload.runs[0] : null
+          normalized = normalizeLatestRun({ run: latest })
         }
-        const latest = Array.isArray(fallbackPayload?.runs) ? fallbackPayload.runs[0] : null
-        normalized = normalizeLatestRun({ run: latest })
       }
 
-      if (!normalized && !latestResponse.ok) {
+      if (!normalized) {
+        const gridResponse = await fetch('/api/proxy/grid/status', { cache: 'no-store' })
+        const gridPayload = await gridResponse.json()
+        if (gridResponse.ok) {
+          normalized = normalizeGridStatus(gridPayload)
+        }
+      }
+
+      if (!normalized) {
         throw new Error(latestPayload?.detail ?? latestPayload?.error ?? `HTTP ${latestResponse.status}`)
       }
 

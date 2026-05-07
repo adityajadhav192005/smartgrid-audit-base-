@@ -315,8 +315,6 @@ class RapidScadaLiveClient:
 
         try:
             tags = normalize_scada_tags(self._fetch_tags())
-            # DEBUG: Print raw SCADA tags to logs for troubleshooting
-            print(f"[SCADA DEBUG] Raw tags received: {tags}")
             req_dict = scada_tags_to_score_request(
                 agent_id=self.agent_id,
                 tags=tags,
@@ -341,7 +339,12 @@ class RapidScadaLiveClient:
 
     def _run_loop(self) -> None:
         while not self._stop.is_set():
-            self.poll_once()
+            try:
+                self.poll_once()
+            except Exception as exc:  # noqa: BLE001
+                with self._lock:
+                    self.consecutive_failures += 1
+                    self.last_error = f"Unhandled: {exc}"
             self._stop.wait(self.poll_sec)
 
     def start(self) -> None:

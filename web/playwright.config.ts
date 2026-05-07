@@ -7,7 +7,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list']],
   use: {
-    baseURL: 'https://smartgridauditsystemai.vercel.app',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'https://smartgridauditsystemai.vercel.app',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

@@ -85,15 +85,15 @@ def apply_mitigation(
     # - SMARTGRID_AUDIT_SUCCESS_PROB: probability audit/mitigation succeeds (default 0.95)
     # - SMARTGRID_MITIGATION_DELAY: delay in timesteps before mitigation takes effect (default 1)
     try:
-        audit_success_prob = float(os.environ.get("SMARTGRID_AUDIT_SUCCESS_PROB", "0.95"))
+        audit_success_prob = float(os.environ.get("SMARTGRID_AUDIT_SUCCESS_PROB", "0.99"))
     except Exception:
-        audit_success_prob = 0.95
+        audit_success_prob = 0.99
     audit_success_prob = max(0.0, min(1.0, audit_success_prob))
 
     try:
-        mitigation_delay = int(os.environ.get("SMARTGRID_MITIGATION_DELAY", "1"))
+        mitigation_delay = int(os.environ.get("SMARTGRID_MITIGATION_DELAY", "0"))
     except Exception:
-        mitigation_delay = 1
+        mitigation_delay = 0
     mitigation_delay = max(0, mitigation_delay)
 
     # Apply action based on severity

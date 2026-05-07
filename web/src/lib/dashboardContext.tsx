@@ -32,27 +32,25 @@ type DashboardContextValue = {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null)
 
-const STORAGE_MODE_KEY = 'sg_dashboard_view_mode'
 const STORAGE_SCADA_KEY = 'sg_scada_connected'
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [viewMode, setViewModeState] = useState<ViewMode>('experiment')
-  const [scadaConnected, setScadaConnectedState] = useState(false)
+  const [scadaConnected, setScadaConnectedState] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [refreshTick, setRefreshTick] = useState(0)
   const [notifications, setNotifications] = useState<DashboardNotification[]>([])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const savedMode = localStorage.getItem(STORAGE_MODE_KEY)
+    setViewModeState('experiment')
     const savedScada = localStorage.getItem(STORAGE_SCADA_KEY)
-    if (savedMode === 'experiment' || savedMode === 'scada') {
-      setViewModeState(savedMode)
+    if (savedScada === 'true' || savedScada === 'false') {
+      setScadaConnectedState(savedScada === 'true')
+      return
     }
-    if (savedScada === 'true') {
-      setScadaConnectedState(true)
-    }
+    setScadaConnectedState(true)
   }, [])
 
   useEffect(() => {
@@ -60,41 +58,42 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_SCADA_KEY, String(scadaConnected))
   }, [scadaConnected])
 
+  useEffect(() => {
+    let active = true
+
+    const refreshScadaConnection = async () => {
+      try {
+        const response = await fetch('/api/proxy/grid/status', { cache: 'no-store' })
+        const payload = await response.json().catch(() => ({}))
+        const connected = Boolean(payload?.rapid_scada?.connection?.connected)
+        if (active) {
+          setScadaConnectedState(connected)
+        }
+      } catch {
+        if (active) {
+          setScadaConnectedState(false)
+        }
+      }
+    }
+
+    void refreshScadaConnection()
+    const intervalId = setInterval(() => {
+      void refreshScadaConnection()
+    }, 5000)
+
+    return () => {
+      active = false
+      clearInterval(intervalId)
+    }
+  }, [])
+
   const setViewMode = useCallback((mode: ViewMode) => {
-    if (mode === 'scada' && !scadaConnected) {
-      setNotifications(prev => [{
-        id: crypto.randomUUID(),
-        title: 'SCADA mode unavailable',
-        message: 'Connect SCADA Live first, then switch to SCADA view.',
-        ts: new Date().toISOString(),
-        read: false,
-        level: 'warning' as const,
-      }, ...prev].slice(0, 40))
-      return
-    }
     setViewModeState(mode)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_MODE_KEY, mode)
-    }
-  }, [scadaConnected])
+  }, [])
 
   const setScadaConnected = useCallback((connected: boolean) => {
     setScadaConnectedState(connected)
-    if (!connected && viewMode === 'scada') {
-      setViewModeState('experiment')
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_MODE_KEY, 'experiment')
-      }
-      setNotifications(prev => [{
-        id: crypto.randomUUID(),
-        title: 'Switched to Experiment view',
-        message: 'SCADA disconnected, so SCADA mode was disabled automatically.',
-        ts: new Date().toISOString(),
-        read: false,
-        level: 'warning' as const,
-      }, ...prev].slice(0, 40))
-    }
-  }, [viewMode])
+  }, [])
 
   const triggerRefresh = useCallback(() => {
     setRefreshTick(v => v + 1)

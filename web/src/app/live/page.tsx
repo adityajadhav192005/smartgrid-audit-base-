@@ -1,24 +1,22 @@
 'use client'
 import { useState } from 'react'
-import { liveAgents } from '@/lib/mockData'
 import { StateBadge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Activity, Filter, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
 import { useDashboard } from '@/lib/dashboardContext'
-import { useLatestRun } from '@/lib/latestRun'
+import { useExperimentTelemetry } from '@/lib/experimentTelemetry'
 
 const TYPES = ['All', 'Generator', 'Substation', 'PMU', 'Breaker']
 const STATES = ['All', 'Healthy', 'Anomalous', 'Under Audit', 'Attacked', 'Suspect']
 
 export default function LivePage() {
-  const { viewMode, scadaConnected, searchQuery, triggerRefresh } = useDashboard()
-  const { latestRun } = useLatestRun(12000)
+  const { searchQuery, triggerRefresh } = useDashboard()
+  const { liveAgents, statusCounts, summary } = useExperimentTelemetry(8000)
   const [typeFilter, setTypeFilter]   = useState('All')
   const [stateFilter, setStateFilter] = useState('All')
   const [sortBy, setSortBy]           = useState<'riskScore' | 'anomalyScore'>('riskScore')
-  const scadaBlocked = viewMode === 'scada' && !scadaConnected
 
   const filtered = liveAgents
     .filter(a => {
@@ -30,21 +28,21 @@ export default function LivePage() {
     .filter(a => stateFilter === 'All' || a.state === stateFilter)
     .sort((a, b) => b[sortBy] - a[sortBy])
 
-  const healthy  = liveAgents.filter(a => a.state === 'Healthy').length
-  const flagged  = liveAgents.filter(a => a.state === 'Anomalous' || a.state === 'Attacked').length
-  const auditing = liveAgents.filter(a => a.state === 'Under Audit').length
+  const healthy  = Number(statusCounts.healthy ?? 0)
+  const flagged  = Number(statusCounts.anomalous ?? 0) + Number(statusCounts.attacked ?? 0) + Number(statusCounts.suspect ?? 0)
+  const auditing = Number(statusCounts.underAudit ?? 0)
 
-  const totalAgents = latestRun?.totalAgents || liveAgents.length
-  const latestFlagged = latestRun?.activeIncidents ?? flagged
-  const latestAudits = latestRun?.auditsTriggered ?? auditing
+  const totalAgents = Number(summary?.totalAgents ?? liveAgents.length)
+  const latestFlagged = flagged
+  const latestAudits = auditing
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="section-header">Live Agent Monitoring</h1>
-          <p className="text-sm text-slate-400 mt-1">Real-time state, anomaly scores, and risk for all agents</p>
+          <h1 className="section-header">Experiment Monitor</h1>
+          <p className="text-sm text-slate-400 mt-1">Live experiment-state view across agents, anomaly scores, and risk</p>
         </div>
         <button
           onClick={triggerRefresh}
@@ -54,16 +52,7 @@ export default function LivePage() {
         </button>
       </div>
 
-      <ViewModeBanner section="Live Monitoring" />
-
-      {scadaBlocked && (
-        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
-          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
-        </div>
-      )}
-
-      {!scadaBlocked && (
-      <>
+      <ViewModeBanner section="Experiment Monitor" mode="experiment" />
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -167,8 +156,6 @@ export default function LivePage() {
           <div className="py-12 text-center text-sm text-slate-500">No agents match current filters</div>
         )}
       </div>
-      </>
-      )}
     </div>
   )
 }

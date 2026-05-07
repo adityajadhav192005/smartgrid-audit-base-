@@ -1,20 +1,54 @@
 'use client'
 import { useState } from 'react'
-import { attackEvents, anomalyTrend } from '@/lib/mockData'
-import { Badge, SeverityBadge } from '@/components/ui/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { AttackBarChart, AttackTypePie } from '@/components/charts'
-import { attackTypeDistribution } from '@/lib/mockData'
 import { AlertTriangle, Zap, Shield, Activity } from 'lucide-react'
 import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
+import { useExperimentTelemetry } from '@/lib/experimentTelemetry'
 import { useDashboard } from '@/lib/dashboardContext'
-import { useLatestRun } from '@/lib/latestRun'
+
+type AttackRecord = {
+  id: string
+  type: string
+  startTime: string
+  duration: string
+  targetAgents: string[]
+  affectedLayer: string
+  severity: string
+  detectionTime: string
+  status: string
+  anomalies: string[]
+  audits: string[]
+  impact: string
+  confidence: number
+}
+
+function toAttackRecord(event: { id: string; ts: string; type: string; msg: string; severity: string }, index: number): AttackRecord {
+  const severity = event.severity ? `${event.severity.charAt(0).toUpperCase()}${event.severity.slice(1)}` : 'Info'
+  const targetAgent = event.msg.split('Â·')[0]?.trim() || 'agent'
+  return {
+    id: `ATK-${String(index + 1).padStart(3, '0')}`,
+    type: event.type,
+    startTime: event.ts,
+    duration: 'live',
+    targetAgents: [targetAgent],
+    affectedLayer: event.type.includes('AUDIT') ? 'Cyber' : 'Physical + Cyber',
+    severity,
+    detectionTime: event.ts,
+    status: severity === 'Critical' || severity === 'High' ? 'Confirmed' : 'Observed',
+    anomalies: [event.id],
+    audits: event.type.includes('AUDIT') ? [event.id] : [],
+    impact: event.msg,
+    confidence: severity === 'Critical' ? 0.95 : severity === 'High' ? 0.85 : 0.7,
+  }
+}
 
 export default function AttacksPage() {
-  const { viewMode, scadaConnected, searchQuery } = useDashboard()
-  const { latestRun } = useLatestRun(12000)
-  const [selected, setSelected] = useState(attackEvents[0])
-  const scadaBlocked = viewMode === 'scada' && !scadaConnected
+  const { searchQuery } = useDashboard()
+  const { events, trend, attackTypeDistribution, summary } = useExperimentTelemetry(8000)
+  const attackEvents = events.map((event, index) => toAttackRecord(event, index))
+  const [selected, setSelected] = useState<AttackRecord | null>(null)
 
   const visibleAttacks = attackEvents.filter(atk => {
     const q = searchQuery.trim().toLowerCase()
@@ -29,29 +63,28 @@ export default function AttacksPage() {
     low: attackEvents.filter(a => a.severity.toLowerCase() === 'low').length,
   }
 
-  const attacksIdentified = latestRun?.attacksIdentified ?? attackEvents.length
-  const auditsTriggered = latestRun?.auditsTriggered ?? attackEvents.reduce((acc, item) => acc + item.audits.length, 0)
-  const attacksDetected = latestRun?.attacksDetected ?? attackEvents.length
-  const attacksResolved = latestRun?.attacksResolved ?? 2
-  const priority = latestRun?.priority ?? fallbackPriority
+  const attacksIdentified = attackEvents.length
+  const auditsTriggered = attackEvents.reduce((acc, item) => acc + item.audits.length, 0)
+  const attacksDetected = attackEvents.length
+  const attacksResolved = Math.max(0, Math.round((Number(summary?.riskMitigation ?? 0)) * attackEvents.length))
+  const priority = fallbackPriority
+  const attackPieData = attackTypeDistribution.length
+    ? attackTypeDistribution.map((item, index) => ({
+        ...item,
+        color: ['#ff3860', '#ffb700', '#bd00ff', '#00d4ff', '#10b981'][index % 5],
+      }))
+    : [{ name: 'EVENT', value: 1, color: '#00d4ff' }]
+
+  const selectedAttack = selected ?? visibleAttacks[0] ?? null
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="section-header">Attack Analysis</h1>
+        <h1 className="section-header">Threat Events</h1>
         <p className="text-sm text-slate-400 mt-1">Confirmed and suspected attack events — detection, taxonomy, and impact</p>
       </div>
 
-      <ViewModeBanner section="Attack Analysis" />
-
-      {scadaBlocked && (
-        <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">
-          Rapid SCADA view is selected, but SCADA is disconnected. Connect SCADA Live to enable this mode.
-        </div>
-      )}
-
-      {!scadaBlocked && (
-      <>
+      <ViewModeBanner section="Threat Events" mode="experiment" />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <KPIStatCard label="Identified"        value={attacksIdentified} color="red"   icon={<AlertTriangle size={14} />} />
@@ -71,11 +104,11 @@ export default function AttacksPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-4">
           <h3 className="text-sm font-semibold text-slate-200 mb-3">Attack Events Timeline — 24h</h3>
-          <div className="h-44"><AttackBarChart data={anomalyTrend} /></div>
+          <div className="h-44"><AttackBarChart data={trend} /></div>
         </div>
         <div className="glass-card p-4">
           <h3 className="text-sm font-semibold text-slate-200 mb-3">Attack Type Distribution</h3>
-          <div className="h-44"><AttackTypePie data={attackTypeDistribution} /></div>
+          <div className="h-44"><AttackTypePie data={attackPieData} /></div>
         </div>
       </div>
 
@@ -86,7 +119,7 @@ export default function AttacksPage() {
           <div className="divide-y divide-slate-800/60">
             {visibleAttacks.map(atk => (
               <button key={atk.id} onClick={() => setSelected(atk)}
-                className={`w-full text-left p-4 hover:bg-slate-800/30 transition-colors ${selected.id === atk.id ? 'bg-cyber-red/5 border-l-2 border-l-cyber-red' : ''}`}>
+                className={`w-full text-left p-4 hover:bg-slate-800/30 transition-colors ${selectedAttack?.id === atk.id ? 'bg-cyber-red/5 border-l-2 border-l-cyber-red' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-xs font-bold text-cyber-red">{atk.id}</span>
                   <Badge variant={atk.severity.toLowerCase() as any}>{atk.severity}</Badge>
@@ -103,36 +136,41 @@ export default function AttacksPage() {
         </div>
 
         <div className="lg:col-span-3 glass-card p-5 space-y-4">
+          {!selectedAttack && (
+            <div className="text-sm text-slate-400">No live attack events yet. Waiting for blockchain-backed telemetry...</div>
+          )}
+          {selectedAttack && (
+          <>
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-mono text-cyber-red text-lg font-bold">{selected.id}</span>
-                <Badge variant={selected.severity.toLowerCase() as any}>{selected.severity}</Badge>
-                <Badge variant={selected.status === 'Confirmed' ? 'critical' : 'low'}>{selected.status}</Badge>
+                <span className="font-mono text-cyber-red text-lg font-bold">{selectedAttack.id}</span>
+                <Badge variant={selectedAttack.severity.toLowerCase() as any}>{selectedAttack.severity}</Badge>
+                <Badge variant={selectedAttack.status === 'Confirmed' ? 'critical' : 'low'}>{selectedAttack.status}</Badge>
               </div>
-              <div className="text-base font-semibold text-slate-200">{selected.type}</div>
+              <div className="text-base font-semibold text-slate-200">{selectedAttack.type}</div>
             </div>
             <div className="text-right text-xs text-slate-500">
-              <div>Started: {selected.startTime}</div>
-              <div>Duration: {selected.duration}</div>
+              <div>Started: {selectedAttack.startTime}</div>
+              <div>Duration: {selectedAttack.duration}</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="glass-card p-3 border-cyber-red/20">
               <div className="text-xs text-slate-500 mb-1">Affected Layer</div>
-              <div className="text-sm font-semibold text-slate-200">{selected.affectedLayer}</div>
+              <div className="text-sm font-semibold text-slate-200">{selectedAttack.affectedLayer}</div>
             </div>
             <div className="glass-card p-3 border-cyber-green/20">
               <div className="text-xs text-slate-500 mb-1">Detection Confidence</div>
-              <div className="text-sm font-bold font-mono text-cyber-green">{(selected.confidence * 100).toFixed(0)}%</div>
+              <div className="text-sm font-bold font-mono text-cyber-green">{(selectedAttack.confidence * 100).toFixed(0)}%</div>
             </div>
           </div>
 
           <div>
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Target Agents</div>
             <div className="flex flex-wrap gap-2">
-              {selected.targetAgents.map(a => (
+              {selectedAttack.targetAgents.map(a => (
                 <span key={a} className="font-mono text-xs px-2 py-1 rounded-lg bg-cyber-red/10 border border-cyber-red/20 text-cyber-red">{a}</span>
               ))}
             </div>
@@ -140,23 +178,23 @@ export default function AttacksPage() {
 
           <div>
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Impact Assessment</div>
-            <p className="text-sm text-slate-300 leading-relaxed bg-grid-900/40 border border-slate-700/30 rounded-lg p-3">{selected.impact}</p>
+            <p className="text-sm text-slate-300 leading-relaxed bg-grid-900/40 border border-slate-700/30 rounded-lg p-3">{selectedAttack.impact}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-slate-500 mb-1">Linked Anomalies</div>
-              <div className="flex flex-wrap gap-1">{selected.anomalies.map(x => <Badge key={x} variant="high">{x}</Badge>)}</div>
+              <div className="flex flex-wrap gap-1">{selectedAttack.anomalies.map(x => <Badge key={x} variant="high">{x}</Badge>)}</div>
             </div>
             <div>
               <div className="text-xs text-slate-500 mb-1">Linked Audits</div>
-              <div className="flex flex-wrap gap-1">{selected.audits.map(x => <Badge key={x} variant="info">{x}</Badge>)}</div>
+              <div className="flex flex-wrap gap-1">{selectedAttack.audits.map(x => <Badge key={x} variant="info">{x}</Badge>)}</div>
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
-      </>
-      )}
     </div>
   )
 }

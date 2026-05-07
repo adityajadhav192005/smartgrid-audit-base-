@@ -27,13 +27,22 @@ class ScenarioEngine:
         self.cfg = cfg
         self.rng = np.random.default_rng(cfg.seed)
         self.agent_ids = [a.agent_id for a in agents]
+        self.generators = [a.agent_id for a in agents if a.agent_type == AgentType.GENERATOR]
+        self.pmus = [a.agent_id for a in agents if a.agent_type == AgentType.PMU]
 
         self.breakers = [a.agent_id for a in agents if a.agent_type == AgentType.BREAKER]
         self.substations = [a.agent_id for a in agents if a.agent_type == AgentType.SUBSTATION]
 
-        self.fdi_set = self._sample_set(self.agent_ids, cfg.fdi_rate)
-        self.dos_set = self._sample_set(self.agent_ids, cfg.dos_rate)
-        self.mitm_set = self._sample_set(self.agent_ids, cfg.mitm_rate)
+        fdi_pool = list(dict.fromkeys(self.generators + self.substations + self.pmus))
+        dos_pool = list(dict.fromkeys(self.substations + self.breakers + self.pmus))
+        mitm_pool = list(dict.fromkeys(self.breakers + self.pmus + self.substations))
+
+        self.fdi_set = self._sample_set(fdi_pool or self.agent_ids, cfg.fdi_rate)
+        self.dos_set = self._sample_set([aid for aid in dos_pool if aid not in self.fdi_set] or dos_pool or self.agent_ids, cfg.dos_rate)
+        self.mitm_set = self._sample_set(
+            [aid for aid in mitm_pool if aid not in self.fdi_set and aid not in self.dos_set] or mitm_pool or self.agent_ids,
+            cfg.mitm_rate,
+        )
 
         self.chain_pairs = self._sample_chain_pairs(cfg.chain_rate)
         
@@ -105,10 +114,21 @@ class ScenarioEngine:
 
     def faults_at(self, t: int) -> Dict[str, FaultType]:
         faults = {aid: FaultType.NONE for aid in self.agent_ids}
-        k = int(round(self.cfg.fault_rate * len(self.agent_ids)))
+        fault_pool = list(dict.fromkeys(self.breakers + self.substations + self.generators))
+        if not fault_pool:
+            fault_pool = self.agent_ids
+        k = int(round(self.cfg.fault_rate * len(fault_pool)))
         if k <= 0:
             return faults
-        chosen = self.rng.choice(self.agent_ids, size=min(k, len(self.agent_ids)), replace=False).tolist()
+        chosen = self.rng.choice(fault_pool, size=min(k, len(fault_pool)), replace=False).tolist()
         for aid in chosen:
-            faults[aid] = self.rng.choice(self.cfg.fault_types)
+            if aid in self.breakers:
+                choices = [FaultType.OVERCURRENT, FaultType.VOLTAGE_SAG]
+            elif aid in self.substations:
+                choices = [FaultType.VOLTAGE_SAG, FaultType.FREQ_DEV]
+            elif aid in self.generators:
+                choices = [FaultType.FREQ_DEV, FaultType.OVERCURRENT]
+            else:
+                choices = list(self.cfg.fault_types)
+            faults[aid] = self.rng.choice(choices)
         return faults

@@ -2,11 +2,11 @@
 
 For production operations (Railway backend + Vercel dashboard), see [BACKEND_OPS.md](BACKEND_OPS.md).
 
-This project already exposes a SCADA-facing ingest endpoint in [smartgrid_mas/api/app.py](smartgrid_mas/api/app.py):
+This project exposes a SCADA-facing batch ingest endpoint in [smartgrid_mas/api/app.py](smartgrid_mas/api/app.py):
 
-- `POST /v1/scada/ingest/tags`
+- `POST /v1/scada/ingest/tags/batch`
 
-It accepts raw SCADA-like tags, normalizes them through [smartgrid_mas/integration/scada_adapter.py](smartgrid_mas/integration/scada_adapter.py), and returns:
+It accepts a full grid snapshot as records, normalizes tags through [smartgrid_mas/integration/scada_adapter.py](smartgrid_mas/integration/scada_adapter.py), and returns:
 
 - normalized score request
 - deviation/risk score
@@ -28,52 +28,27 @@ Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
-**2. Push sample SCADA tags**
+**2. Push SCADA tags using bridge launcher**
 
-Use the bridge script:
+Use the bridge launcher:
 
 ```powershell
 $env:SMARTGRID_API_KEY="smartgrid-dev-key"
-.\scripts\push_scada_tags_to_api.ps1 -UseSamplePayload
+.\scripts\start_rapidscada_bridge.ps1
 ```
 
 This posts to:
 
 ```text
-http://127.0.0.1:8000/v1/scada/ingest/tags
+http://127.0.0.1:8000/v1/scada/ingest/tags/batch
 ```
 
-**3. Push real tag JSON**
+**3. Rapid SCADA direct polling bridge (port 10109)**
 
-Create a JSON file like:
-
-```json
-{
-  "voltage": 1.12,
-  "frequency": 0.96,
-  "current": 1.21,
-  "power": 1.09,
-  "response_time": 1.04,
-  "latency": 0.31,
-  "packet_loss": 0.05,
-  "integrity": 0.88,
-  "comm_freq": 0.67
-}
-```
-
-Then run:
-
-```powershell
-$env:SMARTGRID_API_KEY="smartgrid-dev-key"
-.\scripts\push_scada_tags_to_api.ps1 -AgentId "22" -TagsJsonPath ".\sample_tags.json" -CriticalityWeight 1.2 -ScoreThreshold 0.85
-```
-
-**4. Rapid SCADA direct polling bridge (port 10008)**
-
-Rapid SCADA installs as an IIS web app on **TCP port 10008**. It exposes a REST API:
+Rapid SCADA local demo host runs on **TCP port 10109**. It exposes a REST API:
 
 ```
-GET http://localhost:10008/Api/Main/GetCurData?cnlNums=101,102,103,...
+GET http://localhost:10109/Api/Main/GetCurData?cnlNums=...
 ```
 
 Use the dedicated polling bridge that reads Rapid SCADA channels and forwards them to the SmartGrid API automatically:
@@ -131,7 +106,7 @@ If your API key is different from the default, set it first:
 $env:SMARTGRID_API_KEY = "<your-api-key>"
 ```
 
-If Rapid SCADA is not reachable temporarily, the bridge uses nominal fallback values and still exercises the ingest path.
+If Rapid SCADA is not reachable, the bridge skips publishing to avoid fallback/default contamination.
 
 If IIS-hosted Rapid SCADA returns HTTP 500 due file permissions under `C:\Program Files\SCADA\ScadaWeb`, run a writable local copy:
 
@@ -164,7 +139,7 @@ $env:RAPID_SCADA_URL = "http://127.0.0.1:10109"
 
 Once channels are flowing, the bridge normalises each raw value by its nominal and sends the result to the audit API.
 
-**5. Manual tag mapping (alternative)**
+**4. Required tag mapping**
 
 If you prefer not to use the polling bridge, map your SCADA channel names to these expected tags:
 
@@ -178,7 +153,7 @@ If you prefer not to use the polling bridge, map your SCADA channel names to the
 - `integrity`
 - `comm_freq`
 
-If a tag is missing, the adapter falls back to nominal defaults.
+If required tags are missing, ingest is rejected for strict live mode.
 
 **5. What comes back**
 
@@ -207,14 +182,14 @@ For a simple deployment, use this flow:
 
 1. Rapid SCADA exports current tag values.
 2. A small script/service converts them to the JSON structure above.
-3. The script posts to `/v1/scada/ingest/tags`.
+3. The bridge posts one batched payload to `/v1/scada/ingest/tags/batch`.
 4. The response is logged back into SCADA or shown in the operator HMI.
 
 **8. Files involved**
 
 | File | Purpose |
 |------|---------|
-| [smartgrid_mas/api/app.py](smartgrid_mas/api/app.py) | FastAPI with `/v1/scada/ingest/tags` endpoint |
+| [smartgrid_mas/api/app.py](smartgrid_mas/api/app.py) | FastAPI with `/v1/scada/ingest/tags/batch` endpoint |
 | [smartgrid_mas/integration/scada_adapter.py](smartgrid_mas/integration/scada_adapter.py) | Tag normalisation and score request builder |
-| [scripts/pull_rapidscada_to_api.ps1](scripts/pull_rapidscada_to_api.ps1) | **Rapid SCADA polling bridge** (port 10008 → port 8000) |
+| [scripts/pull_rapidscada_to_api.ps1](scripts/pull_rapidscada_to_api.ps1) | **Rapid SCADA polling bridge** (port 10109 → port 8000 batch ingest) |
 | [scripts/push_scada_tags_to_api.ps1](scripts/push_scada_tags_to_api.ps1) | Manual tag push (sample or JSON file) |
