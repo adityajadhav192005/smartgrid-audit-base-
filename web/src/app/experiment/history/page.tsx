@@ -1,1 +1,1 @@
-export { default } from '../../history/page'
+export { default } from '../../rapid-scada/timeline/page'

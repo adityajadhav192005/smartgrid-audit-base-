@@ -16,8 +16,6 @@ This is an end-to-end cyber-physical smart-grid security audit framework. It ext
 - Detects anomalies and cyber attacks using a 3-modality voting ensemble
 - Schedules audit resources dynamically using Q-learning + gradient descent
 - Explains every decision at the feature level (XAI)
-- Records every audit on a blockchain-style tamper-evident ledger
-- Aggregates model weights across agent clusters using federated learning
 - Integrates with live Rapid SCADA for real telemetry
 - Presents everything through a 26-page operational dashboard
 
@@ -45,8 +43,6 @@ This is an end-to-end cyber-physical smart-grid security audit framework. It ext
 **What the base paper lacks (and this project adds):**
 - No live SCADA integration
 - No XAI (black-box decisions)
-- No blockchain audit trail
-- No federated learning
 - No real implementation beyond simulation
 - No dual-branch LSTM
 - No behavioral signature detection
@@ -352,90 +348,15 @@ The operator sees this as a bar chart and a text explanation: "Agent GEN-07 flag
 
 ---
 
-## PART 6: BLOCKCHAIN AUDIT LEDGER
+## PART 6: RAPID SCADA INTEGRATION
 
-### 6.1 How It Works
-
-Every audit event is stored as:
-
-```
-hash = SHA256(prev_hash + agent_id + timestamp + score + action + severity)
-```
-
-This creates a hash chain. If any record is modified, the chain breaks. Verification checks every link.
-
-### 6.2 Why Not A Regular Database
-
-| Property | Regular DB | Hash Chain |
-|----------|-----------|-----------|
-| Can be edited silently | Yes | No |
-| Integrity verifiable | Only with access log | Always |
-| Tamper evidence | Requires audit of the auditor | Built-in |
-| Distributed trust | No | Yes (with distributed blockchain) |
-
-**Implementation:** SQLite-backed in the prototype. In production: Hyperledger Fabric or Ethereum smart contracts.
-
-### 6.3 What Gets Recorded
-
-- Agent ID and timestamp
-- Anomaly score, LSTM probability
-- Audit action (INCREASE/DECREASE/HOLD)
-- Severity classification (CRITICAL/HIGH/MEDIUM/LOW)
-- Feature explanation top-3 contributors
-- Previous hash (chain link)
-
----
-
-## PART 7: FEDERATED LEARNING
-
-### 7.1 The Privacy Problem
-
-In a real multi-utility deployment:
-- Utility A monitors 500 generators
-- Utility B monitors 300 substations
-- Utility C monitors 200 PMUs
-
-Utility A will not share its raw telemetry with B and C — it reveals operational patterns, commercial information, and potential vulnerabilities.
-
-### 7.2 Federated Learning Solution
-
-**FedAvg (Federated Averaging):**
-
-```
-Round 1: Each cluster trains locally on its own data
-Round 2: Each cluster sends model weight updates (not data) to coordinator
-Round 3: Coordinator computes weighted average of weight updates
-Round 4: Coordinator broadcasts updated global model
-Repeat
-```
-
-No raw data ever leaves the cluster. The global model improves from combined knowledge.
-
-**Clusters in this project:**
-- Cluster 1: GEN-01 to GEN-20 (generators)
-- Cluster 2: SUB-21 to SUB-50 (substations)
-- Cluster 3: PMU-51 to PMU-75 (PMUs)
-- Cluster 4: BRK-76 to BRK-100 (breakers)
-
-Each cluster trains an LSTM on its local data. FedAvg aggregates across all four.
-
-### 7.3 Why This Improves The Model
-
-Without federation: each cluster only sees its own agent type's patterns.
-With federation: a generator cluster learns substation attack signatures via the aggregated model.
-Cross-domain pattern sharing without cross-domain data sharing.
-
----
-
-## PART 8: RAPID SCADA INTEGRATION
-
-### 8.1 Why Rapid SCADA Exists In This Project
+### 6.1 Why Rapid SCADA Exists In This Project
 
 The base paper is pure simulation — no SCADA, no live data, no real integration.
 
 Adding Rapid SCADA demonstrates that the algorithm works in a real OT integration context, not just on CSV files. This is the key differentiator for the viva.
 
-### 8.2 What Is Real vs What Is Simulated
+### 6.2 What Is Real vs What Is Simulated
 
 | Component | Real or Simulated | Why |
 |-----------|------------------|-----|
@@ -447,7 +368,7 @@ Adding Rapid SCADA demonstrates that the algorithm works in a real OT integratio
 | Physical process values (voltage etc.) | **Simulated** | Calculated channels, not field devices |
 | Cyber metrics (packet_loss etc.) | **Simulated** | Engineered baselines, no IDS |
 
-### 8.3 The Alternative Approaches And Why We Chose This
+### 6.3 The Alternative Approaches And Why We Chose This
 
 | Option | Problem |
 |--------|---------|
@@ -459,9 +380,9 @@ Adding Rapid SCADA demonstrates that the algorithm works in a real OT integratio
 
 ---
 
-## PART 9: THE DASHBOARD
+## PART 7: THE DASHBOARD
 
-### 9.1 Why A Full Dashboard
+### 7.1 Why A Full Dashboard
 
 The base paper has no dashboard. An academic reviewer might accept results in a table. An industry reviewer expects to see the system working. A viva examiner can be shown a live demo.
 
@@ -470,7 +391,7 @@ The dashboard makes the project:
 - Credible (looks like a real system)
 - Defensible (each page can be explained)
 
-### 9.2 The 26 Pages
+### 7.2 The 26 Pages
 
 **Experiment Running (13 pages):**
 
@@ -479,7 +400,7 @@ The dashboard makes the project:
 | Operations Overview | Headline metrics vs paper, anomaly trend, attack volume, top risky agents |
 | Risk Analytics | Per-agent risk scores, risk distribution, trend over time |
 | Threat Events | Live list of detected threats with severity and timestamp |
-| Audit Trail | Blockchain-backed audit log with filter and search |
+| Audit Trail | Audit log with filter and search |
 | Response Workflow | Mitigation actions taken, response timeline |
 | Decision Explainability | Feature attribution charts per agent |
 | Asset/Topology View | 100-agent grid topology with colour-coded status |
@@ -498,7 +419,7 @@ The dashboard makes the project:
 | Risk Analytics | Live risk distribution from SCADA polling |
 | Monitor | Real-time score per agent, updating every 5s |
 | Threat Events | Live alerts from SCADA pipeline |
-| Audit Trail | Live audit decisions with blockchain hash |
+| Audit Trail | Live audit decisions with severity and timestamp |
 | Response Workflow | Live mitigation actions |
 | Decision Explainability | Live feature attribution for last flagged agent |
 | Asset/Topology | Live topology with colour-coded anomaly status |
@@ -510,9 +431,9 @@ The dashboard makes the project:
 
 ---
 
-## PART 10: METRICS — EVERY NUMBER
+## PART 8: METRICS — EVERY NUMBER
 
-### 10.1 Primary Benchmark (N=100, 24h cycle, 10 seeds)
+### 8.1 Primary Benchmark (N=100, 24h cycle, 10 seeds)
 
 | Metric | Value | Std | Paper | Delta |
 |--------|-------|-----|-------|-------|
@@ -528,7 +449,7 @@ The dashboard makes the project:
 **Why F1 is low:**
 F1 = 2 × Precision × Recall / (Precision + Recall). Recall = 100% (we never miss attacks). But precision is ~15% because we flag ~67 false positives out of ~400 total flags in 24h. This is a recall-optimised design — for security, missing an attack is far worse than investigating a false positive. The low F1 is an honest acknowledgment of this trade-off.
 
-### 10.2 Multi-Scale Results
+### 8.2 Multi-Scale Results
 
 | N | Accuracy | Risk Mitig. | Cost Eff. | Attack Rate ↓ |
 |---|----------|------------|----------|--------------|
@@ -536,7 +457,7 @@ F1 = 2 × Precision × Recall / (Precision + Recall). Recall = 100% (we never mi
 | 200 | 99.01% | 96.65% | 49.22% | 75.13% |
 | 500 | 99.08% | 82.36% | 73.19% | 34.20% |
 
-### 10.3 New Metrics (Not In Base Paper)
+### 8.3 New Metrics (Not In Base Paper)
 
 **Cost-Adjusted Mitigation:**
 ```
@@ -558,9 +479,9 @@ Measures how stable the dual-layer detection is over time.
 
 ---
 
-## PART 11: KEY DESIGN DECISIONS AND ALTERNATIVES
+## PART 9: KEY DESIGN DECISIONS AND ALTERNATIVES
 
-### 11.1 Why Python + FastAPI (Not Django, Flask, Node)
+### 9.1 Why Python + FastAPI (Not Django, Flask, Node)
 
 | Framework | Reason Not Chosen |
 |-----------|------------------|
@@ -569,7 +490,7 @@ Measures how stable the dual-layer detection is over time.
 | Node.js | Python has better ML library ecosystem (PyTorch, NumPy, sklearn) |
 | **FastAPI** | ✅ Async, OpenAPI auto-docs, Pydantic validation, fast |
 
-### 11.2 Why Next.js (Not React + Express, Vue, Angular)
+### 9.2 Why Next.js (Not React + Express, Vue, Angular)
 
 | Framework | Reason Not Chosen |
 |-----------|------------------|
@@ -578,7 +499,7 @@ Measures how stable the dual-layer detection is over time.
 | Angular | Over-engineered for this size of project |
 | **Next.js** | ✅ React-based, App Router, server components, Tailwind compatible, good for dashboards |
 
-### 11.3 Why Tailwind CSS (Not Material UI, Bootstrap)
+### 9.3 Why Tailwind CSS (Not Material UI, Bootstrap)
 
 | Library | Reason Not Chosen |
 |---------|------------------|
@@ -586,7 +507,7 @@ Measures how stable the dual-layer detection is over time.
 | Bootstrap | Dated look, jQuery dependency |
 | **Tailwind** | ✅ Utility-first, easy to get a clean restrained research-dashboard look |
 
-### 11.4 Why PyTorch (Not TensorFlow, Keras)
+### 9.4 Why PyTorch (Not TensorFlow, Keras)
 
 | Framework | Reason Not Chosen |
 |-----------|------------------|
@@ -594,18 +515,11 @@ Measures how stable the dual-layer detection is over time.
 | Keras | Less control over custom losses and training loops |
 | **PyTorch** | ✅ Dynamic computation graph, easy custom loss (focal loss), research standard |
 
-### 11.5 Why SQLite For Blockchain Ledger (Not PostgreSQL, MongoDB)
-
-- SQLite is zero-config, runs in-process, no server needed
-- Sufficient for the research prototype scale (100 agents × 8640 timesteps)
-- In production: Hyperledger Fabric or PostgreSQL with hash chain
-- Our hash chain logic is database-agnostic — swapping the backend is trivial
-
 ---
 
-## PART 12: FILE MAP — EVERY KEY FILE
+## PART 10: FILE MAP — EVERY KEY FILE
 
-### 12.1 Core Python Backend
+### 10.1 Core Python Backend
 
 | File | Purpose |
 |------|---------|
@@ -613,7 +527,7 @@ Measures how stable the dual-layer detection is over time.
 | `smartgrid_mas/run_all.py` | Main experiment runner |
 | `smartgrid_mas/api_server.py` | Entry point for uvicorn |
 
-### 12.2 Detection
+### 10.2 Detection
 
 | File | Purpose |
 |------|---------|
@@ -626,7 +540,7 @@ Measures how stable the dual-layer detection is over time.
 | `smartgrid_mas/detection/multilayer_detection.py` | **Multi-layer detection (Layers B + C)** — sustained_suspicion, CUSUM FDI, network DoS rule, integrity MITM, OR-with-precedence combiner |
 | `smartgrid_mas/detection/network_attack_evidence.py` | Network attack typing evidence (legacy / Layer A support) |
 
-### 12.3 Audit Scheduling
+### 10.3 Audit Scheduling
 
 | File | Purpose |
 |------|---------|
@@ -636,7 +550,7 @@ Measures how stable the dual-layer detection is over time.
 | `smartgrid_mas/audit/constraints.py` | Budget and capacity enforcement |
 | `smartgrid_mas/audit/state_encoder.py` | Agent state → Q-table index |
 
-### 12.4 SCADA Integration
+### 10.4 SCADA Integration
 
 | File | Purpose |
 |------|---------|
@@ -645,15 +559,7 @@ Measures how stable the dual-layer detection is over time.
 | `scripts/pull_rapidscada_to_api.ps1` | PowerShell bridge (830 lines) |
 | `scripts/start_local_demo.ps1` | Full stack launcher |
 
-### 12.5 Blockchain + Federated
-
-| File | Purpose |
-|------|---------|
-| `smartgrid_mas/integration/blockchain_logger.py` | Hash-chain audit ledger |
-| `smartgrid_mas/federated/fedavg.py` | FedAvg aggregation |
-| `smartgrid_mas/federated/orchestrator.py` | Federated round coordination |
-
-### 12.6 XAI + Response
+### 10.5 XAI + Response
 
 | File | Purpose |
 |------|---------|
@@ -661,7 +567,7 @@ Measures how stable the dual-layer detection is over time.
 | `smartgrid_mas/response/response_controller.py` | Severity → mitigation action |
 | `smartgrid_mas/response/mitigation_actions.py` | Concrete mitigation steps |
 
-### 12.7 Dashboard (Key Pages)
+### 10.6 Dashboard (Key Pages)
 
 | File | Purpose |
 |------|---------|
@@ -675,9 +581,9 @@ Measures how stable the dual-layer detection is over time.
 
 ---
 
-## PART 13: HOW TO RUN EVERYTHING
+## PART 11: HOW TO RUN EVERYTHING
 
-### 13.1 Prerequisites
+### 11.1 Prerequisites
 
 ```powershell
 # Python 3.10+
@@ -689,7 +595,7 @@ cd web && npm install
 # Rapid SCADA must be installed and running on port 10109
 ```
 
-### 13.2 Full Local Demo
+### 11.2 Full Local Demo
 
 ```powershell
 .\scripts\start_local_demo.ps1 -OpenDashboard
@@ -697,7 +603,7 @@ cd web && npm install
 
 Starts: Rapid SCADA → Backend → Bridge → Dashboard
 
-### 13.3 Individual Components
+### 11.3 Individual Components
 
 ```powershell
 # Backend only
@@ -722,7 +628,7 @@ python -m pytest smartgrid_mas/tests -v
 .\scripts\trace_rapidscada_live_agents.ps1
 ```
 
-### 13.4 API Endpoints
+### 11.4 API Endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
@@ -738,10 +644,10 @@ python -m pytest smartgrid_mas/tests -v
 
 ---
 
-## PART 14: VIVA PREPARATION — CRITICAL QUESTIONS
+## PART 12: VIVA PREPARATION — CRITICAL QUESTIONS
 
 **Q: What is your research contribution?**
-20+ contributions beyond the base paper. The main ones: 3-modality detection ensemble (reduces FPR from 3.2% to 0.24%), hybrid Q-learning + gradient scheduler (improves cost efficiency from 42.5% to 54.77%), live Rapid SCADA integration (paper has none), XAI feature attribution (paper is black-box), blockchain audit ledger, federated learning.
+22 contributions beyond the base paper. The main ones: 3-modality detection ensemble (reduces FPR from 3.2% to 0.24%), hybrid Q-learning + gradient scheduler (improves cost efficiency from 42.5% to 54.77%), live Rapid SCADA integration (paper has none), XAI feature attribution (paper is black-box), 3-layer multi-detector architecture for stealthy attacks, and a 5-method comparative study.
 
 **Q: How do you know your results are better than the paper?**
 We match the paper's 24-hour evaluation methodology exactly. At 24h, true negatives reach 8.6 million. 68 FPs over 8.6M negatives = 99.76% accuracy. Validated over 10 seeds, std 0.03%. Every reported metric beats the paper on the same evaluation horizon.
@@ -750,7 +656,7 @@ We match the paper's 24-hour evaluation methodology exactly. At 24h, true negati
 Because we optimise for recall first. In security, missing an attack (false negative) costs far more than investigating a false positive. Recall = 100%, Precision ≈ 15%, F1 ≈ 25.7%. This is a deliberate trade-off, not a bug.
 
 **Q: What is the real innovation vs just running the paper's algorithm?**
-The algorithm is completely different. The paper uses single-modality deviation scoring. We add LSTM with dual branches + calibration, behavioral signatures, Tier-A suppression, hybrid Q-learning + gradient scheduling (the paper only proposes this conceptually), XAI, blockchain, and federated learning. Plus the live SCADA integration which the paper has nothing like.
+The algorithm is completely different. The paper uses single-modality deviation scoring. We add LSTM with dual branches + calibration, behavioral signatures, Tier-A suppression, a 3-layer multi-detector architecture (CUSUM for FDI, network rules for DoS, integrity checks for MITM), hybrid Q-learning + gradient scheduling (the paper only proposes this conceptually), and XAI. Plus the live SCADA integration which the paper has nothing like.
 
 **Q: Is this system ready for production?**
 No — and we say that honestly. It is a research prototype. Production would require real PLC/RTU hardware, IDS/SIEM for cyber metrics, adaptive baselines, and regulatory certification. These are documented as future work. The base paper has no production path at all.

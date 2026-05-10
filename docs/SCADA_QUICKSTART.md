@@ -164,7 +164,7 @@ The API response includes:
 - `risk_score`
 - `decision`
 - `severity`
-- `ledger` (blockchain anchor metadata: `event_id`, `tx_id`, `chain_hash`)
+- `audit_action` (scheduler decision: INCREASE/DECREASE/HOLD)
 - `xai.physical`
 - `xai.cyber`
 - `xai.decision`

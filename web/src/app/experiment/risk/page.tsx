@@ -1,1 +1,1 @@
-export { default } from '../../anomalies/page'
+export { default } from '../../rapid-scada/risk/page'

@@ -1,1 +1,1 @@
-export { default } from '../../audits/page'
+export { default } from '../../rapid-scada/audits/page'

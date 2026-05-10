@@ -1,47 +1,14 @@
 'use client'
 
-import Link from 'next/link'
-import { Badge } from '@/components/ui/Badge'
 import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
 import { useDashboard } from '@/lib/dashboardContext'
-import { Code2, Link2, FileBarChart2, Database, Plug2, ArrowUpRight } from 'lucide-react'
+import { Server, Cpu, Shield, BarChart3 } from 'lucide-react'
 
-const TOOLS = [
-  {
-    href: '/api-studio',
-    title: 'API Studio',
-    description: 'Inspect and test backend endpoints from one place.',
-    icon: Code2,
-    tag: 'Developer',
-  },
-  {
-    href: '/blockchain',
-    title: 'Blockchain Ledger',
-    description: 'Review chain integrity and anchored audit events.',
-    icon: Link2,
-    tag: 'Integrity',
-  },
-  {
-    href: '/reports',
-    title: 'Reports & Export',
-    description: 'Generate and download run artifacts and reports.',
-    icon: FileBarChart2,
-    tag: 'Artifacts',
-  },
-  {
-    href: '/datasets',
-    title: 'Datasets',
-    description: 'View benchmark and experimental dataset sources.',
-    icon: Database,
-    tag: 'Data',
-  },
-  {
-    href: '/integrations',
-    title: 'Integrations',
-    description: 'Manage SCADA bridges and external connectors.',
-    icon: Plug2,
-    tag: 'Connectivity',
-  },
+const PLATFORM_INFO = [
+  { label: 'Backend', value: 'FastAPI on port 8000', icon: Server },
+  { label: 'Frontend', value: 'Next.js 14 on port 3000', icon: Cpu },
+  { label: 'Detection', value: '3-Modality + Multi-Layer', icon: Shield },
+  { label: 'Scheduler', value: 'Hybrid Q-Learning + Gradient', icon: BarChart3 },
 ]
 
 export default function AdvancedPage() {
@@ -52,7 +19,7 @@ export default function AdvancedPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Platform Center</h1>
-        <p className="text-sm text-slate-400 mt-1">Secondary platform utilities for verification, reporting, APIs, and integrations</p>
+        <p className="text-sm text-slate-400 mt-1">System overview and platform information</p>
       </div>
 
       <ViewModeBanner section="Platform Center" />
@@ -65,30 +32,23 @@ export default function AdvancedPage() {
 
       {!scadaBlocked && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {TOOLS.map((tool) => {
-            const Icon = tool.icon
+          {PLATFORM_INFO.map((item) => {
+            const Icon = item.icon
             return (
-              <Link
-                key={tool.href}
-                href={tool.href}
-                className="glass-card p-5 hover:border-cyan-500/30 transition-colors group"
+              <div
+                key={item.label}
+                className="glass-card p-5"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-                      <Icon size={16} className="text-cyan-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-slate-200">{tool.title}</div>
-                      <div className="text-xs text-slate-500 mt-1">{tool.description}</div>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                    <Icon size={16} className="text-cyan-400" />
                   </div>
-                  <ArrowUpRight size={14} className="text-slate-500 group-hover:text-cyan-400 transition-colors" />
+                  <div>
+                    <div className="text-xs text-slate-500">{item.label}</div>
+                    <div className="text-sm font-semibold text-slate-200">{item.value}</div>
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <Badge variant="info" className="text-[10px]">{tool.tag}</Badge>
-                </div>
-              </Link>
+              </div>
             )
           })}
         </div>

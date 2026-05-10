@@ -21,7 +21,7 @@
 - Paper: Priyadarsini et al., "Enhancing Security of Distributed MAS in Smart Grids," ACM TOPS 2025, NIT Raipur
 - Base paper achieves: Accuracy 98.4%, FPR 3.2%, Risk Mitigation 87.9%, Cost Efficiency 42.5%
 - What the paper proposes: deviation-based anomaly scoring + dynamic audit scheduling concept
-- What it lacks: live SCADA, XAI, blockchain ledger, federated learning, full implementation
+- What it lacks: live SCADA, XAI, multi-layer detection, method comparison, full implementation
 
 **Speaker note:** "Our work is not a repetition of the paper. It is an extension with 20+ new contributions."
 
@@ -48,7 +48,7 @@
    Implement a hybrid Q-learning + gradient descent scheduler that allocates audit resources to the highest-risk assets within a budget
 
 3. **Objective 3: Operational Integration**
-   Connect the detection and scheduling pipeline to live Rapid SCADA telemetry, with explainability and tamper-evident audit logging
+   Connect the detection and scheduling pipeline to live Rapid SCADA telemetry, with explainability and operational dashboard
 
 ---
 
@@ -65,8 +65,6 @@
   ├── Hybrid Scheduler (Q-Learning + Gradient)
   ├── Response & Mitigation
   ├── XAI Feature Attribution
-  ├── Blockchain Audit Ledger
-  └── Federated Learning (FedAvg)
          ↓ HTTP API
 [Next.js Dashboard — 26 pages]
   ├── Experiment Running workspace (13 pages)
@@ -195,49 +193,7 @@ The dashboard shows a bar chart of contributions. The operator knows exactly why
 
 ---
 
-## Slide 11 — Blockchain Audit Ledger
-
-Every audit event is stored as:
-
-```json
-{
-  "event_id": "sha256 of previous hash + event content",
-  "agent_id": "GEN-07",
-  "timestamp": "2025-05-07T14:32:11Z",
-  "score": 4.21,
-  "action": "INCREASE_AUDIT",
-  "severity": "HIGH",
-  "prev_hash": "abc123..."
-}
-```
-
-If any record is modified, the chain breaks — immediately detectable.
-
-**Why not just a database?** A database admin can silently edit records. A hash chain cannot be tampered with without breaking the integrity check.
-
-**Implementation:** SQLite-backed hash chain. In production: Hyperledger Fabric or Ethereum smart contracts.
-
----
-
-## Slide 12 — Federated Learning
-
-**Problem:** In a real multi-utility deployment, utilities will not share raw telemetry — it reveals operational patterns, commercial secrets, and potential vulnerabilities.
-
-**Solution — FedAvg:**
-
-```
-Global model = average of local model weights (weighted by dataset size)
-
-Each cluster trains locally → shares only weight updates → no raw data shared
-```
-
-**Implementation:** 4 agent clusters (GEN cluster, SUB cluster, PMU cluster, BRK cluster). Each trains an LSTM locally. FedAvg aggregates and broadcasts the improved global model.
-
-**Why this is a real contribution:** The base paper does not address privacy-preserving learning. This directly addresses one of the paper's "future work" items.
-
----
-
-## Slide 13 — Results: Head-to-Head vs Base Paper
+## Slide 11 — Results: Head-to-Head vs Base Paper
 
 | Metric | Our System | Base Paper | Delta |
 |--------|-----------|-----------|-------|
@@ -380,8 +336,6 @@ Five detection methods evaluated on the same simulation data (100 agents, 24h cy
 11. Live Rapid SCADA integration (paper has none)
 12. PowerShell bridge with batch ingest
 13. 670-channel SCADA model (300 base + 370 cyber addon)
-14. Blockchain audit ledger (hash-chained tamper evidence)
-15. Federated learning with FedAvg (4 agent clusters)
 16. Feature-level XAI with ranked contributions
 17. 26-page operational dashboard
 18. Dual workspace (experiment vs live SCADA)
@@ -403,7 +357,7 @@ This project takes the theoretical framework from Priyadarsini et al. and builds
 - FPR 0.24% vs paper's 3.2%
 - Live Rapid SCADA integration with 100 agents
 - Explainable decisions at the feature level
-- Tamper-evident blockchain audit trail
-- Federated learning for privacy preservation
+- 3-layer multi-detector architecture for stealthy attacks
+- 5-method comparative study validating the approach
 
 **The main contribution is an end-to-end cyber-physical audit framework that detects, explains, schedules, and records — in real time, on real SCADA data.**

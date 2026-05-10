@@ -25,8 +25,6 @@ from pydantic import BaseModel, Field
 
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score, anomaly_flag_from_score
 from smartgrid_mas.xai.explain import explain_deviation, explain_audit_decision
-from smartgrid_mas.federated.fedavg import aggregate_vectors, aggregate_state_dicts
-from smartgrid_mas.federated.orchestrator import FederatedCoordinator
 from smartgrid_mas.integration.scada_adapter import (
     get_scada_algorithm_config,
     normalize_scada_tags,
@@ -34,13 +32,12 @@ from smartgrid_mas.integration.scada_adapter import (
 )
 from smartgrid_mas.integration.live_experiment_pipeline import LiveExperimentPipeline
 from smartgrid_mas.integration.ids_adapter import recommend_action_from_alert
-from smartgrid_mas.integration.blockchain_logger import BlockchainLogger
 
 
 app = FastAPI(
     title="SmartGrid MAS API",
     version="0.1.0",
-    description="Basic REST API for SCADA integration, XAI, and federated aggregation.",
+    description="REST API for SCADA integration, anomaly detection, and XAI.",
 )
 
 
@@ -117,16 +114,6 @@ class BatchScoreRequest(BaseModel):
     records: List[ScoreRequest]
 
 
-class FederatedVectorRequest(BaseModel):
-    client_vectors: List[List[float]]
-    sample_counts: List[int]
-
-
-class FederatedStateRequest(BaseModel):
-    client_state_dicts: List[Dict[str, Any]]
-    sample_counts: List[int]
-
-
 class ScadaTagsRequest(BaseModel):
     agent_id: str
     tags: Dict[str, float]
@@ -143,51 +130,12 @@ class IdsAlertRequest(BaseModel):
     alert: Dict[str, Any]
 
 
-class FederatedRegisterRequest(BaseModel):
-    client_id: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class FederatedStartRoundRequest(BaseModel):
-    round_id: str
-    model_name: str = "anomaly_detector"
-    expected_clients: List[str] = Field(default_factory=list)
-    base_model: Optional[Dict[str, Any]] = None
-
-
-class FederatedSubmitUpdateRequest(BaseModel):
-    round_id: str
-    client_id: str
-    sample_count: int = Field(gt=0)
-    model_state: Dict[str, Any]
-
-
-class FederatedFinalizeRoundRequest(BaseModel):
-    round_id: str
-
-
-class BlockchainAnchorRequest(BaseModel):
-    event_type: str = "manual_event"
-    agent_id: str
-    severity: str = "HIGH"
-    payload: Dict[str, Any] = Field(default_factory=dict)
-    force: bool = False
-
-
-class BlockchainVerifyPayloadRequest(BaseModel):
-    payload: Dict[str, Any]
-    prev_hash: str
-    chain_hash: str
-
-
 class RuntimeSettingsPayload(BaseModel):
     values: Dict[str, Any] = Field(default_factory=dict)
     runtime_overrides: Dict[str, Any] = Field(default_factory=dict)
     runtime_env: Dict[str, str] = Field(default_factory=dict)
 
 
-coordinator = FederatedCoordinator()
-blockchain_logger = BlockchainLogger()
 live_experiment_pipeline = LiveExperimentPipeline()
 
 
@@ -1027,7 +975,7 @@ def _explanations_path() -> Path:
     raise FileNotFoundError("No explanations CSV found. Set SMARTGRID_EXPLANATIONS_PATH or generate logs/audit_explanations.csv")
 
 
-def _score_core(payload: ScoreRequest, anchor_event: bool = True) -> Dict[str, Any]:
+def _score_core(payload: ScoreRequest, anchor_event: bool = False) -> Dict[str, Any]:
     score = deviation_score(
         x_phys=np.asarray(payload.x_phys, dtype=float),
         bx=np.asarray(payload.bx, dtype=float),
@@ -1074,29 +1022,7 @@ def _score_core(payload: ScoreRequest, anchor_event: bool = True) -> Dict[str, A
 
     severity = _severity_from_score(float(score), float(payload.score_threshold))
     result["severity"] = severity
-    if anchor_event:
-        result["ledger"] = _anchor_score_result(payload, result)
     return result
-
-
-def _anchor_score_result(payload: ScoreRequest, result: Dict[str, Any], source: str = "live") -> Dict[str, Any]:
-    anchor_payload = {
-        "agent_id": payload.agent_id,
-        "deviation_score": float(result["deviation_score"]),
-        "anomaly_flag": int(result["anomaly_flag"]),
-        "risk_score": float(result["risk_score"]),
-        "decision": result["decision"],
-        "score_threshold": float(payload.score_threshold),
-        "criticality_weight": float(payload.criticality_weight),
-        "xai_decision": result["xai"]["decision"],
-        "source": str(source or "live"),
-    }
-    return blockchain_logger.anchor_event(
-        event_type="audit_decision",
-        agent_id=payload.agent_id,
-        severity=str(result["severity"]),
-        payload=anchor_payload,
-    )
 
 
 def _process_scada_tags_payload(payload: ScadaTagsRequest) -> Dict[str, Any]:
@@ -1143,12 +1069,6 @@ def _process_scada_tags_batch_payload(payload: BatchScadaTagsRequest) -> List[Di
 
         is_primary_agent = str(record.agent_id).strip().upper() == SCADA_PRIMARY_AGENT_ID.upper()
         payload_source = str(getattr(record, "source", "live") or "live").strip().lower()
-        should_anchor = (payload_source != "fallback") and (
-            is_primary_agent or int(result.get("anomaly_flag", 0)) >= 1
-        )
-        if should_anchor:
-            result["ledger"] = _anchor_score_result(req, result, source=payload_source)
-
         rapid_scada_live.ingest_snapshot(
             agent_id=record.agent_id,
             tags=normalized_tags,
@@ -1182,9 +1102,6 @@ def _process_scada_tags_payload_legacy(payload: ScadaTagsRequest) -> Dict[str, A
     result = _score_core(req, anchor_event=False)
     is_primary_agent = str(payload.agent_id).strip().upper() == SCADA_PRIMARY_AGENT_ID.upper()
     payload_source = str(getattr(payload, "source", "live") or "live").strip().lower()
-    should_anchor = (payload_source != "fallback") and (is_primary_agent or int(result.get("anomaly_flag", 0)) >= 1)
-    if should_anchor:
-        result["ledger"] = _anchor_score_result(req, result, source=payload_source)
     rapid_scada_live.ingest_snapshot(
         agent_id=payload.agent_id,
         tags=normalized_tags,
@@ -1215,48 +1132,6 @@ def shutdown_event() -> None:
 def health() -> Dict[str, str]:
     return {"status": "ok"}
 
-
-@app.get("/v1/db/health")
-def db_health(_: str = Depends(_security_guard)) -> Dict[str, Any]:
-    return blockchain_logger.status()
-
-
-@app.get("/v1/blockchain/status")
-def blockchain_status(_: str = Depends(_security_guard)) -> Dict[str, Any]:
-    return blockchain_logger.status()
-
-
-@app.get("/v1/blockchain/events")
-def blockchain_events(limit: int = 50, _: str = Depends(_security_guard)) -> Dict[str, Any]:
-    return blockchain_logger.recent_events(limit=limit)
-
-
-@app.get("/v1/blockchain/events/{event_id}/verify")
-def blockchain_verify_event(event_id: int, _: str = Depends(_security_guard)) -> Dict[str, Any]:
-    out = blockchain_logger.verify_event(event_id)
-    if not out.get("exists", False):
-        raise HTTPException(status_code=404, detail=f"Event id {event_id} not found")
-    return out
-
-
-@app.post("/v1/blockchain/verify-payload")
-def blockchain_verify_payload(payload: BlockchainVerifyPayloadRequest, _: str = Depends(_security_guard)) -> Dict[str, Any]:
-    return blockchain_logger.verify_payload(
-        payload=payload.payload,
-        prev_hash=payload.prev_hash,
-        chain_hash=payload.chain_hash,
-    )
-
-
-@app.post("/v1/blockchain/anchor")
-def blockchain_anchor(payload: BlockchainAnchorRequest, _: str = Depends(_security_guard)) -> Dict[str, Any]:
-    return blockchain_logger.anchor_event(
-        event_type=payload.event_type,
-        agent_id=payload.agent_id,
-        severity=payload.severity,
-        payload=payload.payload,
-        force=payload.force,
-    )
 
 
 @app.get("/grid/status")
@@ -1415,82 +1290,6 @@ def ids_alert(payload: IdsAlertRequest, _: str = Depends(_security_guard)) -> Di
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-@app.post("/v1/federated/aggregate/vector")
-def fedavg_vector(payload: FederatedVectorRequest, _: str = Depends(_security_guard)) -> Dict:
-    try:
-        agg = aggregate_vectors(payload.client_vectors, payload.sample_counts)
-        return {"aggregated_vector": agg, "num_clients": len(payload.client_vectors)}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/v1/federated/aggregate/state")
-def fedavg_state(payload: FederatedStateRequest, _: str = Depends(_security_guard)) -> Dict:
-    try:
-        agg = aggregate_state_dicts(payload.client_state_dicts, payload.sample_counts)
-        return {"aggregated_state": agg, "num_clients": len(payload.client_state_dicts)}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/v1/federated/clients/register")
-def federated_register_client(
-    payload: FederatedRegisterRequest,
-    _: str = Depends(_security_guard),
-) -> Dict:
-    try:
-        return coordinator.register_client(payload.client_id, payload.metadata)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/v1/federated/rounds/start")
-def federated_start_round(
-    payload: FederatedStartRoundRequest,
-    _: str = Depends(_security_guard),
-) -> Dict:
-    try:
-        return coordinator.start_round(
-            round_id=payload.round_id,
-            model_name=payload.model_name,
-            expected_clients=payload.expected_clients,
-            base_model=payload.base_model,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/v1/federated/rounds/submit")
-def federated_submit_update(
-    payload: FederatedSubmitUpdateRequest,
-    _: str = Depends(_security_guard),
-) -> Dict:
-    try:
-        return coordinator.submit_update(
-            round_id=payload.round_id,
-            client_id=payload.client_id,
-            sample_count=payload.sample_count,
-            model_state=payload.model_state,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/v1/federated/rounds/finalize")
-def federated_finalize_round(
-    payload: FederatedFinalizeRoundRequest,
-    _: str = Depends(_security_guard),
-) -> Dict:
-    try:
-        return coordinator.finalize_round(payload.round_id)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/v1/federated/status")
-def federated_status(_: str = Depends(_security_guard)) -> Dict:
-    return coordinator.get_status()
 
 
 @app.post("/v1/runs/start")

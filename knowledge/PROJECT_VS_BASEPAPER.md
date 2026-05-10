@@ -35,8 +35,6 @@ Single-layer, offline, no operational integration.
   |-- Hybrid Q-Learning + Gradient Scheduler
   |-- Response & Mitigation Engine
   |-- XAI Feature Attribution
-  |-- Blockchain Audit Ledger
-  |-- Federated Learning (FedAvg)
        -> [Next.js Dashboard (26 pages)]
 ```
 Multi-layer, real-time, live SCADA integration.
@@ -49,10 +47,8 @@ Multi-layer, real-time, live SCADA integration.
 | Detection layers | 1 (deviation scoring) | 4 (deviation + LSTM + behavioral + multi-layer) | Catches stealthy attacks |
 | Scheduling | Q-learning only | Q-learning + gradient descent (hybrid) | Continuous frequency optimization |
 | Explainability | None | Feature-level XAI with per-feature contribution | Operator trust and auditability |
-| Audit trail | None | Hash-chained blockchain ledger (SQLite) | Tamper evidence |
-| Privacy | Not addressed | Federated learning (FedAvg, 4 clusters) | Multi-utility deployment |
 | Dashboard | None | 26-page Next.js operational UI | Operational readiness |
-| API | None | 36-endpoint FastAPI REST API | Integration-ready |
+| API | None | 24-endpoint FastAPI REST API | Integration-ready |
 
 ---
 
@@ -191,10 +187,8 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 | Budget constraints | Conceptual | Implemented |
 | Live SCADA integration | No | Yes (Rapid SCADA, 100 agents) |
 | Feature-level XAI | No | Yes |
-| Blockchain audit ledger | No | Yes (hash-chained) |
-| Federated learning | No | Yes (FedAvg, 4 clusters) |
 | Operational dashboard | No | Yes (26 pages, 2 workspaces) |
-| REST API | No | Yes (36 endpoints) |
+| REST API | No | Yes (24 endpoints) |
 | Cloud deployment | No | Yes (Cloud Run) |
 | Per-agent-type profiles | No | Yes (GEN/SUB/PMU/BRK) |
 | Adaptive thresholds | No | Yes (risk-context based) |
@@ -213,7 +207,7 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 3. Simulation framework for MAS security evaluation
 4. Risk mitigation metric definition
 
-### Our Additional Contributions (24 total)
+### Our Additional Contributions (22 total)
 1. 3-modality voting ensemble (deviation + LSTM + behavioral)
 2. Tier-A false positive suppression
 3. Dual-branch LSTM with physical and cyber branches
@@ -227,17 +221,15 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 11. Live Rapid SCADA integration
 12. PowerShell bridge with batch ingest
 13. 670-channel SCADA model (300 base + 370 cyber addon)
-14. Blockchain audit ledger (hash-chained tamper evidence)
-15. Federated learning with FedAvg (4 agent clusters)
-16. Feature-level XAI with ranked contributions
-17. 26-page operational dashboard
-18. Dual workspace (experiment vs live SCADA)
-19. Multi-scale validation (N=100, 200, 500)
-20. Statistical significance testing (10-seed mean + std)
-21. Three-layer multi-detector architecture
-22. CUSUM-based FDI drift detection
-23. Rule-based DoS detection (2-of-3 corroboration)
-24. Integrity + temporal-jump MITM detection
+14. Feature-level XAI with ranked contributions
+15. 26-page operational dashboard
+16. Dual workspace (experiment vs live SCADA)
+17. Multi-scale validation (N=100, 200, 500)
+18. Statistical significance testing (10-seed mean + std)
+19. Three-layer multi-detector architecture
+20. CUSUM-based FDI drift detection
+21. Rule-based DoS detection (2-of-3 corroboration)
+22. Integrity + temporal-jump MITM detection
 
 ---
 
@@ -252,8 +244,6 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 | No adaptive baselines | Yes | Yes (hand-set, not learned) |
 | No comparison with other methods | Yes | **No** (5-method comparison now implemented) |
 | No explainability | Yes | **No** (XAI implemented) |
-| No tamper-evident logging | Yes | **No** (blockchain ledger) |
-| No privacy-preserving learning | Yes | **No** (federated learning) |
 | No operational dashboard | Yes | **No** (26-page dashboard) |
 
 ---
@@ -298,9 +288,7 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 | Physical device integration | Not mentioned | Planned (Modbus/OPC UA) |
 | Precision improvement | Not mentioned | Identified (cost-sensitive tuning) |
 | Larger scale (N>500) | Mentioned | Validated at N=500, plan for N=1000+ |
-| Privacy-preserving learning | Mentioned as future | **Implemented** (FedAvg) |
 | Explainability | Mentioned as future | **Implemented** (XAI) |
-| Tamper-evident audit | Mentioned as future | **Implemented** (blockchain) |
 
 ---
 
@@ -309,7 +297,7 @@ No single method can achieve high recall AND low FPR. The ensemble does.
 The base paper provides a valuable theoretical framework for dynamic audit scheduling in smart grids. Our project takes that framework and:
 
 1. **Implements it fully** — from paper equations to working code
-2. **Extends it significantly** — 24 additional contributions beyond the paper
+2. **Extends it significantly** — 22 additional contributions beyond the paper
 3. **Validates it rigorously** — 5-method comparison, multi-scale testing, statistical significance
 4. **Operationalizes it** — live SCADA integration, dashboard, API, deployment
 5. **Improves every metric** — accuracy, FPR, risk mitigation, cost efficiency, coverage

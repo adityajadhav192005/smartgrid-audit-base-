@@ -224,14 +224,14 @@ export function SettingsConfigurationPanel() {
 
       <div className="glass-card p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-semibold text-slate-300">Operations:</span>
-          <Link href="/integrations" className="text-slate-300 hover:underline">Integrations</Link>
+          <span className="font-semibold text-slate-300">Quick Links:</span>
+          <Link href="/rapid-scada/overview" className="text-slate-300 hover:underline">SCADA Overview</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/scada-live" className="text-slate-300 hover:underline">SCADA Live</Link>
+          <Link href="/experiment/overview" className="text-slate-300 hover:underline">Experiment Overview</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/api-studio" className="text-slate-300 hover:underline">API Studio</Link>
+          <Link href="/report" className="text-slate-300 hover:underline">Report</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/reports" className="text-slate-300 hover:underline">Reports</Link>
+          <Link href="/research" className="text-slate-300 hover:underline">Research</Link>
         </div>
       </div>
 

@@ -59,6 +59,18 @@ cd "D:\Mtech Main project\smartgrid-audit-base-"
 .\scripts\start_local_demo.ps1 -OpenDashboard
 ```
 
+If PowerShell blocks script execution, run with process-scoped bypass:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\scripts\start_local_demo.ps1 -OpenDashboard
+```
+
+Alternative launcher (already uses bypass):
+
+```powershell
+.\scripts\start_local_demo.cmd -OpenDashboard
+```
+
 Expected endpoints:
 
 1. Rapid SCADA Webstation: http://127.0.0.1:10109

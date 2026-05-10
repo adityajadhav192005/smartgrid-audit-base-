@@ -1,1 +1,1 @@
-export { default } from '../../attacks/page'
+export { default } from '../../rapid-scada/threats/page'

@@ -1,1 +1,1 @@
-export { default } from '../../response/page'
+export { default } from '../../rapid-scada/response/page'

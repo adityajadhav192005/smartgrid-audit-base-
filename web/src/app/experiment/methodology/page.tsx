@@ -269,7 +269,7 @@ export default function ExperimentMethodologyPage() {
             Hybrid scheduler runs Q-learning for directional decisions (INC/HOLD/DEC) refined by gradient descent for magnitude. Cluster budget allocated proportionally by aggregate cluster risk.
           </div>
           <div className="mt-2 text-[11px] text-slate-500 leading-relaxed">
-            <span className="text-amber-400 font-semibold">vs paper:</span> base paper reports 12 RL iterations to converge. Our higher iteration count reflects a larger state space (we encode 9 physical+cyber metrics + LSTM probability + cluster label + cyber-attack-family prior, vs paper's 6 metrics). Larger state space requires more samples for Q-table coverage. Per-step inference latency stays sub-50 ms.
+            <span className="text-amber-400 font-semibold">vs paper:</span> base paper reports 12 RL iterations to converge. Our higher iteration count reflects a larger state space (we encode 9 physical+cyber metrics + LSTM probability + cluster label + cyber-attack-family prior, vs paper&apos;s 6 metrics). Larger state space requires more samples for Q-table coverage. Per-step inference latency stays sub-50 ms.
           </div>
         </div>
       </div>

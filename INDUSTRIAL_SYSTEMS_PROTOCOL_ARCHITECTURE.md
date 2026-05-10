@@ -1,0 +1,337 @@
+# Industrial Systems and Protocol Architecture Manual
+
+## Project: SmartGrid AI Audit Framework
+
+This document explains the deployed cyber-physical architecture of the project as it exists now. The system has two operational workspaces:
+
+- `Experiment Running`: latest-run simulation, evaluation, and policy analysis
+- `Rapid SCADA Live`: live Rapid SCADA telemetry, scoring, audit decisions, and operator dashboards
+
+The key architectural point is simple:
+
+- the experiment workspace is driven by latest run artifacts
+- the Rapid SCADA workspace is driven by live Rapid SCADA channels
+
+They are separated intentionally so experiment telemetry does not conflict with live SCADA telemetry.
+
+---
+
+## 1. Control Layer
+
+### 1.1 Actual Control Stack
+
+The control stack is:
+
+- Rapid SCADA Webstation on `http://127.0.0.1:10109`
+- PowerShell bridge in [`scripts/pull_rapidscada_to_api.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/pull_rapidscada_to_api.ps1)
+- FastAPI backend in [`smartgrid_mas/api/app.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/api/app.py)
+- Next.js dashboard in [`web`](d:/Mtech%20Main%20project/smartgrid-audit-base-/web)
+
+Rapid SCADA is the OT telemetry source. The backend is the AI scoring and audit-decision layer. The dashboard is the operator-facing analysis and response layer.
+
+### 1.2 Live SCADA Model
+
+The Rapid SCADA live workspace now runs on a fixed `10 x 10` asset model:
+
+- `GEN-01` to `GEN-20`
+- `SUB-21` to `SUB-50`
+- `PMU-51` to `PMU-75`
+- `BRK-76` to `BRK-100`
+
+Total live SCADA agents:
+
+- `100`
+
+Rapid SCADA currently exposes all 100 agents as live calculated channels. These are live SCADA values in the transport/runtime sense, but they are still simulated/calculated values inside Rapid SCADA rather than measurements from physical field devices.
+
+### 1.3 Update Logic
+
+The dashboard uses two distinct update modes:
+
+- experiment pages: latest run summaries and experiment telemetry
+- Rapid SCADA pages: continuous live polling and SCADA ingest snapshots
+
+The SCADA bridge polls Rapid SCADA every configured interval and batches the full 100-agent state into the backend. The backend then updates:
+
+- live score snapshots
+- per-agent states
+- anomaly events
+- audit decisions
+- live experiment-pipeline status
+- explainability summaries
+
+---
+
+## 2. Communication and Protocol Architecture
+
+### 2.1 Protocol Roles in This Project
+
+This project uses a layered protocol model:
+
+- Rapid SCADA Web API for live telemetry extraction
+- internal HTTP batch ingest from bridge to backend
+- dashboard HTTP polling through backend proxy routes
+
+This is not yet a field-device deployment using Modbus, OPC UA, or MQTT end to end. Instead, Rapid SCADA acts as the OT supervisory platform, and the SmartGrid backend acts as the analytics and audit layer above it.
+
+### 2.2 Practical Protocol Mapping
+
+Current practical data path:
+
+1. Rapid SCADA calculated channels produce current values
+2. bridge authenticates to Rapid SCADA Web API
+3. bridge reads current data using `GetCurData`
+4. bridge posts a batched 100-agent payload to `/v1/scada/ingest/tags/batch`
+5. backend scores and stores results
+6. dashboard pages consume the processed result set
+
+### 2.3 Why Batch Ingest Was Required
+
+Earlier, the bridge posted one request per agent and triggered `429 Too Many Requests`. The final architecture now uses batch ingest so one SCADA polling cycle maps to one backend request. This reduced request pressure and stabilized the live SCADA path.
+
+---
+
+## 3. Rapid SCADA Engineering Model
+
+### 3.1 Channel Design
+
+The Rapid SCADA project now uses an enriched two-layer channel model for the `100`-agent grid:
+
+- base model: `300` calculated channels in `Cnl.xml`
+- cyber addon: `370` calculated channels in `Cnl_Cyber_Addon.xml`
+
+This gives `670` configured channels in the current enriched deployment.
+
+The base model still carries the original operational signals:
+
+- generators: voltage, current, anomaly score
+- substations: load, latency, anomaly score
+- PMUs: voltage, frequency, anomaly score
+- breakers: status, fault, anomaly score
+
+The cyber addon contributes the telemetry fields that the backend expects for richer cyber-physical scoring:
+
+- generators: `latency`, `packet_loss`, `integrity`, `comm_freq`
+- substations: `packet_loss`, `integrity`, `comm_freq`
+- PMUs: `latency`, `packet_loss`, `integrity`, `comm_freq`
+- breakers: `latency`, `packet_loss`, `integrity`, `comm_freq`
+
+The generated project files live in:
+
+- [`rapidscada_demo/ProjectBaseXML/Cnl.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Cnl.xml)
+- [`rapidscada_demo/ProjectBaseXML/Cnl_Cyber_Addon.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Cnl_Cyber_Addon.xml)
+- [`rapidscada_demo/ProjectBaseXML/Obj.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Obj.xml)
+- [`rapidscada_demo/ProjectBaseXML/Device.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/Device.xml)
+- [`rapidscada_demo/ProjectBaseXML/CommLine.xml`](d:/Mtech%20Main%20project/smartgrid-audit-base-/rapidscada_demo/ProjectBaseXML/CommLine.xml)
+
+### 3.2 Critical Runtime Lesson
+
+The main engineering issue discovered during integration was:
+
+- formulas alone were not enough
+- channels had to be imported as `Calculated` channels, not plain `Input` channels
+
+Once the generated channels used `CnlTypeID = 3`, Rapid SCADA began publishing current data for all 100 agents.
+
+### 3.3 Current Reading Reality
+
+The current Rapid SCADA values are:
+
+- live
+- valid through the SCADA runtime and API
+- generated by formulas inside Rapid SCADA
+
+So the system now demonstrates:
+
+- real SCADA pipeline integration
+- real live current-data retrieval
+- simulated grid behavior
+
+It does not yet demonstrate:
+
+- physical PLC/RTU/PMU device integration
+- direct field protocol acquisition from real electrical hardware
+
+---
+
+## 4. AI and Audit Layer
+
+### 4.1 What the Backend Does
+
+The backend receives SCADA tags and converts them into the SmartGrid scoring schema:
+
+- physical features
+- cyber features
+- baselines
+- thresholds
+- criticality weights
+
+This logic is implemented in:
+
+- [`smartgrid_mas/integration/scada_adapter.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/integration/scada_adapter.py)
+- [`smartgrid_mas/api/app.py`](d:/Mtech%20Main%20project/smartgrid-audit-base-/smartgrid_mas/api/app.py)
+
+### 4.2 Active Detection Model
+
+The live SCADA path now uses a merged experiment-live pipeline. The explainable deviation model remains central:
+
+$$
+S_i(t)=w_i\left(d_x+d_y\right)
+$$
+
+where:
+
+- `d_x` is physical deviation from baseline
+- `d_y` is cyber deviation from baseline
+- `w_i` is agent criticality weight
+
+Around that score, the live path can also add:
+
+- live LSTM anomaly probability using the `lstm_live_scada.pt` checkpoint
+- behavior adaptation and short trend context
+- hybrid audit scheduling with live-safe bounds
+- response and explanation output per agent
+
+Operationally, the live chain is:
+
+1. normalize SCADA tags
+2. compute optional LSTM probability
+3. compute explainable deviation score
+4. update behavior and cluster context
+5. compute audit frequency and decision
+6. assign response state
+7. publish XAI and snapshot fields to the dashboard
+
+### 4.3 Explainability
+
+The system computes feature contribution from normalized deviation and surfaces the top contributing features in the dashboard. This is important for viva defense because the system can explain why an agent was flagged rather than only reporting a score.
+
+---
+
+## 5. Operator Dashboards
+
+### 5.1 Workspace Split
+
+The dashboard was restructured into two separate workspaces:
+
+#### Experiment Running
+
+- Operations Overview
+- Risk Analytics
+- Threat Events
+- Audit Trail
+- Response Workflow
+- Decision Explainability
+- Asset / Topology View
+- Algorithm Config / Methodology View
+- Incident Timeline
+- System Health / Pipeline Health
+- Experiment Monitor
+- Experiment Control
+- Experiment History
+
+#### Rapid SCADA Live
+
+- Operations Overview
+- Risk Analytics
+- Monitor
+- Threat Events
+- Audit Trail
+- Response Workflow
+- Decision Explainability
+- Asset / Topology View
+- Algorithm Config / Methodology View
+- Incident Timeline
+- System Health / Pipeline Health
+- Rapid SCADA Grid
+- SCADA Connectivity
+
+### 5.2 Why the Split Matters
+
+This separation solves an earlier design problem where experiment-mode views and live SCADA views competed for the same top-level state. Now:
+
+- experiment dashboards stay tied to latest run data
+- SCADA dashboards stay tied to live SCADA data only
+
+In the current implementation:
+
+- live SCADA pages map from the fresh `/grid/status` and `/v1/scada/live` snapshot
+- latest experiment cards map from `/v1/runs/latest`
+- historical audit events do not override the current live agent state
+
+This is more defensible both technically and academically.
+
+---
+
+## 6. Reliability and Fallback Policy
+
+Fallback is still allowed, but it is now transparent.
+
+The system distinguishes:
+
+- `live`
+- `mixed`
+- `fallback`
+
+This means the platform can stay operational when SCADA is temporarily unavailable, without pretending that fallback values are real field telemetry.
+
+This is the correct industrial behavior:
+
+- resilience without deception
+- continuity without hiding data provenance
+
+The bridge also now supports two different anomaly-driving modes for live telemetry generation:
+
+- `Independent` mode, now the default, where agents become abnormal independently based on deterministic windows
+- forced demo modes such as `GeneratorFDI`, `SubstationDoS`, `PMUDesync`, `BreakerTrip`, or `Auto`
+
+Independent mode supports three presets:
+
+- `Realistic`
+- `Balanced`
+- `Demo`
+
+These are exposed through runtime settings and passed through the bridge launcher.
+
+---
+
+## 7. Verification and Deployment Notes
+
+### 7.1 Key Verification Scripts
+
+- full demo startup:
+  - [`scripts/start_local_demo.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/start_local_demo.ps1)
+- Rapid SCADA bridge:
+  - [`scripts/start_rapidscada_bridge.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/start_rapidscada_bridge.ps1)
+- live-agent verification:
+  - [`scripts/trace_rapidscada_live_agents.ps1`](d:/Mtech%20Main%20project/smartgrid-audit-base-/scripts/trace_rapidscada_live_agents.ps1)
+
+The bridge launcher now reads persisted runtime settings for:
+
+- anomaly phase
+- independent anomaly preset
+- anomaly cycle seconds
+- anomaly intensity
+
+### 7.2 Verified Final State
+
+Rapid SCADA live-agent trace reached:
+
+- `Live agents: 100`
+- `Non-live: 0`
+
+This confirms the final `10 x 10` live SCADA grid is operational.
+
+---
+
+## 8. Practical Viva Position
+
+The strongest accurate summary is:
+
+This project implements a real live SCADA-to-AI audit pipeline. Rapid SCADA provides live calculated telemetry for a 100-agent smart-grid model, the SmartGrid backend performs explainable anomaly scoring and audit decisions, and the dashboard presents separated experiment and SCADA workspaces for operational clarity.
+
+If asked whether it is a physical grid deployment, the honest answer is:
+
+- the SCADA pipeline is real
+- the current telemetry is simulated/calculated inside Rapid SCADA
+- the same architecture can later be connected to real industrial protocols and field devices
