@@ -41,7 +41,8 @@ from smartgrid_mas.simulation.eval_suite import build_summary
 from smartgrid_mas.simulation.export import export_records_csv
 from smartgrid_mas.data.cyber_attacks import AttackConfig
 from smartgrid_mas.data.synthetic_faults import FaultConfig
-from smartgrid_mas.data.real_dataset import load_real_training_data
+from smartgrid_mas.data.real_dataset import load_real_training_corpus
+from smartgrid_mas.data.network_intrusion_dataset import load_network_intrusion_corpus
 
 
 def _load_runtime_env_file() -> None:
@@ -71,6 +72,7 @@ _load_runtime_env_file()
 SEED = 42
 CONFIG_PATH = os.environ.get('SMARTGRID_CONFIG', "smartgrid_mas/config/global_config.yaml")
 LSTM_MODEL_PATH = "smartgrid_mas/data/anomaly_inputs/lstm.pt"
+NETWORK_LSTM_MODEL_PATH = "smartgrid_mas/data/anomaly_inputs/lstm_network.pt"
 LOGS_DIR = Path("logs")
 DATA_DIR = Path("smartgrid_mas/data")
 
@@ -91,10 +93,29 @@ def _env_int(key: str, default: int) -> int:
         return default
 
 
-# Paper-aligned defaults (tuned target)
-# Default 0.07 yields the validated operating region with strong cost efficiency
-# while preserving high recall and low FPR.
-AUDIT_BUDGET_RATIO = _env_float("SMARTGRID_AUDIT_BUDGET_RATIO", 0.07)
+def _env_bool(key: str, default: bool) -> bool:
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+OPTIMIZATION_PROFILE = os.environ.get("SMARTGRID_OPTIMIZATION_PROFILE", "ROBUST").strip().upper()
+
+
+def _profile_default_float(key: str, robust: float, balanced: float, cost: float) -> float:
+    profile_defaults = {
+        "ROBUST": robust,
+        "BALANCED": balanced,
+        "COST": cost,
+    }
+    return _env_float(key, profile_defaults.get(OPTIMIZATION_PROFILE, balanced))
+
+
+# Default profile is robustness-first instead of cost-first.
+# ROBUST keeps the scheduler closer to a defensive operating point and makes
+# it easier to stay near a 45-60% cost-efficiency band instead of maximizing savings.
+AUDIT_BUDGET_RATIO = _profile_default_float("SMARTGRID_AUDIT_BUDGET_RATIO", 0.10, 0.08, 0.07)
 GRADIENT_LR = 0.01
 MAX_AUDITS_PER_CYCLE = _env_int("SMARTGRID_MAX_AUDITS_PER_CYCLE", 100)
 CONSTRAINT_LOG_LEVEL = os.environ.get("SMARTGRID_CONSTRAINT_LOG_LEVEL", "WARNING").upper()
@@ -219,6 +240,7 @@ def generate_synthetic_training_data(
     
     # Number of anomalies
     n_anomalies = int(n_samples * anomaly_ratio)
+    anomaly_indices = set(rng.choice(n_samples, size=n_anomalies, replace=False).tolist()) if n_anomalies > 0 else set()
     
     for i in range(n_samples):
         # Time parameter (normalize to [0, 2π])
@@ -253,13 +275,75 @@ def generate_synthetic_training_data(
         signal = base_signal + noise
         
         # Determine if anomalous
-        is_anomaly = i < n_anomalies
-        
+        is_anomaly = i in anomaly_indices
+
         if is_anomaly:
-            # Anomalous: inject larger deviations (FDI-like)
-            anomaly_factor = rng.uniform(1.5, 3.0)
-            signal = signal * anomaly_factor + rng.normal(0, 0.1, size=n_features).astype(np.float32)
-        
+            mode = rng.choice(
+                ["spike", "drift", "cyber", "mixed", "borderline", "transition"],
+                p=[0.24, 0.16, 0.16, 0.18, 0.14, 0.12],
+            )
+            phys_dim = ENV_CFG.phys_dim
+            cyber_dim = ENV_CFG.cyber_dim
+            phys_slice = slice(0, phys_dim)
+            cyber_slice = slice(phys_dim, phys_dim + cyber_dim)
+            anomaly_noise = rng.normal(0, 0.06, size=n_features).astype(np.float32)
+
+            if mode == "spike":
+                spike_mask = rng.uniform(0.0, 1.0, size=n_features) > 0.4
+                spike_mag = rng.uniform(0.9, 2.2, size=n_features).astype(np.float32)
+                signal = signal + spike_mask.astype(np.float32) * spike_mag + anomaly_noise
+            elif mode == "drift":
+                drift_scale = float(i) / max(1.0, float(n_samples - 1))
+                drift = rng.uniform(0.3, 1.1, size=n_features).astype(np.float32) * (0.4 + drift_scale)
+                signal = signal + drift + anomaly_noise
+            elif mode == "cyber":
+                signal[cyber_slice] = signal[cyber_slice] + rng.uniform(0.5, 1.8, size=cyber_dim).astype(np.float32)
+                if cyber_dim >= 3:
+                    signal[phys_dim + 2] = np.clip(signal[phys_dim + 2] - rng.uniform(0.15, 0.55), 0.0, 1.0)
+                signal = signal + anomaly_noise
+            elif mode == "mixed":
+                phys_scale = rng.uniform(1.3, 2.4)
+                cyber_shift = rng.uniform(0.4, 1.4, size=cyber_dim).astype(np.float32)
+                signal[phys_slice] = signal[phys_slice] * phys_scale
+                signal[cyber_slice] = signal[cyber_slice] + cyber_shift
+                signal = signal + anomaly_noise
+            elif mode == "borderline":
+                signal = signal + rng.normal(0.18, 0.03, size=n_features).astype(np.float32)
+            elif mode == "transition":
+                target = signal.copy()
+                target[phys_slice] = target[phys_slice] * rng.uniform(1.15, 1.8)
+                target[cyber_slice] = target[cyber_slice] + rng.uniform(0.2, 0.9, size=cyber_dim).astype(np.float32)
+                blend = rng.uniform(0.35, 0.65)
+                signal = ((1.0 - blend) * signal) + (blend * target) + anomaly_noise
+
+            signal = signal.astype(np.float32)
+        else:
+            normal_mode = rng.choice(
+                ["stable", "load_shift", "cyber_jitter", "maintenance", "recovery"],
+                p=[0.45, 0.18, 0.14, 0.13, 0.10],
+            )
+            phys_dim = ENV_CFG.phys_dim
+            cyber_dim = ENV_CFG.cyber_dim
+            phys_slice = slice(0, phys_dim)
+            cyber_slice = slice(phys_dim, phys_dim + cyber_dim)
+
+            if normal_mode == "load_shift":
+                signal[phys_slice] = signal[phys_slice] + rng.normal(0.08, 0.03, size=phys_dim).astype(np.float32)
+            elif normal_mode == "cyber_jitter":
+                signal[cyber_slice] = signal[cyber_slice] + rng.normal(0.05, 0.02, size=cyber_dim).astype(np.float32)
+                if cyber_dim >= 3:
+                    signal[phys_dim + 2] = np.clip(signal[phys_dim + 2], 0.90, 1.0)
+            elif normal_mode == "maintenance":
+                signal[phys_slice] = signal[phys_slice] * rng.uniform(0.92, 1.08)
+                signal[cyber_slice] = signal[cyber_slice] + rng.normal(0.02, 0.01, size=cyber_dim).astype(np.float32)
+            elif normal_mode == "recovery":
+                target = signal.copy()
+                target[phys_slice] = target[phys_slice] * rng.uniform(1.05, 1.18)
+                target[cyber_slice] = target[cyber_slice] + rng.normal(0.04, 0.015, size=cyber_dim).astype(np.float32)
+                blend = rng.uniform(0.10, 0.30)
+                signal = ((1.0 - blend) * signal) + (blend * target)
+            signal = signal.astype(np.float32)
+
         data.append(signal)
         labels.append(float(is_anomaly))
     
@@ -277,12 +361,20 @@ def _train_lstm_with_current_config(logger: logging.Logger, config: Dict[str, An
     
     real_data_path = os.environ.get("SMARTGRID_REAL_DATA_PATH", "").strip()
     real_label_col = os.environ.get("SMARTGRID_LABEL_COLUMN", "").strip() or None
+    synthetic_augment_ratio = _env_float(
+        "SMARTGRID_SYNTHETIC_AUGMENT_RATIO",
+        0.35 if OPTIMIZATION_PROFILE == "ROBUST" else 0.20,
+    )
+    synthetic_train_samples = _env_int(
+        "SMARTGRID_SYNTHETIC_TRAIN_SAMPLES",
+        3000 if OPTIMIZATION_PROFILE == "ROBUST" else 2000,
+    )
 
     if real_data_path:
-        logger.info(f"  Loading REAL training data from: {real_data_path}")
+        logger.info(f"  Loading REAL training corpus from: {real_data_path}")
         try:
-            loaded = load_real_training_data(
-                path=real_data_path,
+            loaded = load_real_training_corpus(
+                paths=real_data_path,
                 target_feature_dim=FEATURE_DIM,
                 label_column=real_label_col,
                 random_seed=SEED,
@@ -295,17 +387,31 @@ def _train_lstm_with_current_config(logger: logging.Logger, config: Dict[str, An
                 loaded.original_feature_count,
                 loaded.adapted_feature_count,
             )
+            if synthetic_augment_ratio > 0:
+                synth_rows = max(256, int(round(data.shape[0] * synthetic_augment_ratio)))
+                synth_data, synth_labels = generate_synthetic_training_data(
+                    n_samples=synth_rows,
+                    anomaly_ratio=0.25,
+                    seed=SEED + 99,
+                )
+                data = np.concatenate([data, synth_data], axis=0)
+                labels = np.concatenate([labels, synth_labels], axis=0)
+                logger.info(
+                    "  Added synthetic augmentation | extra_rows=%d | final_rows=%d",
+                    synth_rows,
+                    data.shape[0],
+                )
         except Exception as e:
             logger.warning(f"  Real dataset load failed ({e}); falling back to synthetic data")
             data, labels = generate_synthetic_training_data(
-                n_samples=2000,
+                n_samples=synthetic_train_samples,
                 anomaly_ratio=0.2,
                 seed=SEED,
             )
     else:
         logger.info(f"  Generating synthetic training data (features={FEATURE_DIM})...")
         data, labels = generate_synthetic_training_data(
-            n_samples=2000,
+            n_samples=synthetic_train_samples,
             anomaly_ratio=0.2,
             seed=SEED,
         )
@@ -326,6 +432,90 @@ def _train_lstm_with_current_config(logger: logging.Logger, config: Dict[str, An
     )
     logger.info(f"✓ LSTM model trained and saved: {LSTM_MODEL_PATH}")
     logger.info(f"  Train loss: {result.train_loss:.4f}, Val loss: {result.val_loss:.4f}")
+    logger.info(
+        "  Calibration: temperature=%.3f, decision_threshold=%.3f",
+        result.calibration_temperature,
+        result.calibration_threshold,
+    )
+
+
+def _train_network_lstm_with_current_config(logger: logging.Logger, config: Dict[str, Any]) -> None:
+    """Train branch-2 network intrusion LSTM on cyber-only features."""
+    lstm_cfg = config.get("anomaly_model", {}).get("lstm", {})
+    hidden_size = int(os.environ.get("SMARTGRID_NET_HIDDEN_SIZE", lstm_cfg.get("hidden_size", 64)))
+    num_layers = int(os.environ.get("SMARTGRID_NET_NUM_LAYERS", lstm_cfg.get("num_layers", 2)))
+    dropout = float(os.environ.get("SMARTGRID_NET_DROPOUT", lstm_cfg.get("dropout", 0.2)))
+    batch_size = int(os.environ.get("SMARTGRID_NET_BATCH_SIZE", lstm_cfg.get("batch_size", 64)))
+    epochs = int(os.environ.get("SMARTGRID_NET_EPOCHS", lstm_cfg.get("epochs", 20)))
+    window = _env_int("SMARTGRID_NET_LSTM_WINDOW", min(12, LSTM_WINDOW))
+
+    net_data_path = os.environ.get("SMARTGRID_NET_DATA_PATH", "").strip()
+    net_label_col = os.environ.get("SMARTGRID_NET_LABEL_COLUMN", "").strip() or None
+    augment_ratio = _env_float("SMARTGRID_NET_SYNTHETIC_AUGMENT_RATIO", 0.25)
+    train_samples = _env_int("SMARTGRID_NET_SYNTHETIC_TRAIN_SAMPLES", 2500)
+    net_max_rows = _env_int("SMARTGRID_NET_MAX_ROWS", 0)
+
+    if net_data_path:
+        logger.info(f"  Loading network intrusion corpus from: {net_data_path}")
+        try:
+            loaded = load_network_intrusion_corpus(
+                paths=net_data_path,
+                max_rows=(net_max_rows or None),
+                random_seed=SEED + 7,
+            )
+            data, labels = loaded.data, loaded.labels
+            logger.info(
+                "  Network corpus loaded | rows=%d | engineered_features=%d | top_attack_cats=%s",
+                data.shape[0],
+                data.shape[1],
+                dict(list(sorted(loaded.attack_cat_counts.items(), key=lambda item: item[1], reverse=True)[:4])),
+            )
+            if augment_ratio > 0:
+                synth_x, synth_y = generate_synthetic_training_data(
+                    n_samples=max(256, int(round(data.shape[0] * augment_ratio))),
+                    anomaly_ratio=0.25,
+                    seed=SEED + 123,
+                )
+                data = np.concatenate([data, synth_x[:, -ENV_CFG.cyber_dim:]], axis=0)
+                labels = np.concatenate([labels, synth_y], axis=0)
+        except Exception as e:
+            logger.warning(f"  Network dataset load failed ({e}); falling back to synthetic cyber-only data")
+            synth_x, synth_y = generate_synthetic_training_data(
+                n_samples=train_samples,
+                anomaly_ratio=0.25,
+                seed=SEED + 123,
+            )
+            data, labels = synth_x[:, -ENV_CFG.cyber_dim:], synth_y
+    else:
+        logger.info("  Generating synthetic cyber-only training data for branch 2...")
+        synth_x, synth_y = generate_synthetic_training_data(
+            n_samples=train_samples,
+            anomaly_ratio=0.25,
+            seed=SEED + 123,
+        )
+        data, labels = synth_x[:, -ENV_CFG.cyber_dim:], synth_y
+
+    result = train_lstm(
+        data=data,
+        labels=labels,
+        window=window,
+        model_path=str(NETWORK_LSTM_MODEL_PATH),
+        hidden_size=hidden_size,
+        num_layers=num_layers,
+        dropout=dropout,
+        batch_size=batch_size,
+        epochs=epochs,
+        lr=1e-3,
+        seed=SEED + 7,
+        verbose=False,
+    )
+    logger.info(f"Network branch model trained and saved: {NETWORK_LSTM_MODEL_PATH}")
+    logger.info(f"  Train loss: {result.train_loss:.4f}, Val loss: {result.val_loss:.4f}")
+    logger.info(
+        "  Calibration: temperature=%.3f, decision_threshold=%.3f",
+        result.calibration_temperature,
+        result.calibration_threshold,
+    )
 
 
 def train_lstm_if_needed(logger: logging.Logger, config: Dict[str, Any]) -> None:
@@ -356,6 +546,8 @@ def train_lstm_if_needed(logger: logging.Logger, config: Dict[str, Any]) -> None
                     retrain_reason = "dropout mismatch"
                 elif int(ckpt.get("window", -1)) != LSTM_WINDOW:
                     retrain_reason = "window mismatch"
+                elif int(ckpt.get("training_pipeline_version", -1)) != 2:
+                    retrain_reason = "training_pipeline_version mismatch"
         except Exception as e:
             retrain_reason = f"failed to load checkpoint ({e})"
 
@@ -364,6 +556,47 @@ def train_lstm_if_needed(logger: logging.Logger, config: Dict[str, Any]) -> None
         _train_lstm_with_current_config(logger, config)
     else:
         logger.info(f"✓ LSTM model already exists and matches configuration: {LSTM_MODEL_PATH}")
+
+
+    enable_network_branch = _env_bool("SMARTGRID_ENABLE_NETWORK_BRANCH", True)
+    if not enable_network_branch:
+        return
+
+    net_window = _env_int("SMARTGRID_NET_LSTM_WINDOW", min(12, LSTM_WINDOW))
+    net_hidden = int(os.environ.get("SMARTGRID_NET_HIDDEN_SIZE", hidden_size))
+    net_layers = int(os.environ.get("SMARTGRID_NET_NUM_LAYERS", num_layers))
+    net_dropout = float(os.environ.get("SMARTGRID_NET_DROPOUT", dropout))
+    net_model_path = Path(NETWORK_LSTM_MODEL_PATH)
+    net_retrain_reason = None
+
+    if not net_model_path.exists():
+        net_retrain_reason = "no existing network checkpoint"
+    else:
+        try:
+            ckpt = torch.load(net_model_path, map_location="cpu")
+            if not (isinstance(ckpt, dict) and "state_dict" in ckpt):
+                net_retrain_reason = "legacy checkpoint without metadata"
+            else:
+                if int(ckpt.get("input_size", -1)) != ENV_CFG.cyber_dim:
+                    net_retrain_reason = "input_size mismatch"
+                elif int(ckpt.get("hidden_size", -1)) != net_hidden:
+                    net_retrain_reason = "hidden_size mismatch"
+                elif int(ckpt.get("num_layers", -1)) != net_layers:
+                    net_retrain_reason = "num_layers mismatch"
+                elif float(ckpt.get("dropout", -1.0)) != float(net_dropout):
+                    net_retrain_reason = "dropout mismatch"
+                elif int(ckpt.get("window", -1)) != net_window:
+                    net_retrain_reason = "window mismatch"
+                elif int(ckpt.get("training_pipeline_version", -1)) != 2:
+                    net_retrain_reason = "training_pipeline_version mismatch"
+        except Exception as e:
+            net_retrain_reason = f"failed to load checkpoint ({e})"
+
+    if net_retrain_reason:
+        logger.info(f"Training network branch model ({net_retrain_reason})...")
+        _train_network_lstm_with_current_config(logger, config)
+    else:
+        logger.info(f"Network branch model already exists and matches configuration: {NETWORK_LSTM_MODEL_PATH}")
 
 
 # ============================================================================
@@ -383,6 +616,31 @@ def load_lstm_model(logger: logging.Logger, config: Dict[str, Any]) -> LSTMInfer
     logger.info(
         "✓ LSTM model loaded: %s (input_size=%s, hidden_size=%s, layers=%s, window=%s)",
         LSTM_MODEL_PATH,
+        getattr(inferencer, "input_size", "?"),
+        getattr(inferencer.model, "hidden_size", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
+        getattr(inferencer.model, "num_layers", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
+        getattr(inferencer, "window", "?"),
+    )
+    return inferencer
+
+
+def load_network_lstm_model(logger: logging.Logger, config: Dict[str, Any]) -> LSTMInferencer | None:
+    """Load the trained branch-2 network intrusion model for inference."""
+    if not _env_bool("SMARTGRID_ENABLE_NETWORK_BRANCH", True):
+        logger.info("Network branch disabled via SMARTGRID_ENABLE_NETWORK_BRANCH")
+        return None
+
+    logger.info("Loading network branch model for inference...")
+    try:
+        inferencer = LSTMInferencer(model_path=NETWORK_LSTM_MODEL_PATH)
+    except Exception as e:
+        logger.warning(f"Network branch load failed after verification ({e}); retraining once more...")
+        _train_network_lstm_with_current_config(logger, config)
+        inferencer = LSTMInferencer(model_path=NETWORK_LSTM_MODEL_PATH)
+
+    logger.info(
+        "Network branch model loaded: %s (input_size=%s, hidden_size=%s, layers=%s, window=%s)",
+        NETWORK_LSTM_MODEL_PATH,
         getattr(inferencer, "input_size", "?"),
         getattr(inferencer.model, "hidden_size", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
         getattr(inferencer.model, "num_layers", "?") if hasattr(inferencer, "model") and inferencer.model else "?",
@@ -484,6 +742,7 @@ def run_all_simulations(
     agents_dyn: List[BaseAgent],
     agents_base: List[BaseAgent],
     lstm_infer: LSTMInferencer,
+    network_lstm_infer: LSTMInferencer | None,
     config: Dict[str, Any],
     logger: logging.Logger,
     ablation_mode: str = 'HYBRID',
@@ -550,6 +809,7 @@ def run_all_simulations(
     dyn_metrics, dyn_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_simulation_24h(
         agents=agents_dyn,
         lstm_infer=lstm_infer,
+        network_lstm_infer=network_lstm_infer,
         audit_budget_ratio=effective_budget_ratio,
         timestep_minutes=_timestep_minutes,
         cycle_hours=_cycle_hours,
@@ -585,6 +845,7 @@ def run_all_simulations(
     base_metrics, base_events, _, _, _, _, _ = run_fixed_audit_24h(
         agents=agents_base,
         lstm_infer=lstm_infer,
+        network_lstm_infer=network_lstm_infer,
         fixed_f=BASELINE_FIXED_F,
         timestep_minutes=_timestep_minutes,
         cycle_hours=_cycle_hours,
@@ -782,11 +1043,14 @@ def print_summary_report(summary: Dict[str, Any], logger: logging.Logger) -> Non
     def fmt(val: float, digits: int = 4) -> str:
         return f"{val:.{digits}f}"
 
+    typing_metrics = summary.get("attack_typing_metrics", {}) if isinstance(summary.get("attack_typing_metrics"), dict) else {}
     rows = [
         ("Attack Rate (Dyn/Base)", f"{pct(summary.get('attack_rate_dyn', 0))} / {pct(summary.get('attack_rate_base', 0))}"),
         ("Attack Rate Reduction", pct(summary.get('attack_rate_reduction', 0))),
         ("Precision / Recall / F1", f"{fmt(summary.get('precision', 0),4)} / {fmt(summary.get('recall', 0),3)} / {fmt(summary.get('f1', 0),4)}"),
+        ("TP / FP / FN / TN", f"{int(summary.get('tp', 0))} / {int(summary.get('fp', 0))} / {int(summary.get('fn', 0))} / {int(summary.get('tn', 0))}"),
         ("Accuracy", fmt(summary.get('accuracy', 0),3)),
+        ("Typing Acc / MacroTPR", f"{fmt(typing_metrics.get('typing_accuracy', 0.0),4)} / {fmt(typing_metrics.get('macro_tpr', 0.0),4)}"),
         ("Risk Mitigation", pct(summary.get('risk_mitigation', 0))),
         ("Cost Efficiency", pct(summary.get('cost_efficiency', 0))),
         ("Coverage (Dyn/Base)", f"{pct(summary.get('coverage_dyn', summary.get('coverage_cycle_dynamic',0)))} / {pct(summary.get('coverage_base', summary.get('coverage_cycle_baseline',0)))}"),
@@ -834,6 +1098,12 @@ def print_compact_sweep_table(run_summaries: List[Dict[str, Any]], logger: loggi
     def get(n: int, key: str, default: float = 0.0) -> float:
         return by_n.get(n, {}).get(key, default)
 
+    def get_nested(n: int, key: str, nested_key: str, default: float = 0.0) -> float:
+        val = by_n.get(n, {}).get(key, {})
+        if isinstance(val, dict):
+            return float(val.get(nested_key, default))
+        return default
+
     def add_row(label: str, values: List[str], lines: List[str]) -> None:
         lines.append(f"{label:<35} " + " ".join(f"{v:>11}" for v in values))
 
@@ -853,19 +1123,22 @@ def print_compact_sweep_table(run_summaries: List[Dict[str, Any]], logger: loggi
     add_row("Precision (Dynamic)", [fmt(get(n, "precision", 0), 4) for n in order], lines)
     add_row("Recall (Dynamic)", [fmt(get(n, "recall", 0), 3) for n in order], lines)
     add_row("F1-Score (Dynamic)", [fmt(get(n, "f1", 0), 4) for n in order], lines)
+    add_row("TP / FP / FN / TN", [f"{int(get(n,'tp',0))}/{int(get(n,'fp',0))}/{int(get(n,'fn',0))}/{int(get(n,'tn',0))}" for n in order], lines)
     add_row("TPR / TNR / FPR", [f"{fmt(get(n,'tpr',0),3)}/{fmt(get(n,'tnr',0),4)}/{fmt(get(n,'fpr',0),4)}" for n in order], lines)
     add_row("Accuracy (Dynamic)", [fmt(get(n, "accuracy", 0), 3) for n in order], lines)
+    add_row(
+        "Typing Acc / MacroTPR",
+        [
+            f"{fmt(get_nested(n,'attack_typing_metrics','typing_accuracy',0),4)}/{fmt(get_nested(n,'attack_typing_metrics','macro_tpr',0),4)}"
+            for n in order
+        ],
+        lines,
+    )
     lines.append("-" * 70)
 
     add_row("Risk Mitigation", [pct(get(n, "risk_mitigation", 0)) for n in order], lines)
     add_row("Mean Risk Dyn/Base", [f"{fmt(get(n,'mean_global_risk_dynamic',0),4)}/{fmt(get(n,'mean_global_risk_baseline',0),4)}" for n in order], lines)
     add_row("Risk Reduced per $", [fmt(get(n, "risk_reduced_per_cost", 0), 6) for n in order], lines)
-    def get_nested(n: int, key: str, nested_key: str, default: float = 0.0) -> float:
-        val = by_n.get(n, {}).get(key, {})
-        if isinstance(val, dict):
-            return float(val.get(nested_key, default))
-        return default
-    
     add_row("CLSI", [pct(get_nested(n, "cross_layer_stability", "index", 0)) for n in order], lines)
     add_row("Deviation Slope", [fmt(get_nested(n, "deviation_trend", "deviation_slope", 0), 6) for n in order], lines)
     lines.append("-" * 70)
@@ -911,7 +1184,7 @@ def main() -> None:
     )
     
     # Support seed sweep for robustness analysis
-    seed_env = os.environ.get("SMARTGRID_SEEDS", "").strip()
+    seed_env = os.environ.get("SMARTGRID_SEEDS", "42,43,44,45,46").strip()
     if seed_env:
         try:
             seeds = [int(x) for x in seed_env.split(",") if x.strip()]
@@ -984,6 +1257,7 @@ def main() -> None:
             logger.info("STEP 4: Loading LSTM Model")
             logger.info("="*70)
             lstm_infer = load_lstm_model(logger, config)
+            network_lstm_infer = load_network_lstm_model(logger, config)
             # Cycle length override
             cycle_override = os.environ.get("SMARTGRID_CYCLE_HOURS", "").strip()
             if cycle_override:
@@ -1054,7 +1328,7 @@ def main() -> None:
                 for ablation_mode in ablation_modes:
                     logger.info(f"\n  → Ablation mode: {ablation_mode}")
                     dyn_metrics, dyn_events, base_metrics, base_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_all_simulations(
-                        agents_dyn, agents_base, lstm_infer, config, logger, ablation_mode=ablation_mode, 
+                        agents_dyn, agents_base, lstm_infer, network_lstm_infer, config, logger, ablation_mode=ablation_mode, 
                         n_specific_budget_ratio=n_specific_budget_ratio, n_agents=n_agents
                     )
                     ablation_results[ablation_mode] = {

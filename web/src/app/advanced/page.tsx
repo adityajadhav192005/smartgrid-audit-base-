@@ -51,11 +51,11 @@ export default function AdvancedPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="section-header">Advanced Tools</h1>
-        <p className="text-sm text-slate-400 mt-1">Consolidated access to secondary platform utilities</p>
+        <h1 className="section-header">Platform Center</h1>
+        <p className="text-sm text-slate-400 mt-1">Secondary platform utilities for verification, reporting, APIs, and integrations</p>
       </div>
 
-      <ViewModeBanner section="Advanced Tools" />
+      <ViewModeBanner section="Platform Center" />
 
       {scadaBlocked && (
         <div className="glass-card p-5 border border-amber-500/30 text-amber-200 text-sm">

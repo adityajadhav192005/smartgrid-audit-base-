@@ -5,7 +5,7 @@ simulation:
 
 audit:
   risk_threshold: 0.5          # paper
-  audit_budget_ratio: 0.07     # tuned operating point for high cost efficiency with stable detection
+  audit_budget_ratio: 0.10     # robustness-first default; aims for stronger detection with cost efficiency nearer 45-60%
   max_audits_per_cycle: 100    # informational; runtime uses paper-aligned F = n_agents * f_max
   f_min: 1                     # paper: minimum regulatory audit frequency
   f_max: 5                     # paper: maximum audit frequency per cycle
@@ -14,15 +14,15 @@ audit:
   # Per-N budget overrides (optional - if not specified, uses audit_budget_ratio above)
   # Optional per-N override; keep paper-defaults at 10% unless explicitly changed
   budget_per_n:
-    100: 0.07
-    200: 0.07
-    500: 0.07
+    100: 0.10
+    200: 0.10
+    500: 0.10
 
 thresholds:
   k_sigma: 4.0                 # Th = k * sigma (raised to reduce false positives)
   sigma_window: 24             # rolling window for sigma calibration (overridable via SMARTGRID_THRESHOLD_WINDOW)
-  score_threshold: 4.0         # default anomaly score threshold (overridable via SMARTGRID_SCORE_THRESHOLD)
-  prob_threshold: 0.999        # default anomaly probability threshold (overridable via SMARTGRID_ANOMALY_PROB_THRESHOLD)
+  score_threshold: 3.0         # default anomaly score threshold (overridable via SMARTGRID_SCORE_THRESHOLD)
+  prob_threshold: 0.97         # default anomaly probability threshold (overridable via SMARTGRID_ANOMALY_PROB_THRESHOLD)
 
 costs:
   failure_cost_coeff: 10.0     # C_f used in executed cost and cost efficiency

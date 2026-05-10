@@ -6,6 +6,16 @@ from smartgrid_mas.audit.actions import AuditAction
 from smartgrid_mas.agents.state import AgentState
 
 
+def _profile_default(key: str, robust: float, balanced: float, cost: float) -> float:
+    profile = os.environ.get("SMARTGRID_OPTIMIZATION_PROFILE", "ROBUST").strip().upper()
+    defaults = {
+        "ROBUST": robust,
+        "BALANCED": balanced,
+        "COST": cost,
+    }
+    return float(os.environ.get(key, defaults.get(profile, balanced)))
+
+
 @dataclass
 class RewardWeights:
     """Paper-aligned reward weights (pinned reference)."""
@@ -17,22 +27,23 @@ class RewardWeights:
     # 2. Amplified security penalties: lambda_attack 5.0 → 10.0 (2x stronger)
     # 3. Reduced audit cost weight: 0.2 → 0.05 (4x cheaper relative to security)
     # 4. High-risk threshold raised to 0.75 (tighter definition)
-    lambda_attack: float = float(os.environ.get("SMARTGRID_RW_ATTACK", 10.0))  # Missed attacks - DOUBLED to 10.0
-    lambda_audit: float = float(os.environ.get("SMARTGRID_RW_AUDIT", 0.05))   # Audit cost - REDUCED to 0.05 (audits 4x cheaper)
+    lambda_attack: float = _profile_default("SMARTGRID_RW_ATTACK", 14.0, 12.0, 11.0)
+    lambda_audit: float = _profile_default("SMARTGRID_RW_AUDIT", 0.04, 0.035, 0.03)
     lambda_stability: float = float(os.environ.get("SMARTGRID_RW_STABILITY", 0.1))
-    bonus_react: float = float(os.environ.get("SMARTGRID_RW_BONUS", 2.0))  # DOUBLED bonus for proactive audits
+    bonus_react: float = _profile_default("SMARTGRID_RW_BONUS", 3.0, 2.75, 2.5)
     lambda_risk_excess: float = float(os.environ.get("SMARTGRID_RW_RISK_EXCESS", 0.30))
-    min_freq_high_risk: int = int(os.environ.get("SMARTGRID_RW_MIN_FREQ_HR", 2))  # Force f≥2 for high-risk
+    min_freq_high_risk: int = int(os.environ.get("SMARTGRID_RW_MIN_FREQ_HR", 3 if os.environ.get("SMARTGRID_OPTIMIZATION_PROFILE", "ROBUST").strip().upper() == "ROBUST" else 2))
     lambda_low_coverage: float = float(os.environ.get("SMARTGRID_RW_LOW_COVERAGE", 0.50))
-    lambda_budget_barrier: float = float(os.environ.get("SMARTGRID_RW_BUDGET_BARRIER", 5.0))
-    lambda_quadratic_risk: float = float(os.environ.get("SMARTGRID_RW_QUADRATIC", 5.0))  # NEW: Quadratic penalty
-    high_risk_threshold: float = float(os.environ.get("SMARTGRID_RW_HIGH_RISK_TH", 0.75))  # NEW: High-risk cutoff
+    lambda_budget_barrier: float = _profile_default("SMARTGRID_RW_BUDGET_BARRIER", 3.5, 4.2, 5.0)
+    lambda_quadratic_risk: float = _profile_default("SMARTGRID_RW_QUADRATIC", 8.0, 6.0, 5.0)
+    high_risk_threshold: float = _profile_default("SMARTGRID_RW_HIGH_RISK_TH", 0.70, 0.72, 0.75)
     high_risk_inaction_scale: float = float(os.environ.get("SMARTGRID_RW_INACTION_SCALE", 1.0))
+    lambda_false_positive_audit: float = _profile_default("SMARTGRID_RW_FP_AUDIT", 0.45, 0.30, 0.22)
 
     # Multi-objective scalarization weights (sweep these in experiments)
-    w_security: float = float(os.environ.get("SMARTGRID_RW_W_SECURITY", 1.0))
-    w_cost: float = float(os.environ.get("SMARTGRID_RW_W_COST", 1.0))
-    w_precision: float = float(os.environ.get("SMARTGRID_RW_W_PRECISION", 1.0))
+    w_security: float = _profile_default("SMARTGRID_RW_W_SECURITY", 1.35, 1.15, 1.0)
+    w_cost: float = _profile_default("SMARTGRID_RW_W_COST", 0.60, 0.80, 1.0)
+    w_precision: float = _profile_default("SMARTGRID_RW_W_PRECISION", 1.30, 1.10, 1.0)
 
 
 def compute_reward(
@@ -118,10 +129,11 @@ def compute_reward(
     # NEW: QUADRATIC penalty for high-risk agents with insufficient audits
     # This makes ignoring risky agents EXPONENTIALLY bad (not just linearly)
     quadratic_penalty = 0.0
-    if st.risk_score > weights.high_risk_threshold and st.audit_frequency < 2:
+    min_freq_required = max(1, int(weights.min_freq_high_risk))
+    if st.risk_score > weights.high_risk_threshold and st.audit_frequency < min_freq_required:
         # Penalty grows with square of risk shortfall
         risk_excess = st.risk_score - weights.high_risk_threshold
-        freq_deficit = 2 - st.audit_frequency  # How far below min
+        freq_deficit = min_freq_required - st.audit_frequency
         quadratic_penalty = weights.lambda_quadratic_risk * (risk_excess ** 2) * freq_deficit
     
     c_failure = c_failure + quadratic_penalty
@@ -134,6 +146,15 @@ def compute_reward(
             * weights.high_risk_inaction_scale
             * max(0.0, float(st.risk_score - risk_threshold))
         )
+
+    # New detector regime is recall-first; discourage audit increases on weak/no-anomaly states.
+    low_risk_overaudit_penalty = 0.0
+    anomaly_flag = int(getattr(st, "anomaly_flag", 0))
+    model_confirmed = int(getattr(st, "model_confirmed", 0))
+    if action == AuditAction.INC and anomaly_flag == 0:
+        weak_risk_gap = max(0.0, float(risk_threshold - st.risk_score))
+        weak_signal = 1.0 if model_confirmed == 0 else 0.5
+        low_risk_overaudit_penalty = weights.lambda_false_positive_audit * weak_signal * (0.5 + weak_risk_gap)
 
     # Optional system-level shared failure term (from scheduler)
     if num_agents and num_agents > 0 and system_c_failure > 0.0:
@@ -158,7 +179,7 @@ def compute_reward(
     # Multi-objective scalarization
     # r = w1 * r_security - w2 * r_cost + w3 * r_precision
     r_security = detect_bonus + react_bonus + mitigation_bonus - c_failure - high_risk_inaction_penalty
-    r_cost = c_audit + stability_penalty + (weights.lambda_budget_barrier * max(0.0, float(over_budget_excess)))
+    r_cost = c_audit + stability_penalty + low_risk_overaudit_penalty + (weights.lambda_budget_barrier * max(0.0, float(over_budget_excess)))
     r_precision = -det_penalty
 
     reward = (

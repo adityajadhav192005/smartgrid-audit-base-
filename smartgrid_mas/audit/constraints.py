@@ -85,14 +85,17 @@ def enforce_audit_constraints(
     
     num_agents = len(agents)
     
-    # Base capacity: Use config max_audits_per_cycle exactly (no hidden floor).
-    # This keeps paper/experiment overrides (e.g., 5 audits/cycle) faithful.
+    # Base capacity: keep the configured cap for smaller runs, but allow
+    # scale-aware growth for larger grids so large-N experiments are not
+    # artificially under-audited by a flat ceiling.
     base_cap = max(1, int(max_audits_per_cycle))
-    
-    # Paper-aligned count cap: direct configured max audits per cycle
-    # (no hidden heuristics; budget handles cost-side control)
+    cap_fraction = float(os.environ.get("SMARTGRID_MAX_AUDIT_FRACTION", "0.40"))
+    scaled_cap = int(math.ceil(max(0.0, cap_fraction) * num_agents))
+
+    # Keep small-N behavior stable by preserving the configured base cap there,
+    # while allowing larger grids to scale up to a fraction of agents per cycle.
     is_crisis = False
-    dynamic_max_audits = base_cap
+    dynamic_max_audits = max(base_cap, scaled_cap)
     
     # Cost multiplier: Overdraft audits cost 3× more (emergency overtime spending)
     # This models: hiring emergency contractors, expedited processing, priority handling
@@ -211,7 +214,19 @@ def enforce_audit_constraints(
     # Paper-aligned governance: Ensure at least 40% of agents receive audits per cycle
     # This prevents RL from under-auditing despite cost optimization pressure
     min_coverage_pct = float(os.environ.get("SMARTGRID_MIN_COVERAGE_PCT", "0.40"))
-    min_agents_covered = int(math.ceil(min_coverage_pct * len(agents)))
+    min_agents_requested = int(math.ceil(min_coverage_pct * len(agents)))
+    max_coverable_agents = min(
+        len(agents),
+        int(math.floor(float(dynamic_max_audits) / max(1, int(f_min)))),
+    )
+    min_agents_covered = min(min_agents_requested, max_coverable_agents)
+    if min_agents_requested > max_coverable_agents:
+        logger.info(
+            "Coverage constraint clipped to feasible bound | "
+            f"requested_min_covered={min_agents_requested} | "
+            f"max_coverable={max_coverable_agents} | "
+            f"num_agents={len(agents)} | f_min={f_min} | dynamic_max={dynamic_max_audits}"
+        )
     agents_covered = sum(1 for agent in agents if agent.audit_frequency > 0)
     
     if agents_covered < min_agents_covered:
@@ -240,7 +255,7 @@ def enforce_audit_constraints(
         
         logger.info(
             f"GOVERNANCE_OVERRIDE: Forced {forced_count} additional agents to f_min={f_min} "
-            f"to meet {min_coverage_pct*100:.0f}% minimum coverage"
+            f"to meet feasible minimum coverage target {min_agents_covered}/{len(agents)}"
         )
     
     freqs = {agent.agent_id: agent.audit_frequency for agent in agents}
@@ -261,6 +276,8 @@ def enforce_audit_constraints(
         "budget_ratio_effective": float(effective_budget_ratio),
         "soft_scale": float(soft_scale),
         "min_coverage_pct": float(min_coverage_pct),
+        "min_agents_covered_target": float(min_agents_covered),
+        "max_coverable_agents": float(max_coverable_agents),
         "agents_covered": float(sum(1 for agent in agents if agent.audit_frequency > 0)),
     }
     return freqs, stats

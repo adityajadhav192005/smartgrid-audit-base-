@@ -20,12 +20,18 @@ from smartgrid_mas.audit.audit_ledger import AuditLedger
 from smartgrid_mas.audit.audit_executor import execute_audits, AuditExecConfig
 from smartgrid_mas.response.response_controller import response_step
 from smartgrid_mas.simulation.metrics import MetricsLogger
-from smartgrid_mas.anomaly_detection.inference import LSTMInferencer, concat_xy_window
+from smartgrid_mas.anomaly_detection.inference import LSTMInferencer
+from smartgrid_mas.anomaly_detection.dual_branch import (
+    build_grid_branch_window,
+    build_network_branch_window,
+    fuse_branch_probabilities,
+)
 
 
 def run_fixed_audit_24h(
     agents: List[BaseAgent],
     lstm_infer: LSTMInferencer,
+    network_lstm_infer: LSTMInferencer | None = None,
     fixed_f: int = 1,
     timestep_minutes: int = 5,
     cycle_hours: int = 24,
@@ -115,13 +121,20 @@ def run_fixed_audit_24h(
         
         obs, truth = env.step(t)
         
-        # LSTM inference
+        # Dual-branch inference
         for a in agents:
             x, y = obs[a.agent_id]
             st = a.observe(x, y)
             w = a.get_history_window(window=window_for_lstm)
-            feat = concat_xy_window(w["X"], w["Y"])
-            st.anomaly_prob = lstm_infer.predict_proba(feat)
+            grid_feat = build_grid_branch_window(w)
+            net_feat = build_network_branch_window(w) if network_lstm_infer is not None else None
+            grid_prob = lstm_infer.predict_proba(grid_feat)
+            network_prob = network_lstm_infer.predict_proba(net_feat) if network_lstm_infer is not None and net_feat is not None else 0.0
+            fused = fuse_branch_probabilities(grid_prob, network_prob)
+            st.grid_anomaly_prob = fused.grid_prob
+            st.network_intrusion_prob = fused.network_prob
+            st.fusion_agreement = fused.agreement
+            st.anomaly_prob = fused.fused_prob
         
         # Deviation scoring
         for a in agents:

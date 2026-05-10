@@ -138,7 +138,7 @@ def prf1(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
 
 def confusion_matrix(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
     if not y_true or not y_pred:
-        return {"tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0}
+        return {"tp": 0.0, "tn": 0.0, "fp": 0.0, "fn": 0.0, "tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0}
 
     y_true_arr = np.asarray(y_true, dtype=int)
     y_pred_arr = np.asarray(y_pred, dtype=int)
@@ -154,7 +154,17 @@ def confusion_matrix(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
     fnr = float(fn / (tp + fn)) if (tp + fn) > 0 else 0.0
     accuracy = float((tp + tn) / (tp + tn + fp + fn)) if (tp + tn + fp + fn) > 0 else 0.0
 
-    return {"tpr": tpr, "tnr": tnr, "fpr": fpr, "fnr": fnr, "accuracy": accuracy}
+    return {
+        "tp": float(tp),
+        "tn": float(tn),
+        "fp": float(fp),
+        "fn": float(fn),
+        "tpr": tpr,
+        "tnr": tnr,
+        "fpr": fpr,
+        "fnr": fnr,
+        "accuracy": accuracy,
+    }
 
 
 def per_attack_confusion(y_true_types: List[str], y_pred_input) -> Dict[str, Dict[str, float]]:
@@ -246,6 +256,58 @@ def per_attack_confusion(y_true_types: List[str], y_pred_input) -> Dict[str, Dic
             }
 
     return out
+
+
+def summarize_attack_typing(y_true_types: List[str], y_pred_types: List[str]) -> Dict[str, float]:
+    """
+    Summarize attack typing separately from binary anomaly detection.
+
+    Evaluates class attribution only on true non-NONE attack/fault samples.
+    """
+    if not y_true_types or not y_pred_types or len(y_true_types) != len(y_pred_types):
+        return {
+            "positive_support": 0.0,
+            "typing_accuracy": 0.0,
+            "macro_tpr": 0.0,
+            "macro_fpr": 0.0,
+            "classes_with_support": 0.0,
+        }
+
+    metrics = per_attack_confusion(y_true_types, y_pred_types)
+    positive_mask = [str(v).strip().upper() != "NONE" for v in y_true_types]
+    positive_support = int(sum(positive_mask))
+    if positive_support > 0:
+        correct = 0
+        for truth, pred in zip(y_true_types, y_pred_types):
+            truth_norm = str(truth).strip().upper()
+            pred_norm = str(pred).strip().upper()
+            if truth_norm != "NONE" and truth_norm == pred_norm:
+                correct += 1
+        typing_accuracy = float(correct / positive_support)
+    else:
+        typing_accuracy = 0.0
+
+    supported_classes = []
+    for label, vals in metrics.items():
+        if label == "NONE":
+            continue
+        if int(vals.get("support", 0)) > 0:
+            supported_classes.append(label)
+
+    if supported_classes:
+        macro_tpr = float(np.mean([metrics[label].get("tpr", 0.0) for label in supported_classes]))
+        macro_fpr = float(np.mean([metrics[label].get("fpr", 0.0) for label in supported_classes]))
+    else:
+        macro_tpr = 0.0
+        macro_fpr = 0.0
+
+    return {
+        "positive_support": float(positive_support),
+        "typing_accuracy": typing_accuracy,
+        "macro_tpr": macro_tpr,
+        "macro_fpr": macro_fpr,
+        "classes_with_support": float(len(supported_classes)),
+    }
 
 
 def compute_statistical_significance(
@@ -453,13 +515,46 @@ def build_summary(
     # FIX: Cost efficiency uses only audit cost (not failure cost)
     dyn_total_cost = dyn_cost_audit
     base_total_cost = base_cost_audit
-    risk_mitigation = 0.0
+    risk_mitigation_flag = 0.0
     if mean_risk_raw_dyn > 0:
-        risk_mitigation = float((mean_risk_raw_dyn - mean_risk_eff_dyn) / mean_risk_raw_dyn)
+        risk_mitigation_flag = float((mean_risk_raw_dyn - mean_risk_eff_dyn) / mean_risk_raw_dyn)
+
+    # Paper-faithful FPR-invariant risk mitigation (truth-based):
+    #   Numerator = ground-truth attack risk that audits/mitigation neutralised
+    #   Denominator = total ground-truth attack risk over the run
+    # This isolates "what fraction of REAL attack potential did the response
+    # mechanism mitigate" and is invariant to false-positive count changes.
+    truth_risk_series = [
+        float(r.get("truth_weighted_risk", 0.0) or 0.0) for r in dynamic_records
+    ]
+    truth_cleared_series = [
+        float(r.get("truth_risk_cleared", 0.0) or 0.0) for r in dynamic_records
+    ]
+    mean_truth_risk = float(np.mean(truth_risk_series)) if truth_risk_series else 0.0
+    mean_truth_cleared = float(np.mean(truth_cleared_series)) if truth_cleared_series else 0.0
+    risk_mitigation_truth = 0.0
+    if mean_truth_risk > 0:
+        risk_mitigation_truth = float(mean_truth_cleared / mean_truth_risk)
+        risk_mitigation_truth = max(0.0, min(1.0, risk_mitigation_truth))
+
+    risk_mitigation = risk_mitigation_flag
 
     risk_reduced_per_cost = 0.0
     if dyn_total_cost > 0:
         risk_reduced_per_cost = float((mean_risk_base - mean_risk_dyn) / dyn_total_cost)
+
+    # ---- Cost-Adjusted Mitigation (Gemini #4) ----
+    # The "commercial superiority" KPI: how much risk did we mitigate per
+    # audit-dollar spent? Higher is better. Useful to argue against a paper
+    # that achieves similar mitigation at much higher audit cost.
+    # Formula: risk_mitigation (0..1) / executed_audit_cost ($) per total agents
+    # Normalised so the ratio is interpretable across grid sizes.
+    cost_adjusted_mitigation = 0.0
+    audits_per_mitigation_point = 0.0
+    if dyn_total_cost > 0:
+        cost_adjusted_mitigation = float(risk_mitigation * 1000.0 / dyn_total_cost)
+        if risk_mitigation > 0:
+            audits_per_mitigation_point = float(dyn_total_cost / (risk_mitigation * 100.0))
 
     coverage_cycle_dyn = dynamic_records[-1].get("coverage", 0.0) if dynamic_records else 0.0
     coverage_cycle_base = baseline_records[-1].get("coverage", 0.0) if baseline_records else 0.0
@@ -479,7 +574,12 @@ def build_summary(
         "mean_global_risk_raw_dynamic": mean_risk_raw_dyn,
         "mean_global_risk_baseline": mean_risk_base,
         "risk_mitigation": risk_mitigation,
+        "risk_mitigation_flag_based": risk_mitigation_flag,
+        "risk_mitigation_truth_based": risk_mitigation_truth,
+        "mean_truth_weighted_risk": mean_truth_risk,
         "risk_reduced_per_cost": risk_reduced_per_cost,
+        "cost_adjusted_mitigation": cost_adjusted_mitigation,
+        "audits_per_mitigation_point": audits_per_mitigation_point,
         "initial_risk": initial_risk,
         "final_risk": final_risk,
         "coverage_cycle_dynamic": coverage_cycle_dyn,
@@ -490,15 +590,42 @@ def build_summary(
         prf1_metrics = prf1(y_true_dyn, y_pred_dyn)
         summary.update(prf1_metrics)
         summary.update(confusion_matrix(y_true_dyn, y_pred_dyn))
+        summary["anomaly_detection_metrics"] = {
+            "precision": float(summary.get("precision", 0.0)),
+            "recall": float(summary.get("recall", 0.0)),
+            "f1": float(summary.get("f1", 0.0)),
+            "fpr": float(summary.get("fpr", 0.0)),
+            "fn": float(summary.get("fn", 0.0)),
+            "fp": float(summary.get("fp", 0.0)),
+        }
         if y_true_types_dyn is not None and y_pred_types_dyn is not None:
             summary["per_attack_metrics"] = per_attack_confusion(y_true_types_dyn, y_pred_types_dyn)
+            summary["attack_typing_metrics"] = summarize_attack_typing(y_true_types_dyn, y_pred_types_dyn)
     else:
         summary.update({"precision": 0.0, "recall": 0.0, "f1": 0.0})
         summary.update({"tpr": 0.0, "tnr": 0.0, "fpr": 0.0, "fnr": 0.0, "accuracy": 0.0})
+        summary["anomaly_detection_metrics"] = {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "fpr": 0.0,
+            "fn": 0.0,
+            "fp": 0.0,
+        }
         if y_true_types_dyn is not None and y_pred_types_dyn is not None:
             summary["per_attack_metrics"] = per_attack_confusion(y_true_types_dyn, y_pred_types_dyn)
+            summary["attack_typing_metrics"] = summarize_attack_typing(y_true_types_dyn, y_pred_types_dyn)
         elif y_true_types_dyn is not None:
             summary["per_attack_metrics"] = per_attack_confusion(y_true_types_dyn, ["NONE"] * len(y_true_types_dyn))
+            summary["attack_typing_metrics"] = summarize_attack_typing(y_true_types_dyn, ["NONE"] * len(y_true_types_dyn))
+        else:
+            summary["attack_typing_metrics"] = {
+                "positive_support": 0.0,
+                "typing_accuracy": 0.0,
+                "macro_tpr": 0.0,
+                "macro_fpr": 0.0,
+                "classes_with_support": 0.0,
+            }
 
     summary["statistical_tests"] = compute_statistical_significance(
         dynamic_records, baseline_records, y_true_dyn, y_pred_dyn

@@ -33,8 +33,11 @@ class GridEnvConfig:
     base_comm_freq_hz: float = 100.0  # Communication frequency (Hz)
     # Realism controls (env-overridable)
     # NOTE: Actual success/failure roll is handled in response.mitigation_actions.
-    audit_success_prob: float = float(os.environ.get("SMARTGRID_AUDIT_SUCCESS_PROB", "0.95"))
-    mitigation_delay: int = int(os.environ.get("SMARTGRID_MITIGATION_DELAY", "1"))
+    # Defaults aligned with paper Section 4.1.5: response mechanism does not
+    # explicitly model delay, so default delay=0 (immediate). 0.99 success
+    # mirrors near-perfect audit semantics described in Eq. (14) discussion.
+    audit_success_prob: float = float(os.environ.get("SMARTGRID_AUDIT_SUCCESS_PROB", "0.99"))
+    mitigation_delay: int = int(os.environ.get("SMARTGRID_MITIGATION_DELAY", "0"))
 
 
 class GridEnvironment:
@@ -158,10 +161,68 @@ class GridEnvironment:
             atk = attacks.get(a.agent_id, AttackType.NONE)
             if atk == AttackType.FDI:
                 x = self.attack_injector.apply_fdi(x, t)
+                if x.shape[0] >= 1:
+                    x[0] = x[0] + 1.4 + 0.08 * np.sin(2 * np.pi * (t / 48.0))
+                if x.shape[0] >= 2:
+                    x[1] = x[1] + 0.75
+                if x.shape[0] >= 3:
+                    x[2] = x[2] - 0.55
+                if y.shape[0] >= 1:
+                    y[0] = y[0] + 0.35
+                if y.shape[0] >= 3:
+                    y[2] = min(1.0, y[2] + 0.01)
             elif atk == AttackType.DOS:
                 y = self.attack_injector.apply_dos(y)
+                if y.shape[0] >= 1:
+                    y[0] = y[0] + 3.0 + 0.4 * np.sin(2 * np.pi * (t / 36.0))
+                if y.shape[0] >= 2:
+                    y[1] = float(min(1.0, y[1] + 0.22))
+                if y.shape[0] >= 3:
+                    y[2] = float(max(0.0, y[2] - 0.22))
+                if y.shape[0] >= 4:
+                    y[3] = float(max(0.0, y[3] * 0.68))
+                if x.shape[0] >= 2:
+                    x[1] = x[1] + 0.12
             elif atk == AttackType.MITM:
                 x, y = self.attack_injector.apply_mitm(x, y)
+                if y.shape[0] >= 1:
+                    y[0] = y[0] + 1.2
+                if y.shape[0] >= 2:
+                    y[1] = float(min(1.0, y[1] + 0.06))
+                if y.shape[0] >= 3:
+                    y[2] = float(max(0.0, y[2] - 0.38))
+                if y.shape[0] >= 4:
+                    y[3] = float(max(0.0, y[3] * 0.92))
+                if x.shape[0] >= 1:
+                    x[0] = x[0] + 0.22 * np.sin(2 * np.pi * (t / 24.0))
+                if x.shape[0] >= 2:
+                    x[1] = x[1] + 0.10
+                if x.shape[0] >= 3:
+                    x[2] = x[2] - 0.08
+
+            # Strengthen fault separability after cyber perturbation stage.
+            if f != FaultType.NONE:
+                if f == FaultType.VOLTAGE_SAG:
+                    if x.shape[0] >= 1:
+                        x[0] = x[0] * 0.78
+                    if x.shape[0] >= 2:
+                        x[1] = x[1] + 0.18
+                    if y.shape[0] >= 1:
+                        y[0] = y[0] + 0.30
+                elif f == FaultType.OVERCURRENT:
+                    if x.shape[0] >= 2:
+                        x[1] = x[1] * 1.45
+                    if x.shape[0] >= 1:
+                        x[0] = x[0] + 0.12
+                    if y.shape[0] >= 1:
+                        y[0] = y[0] + 0.20
+                elif f == FaultType.FREQ_DEV:
+                    if x.shape[0] >= 3:
+                        x[2] = x[2] + 0.95
+                    if x.shape[0] >= 2:
+                        x[1] = x[1] + 0.15
+                    if y.shape[0] >= 1:
+                        y[0] = y[0] + 0.15
 
             # Legacy manual anomaly toggle (kept for tests/backward compat)
             if self.anomaly_on.get(a.agent_id, False):

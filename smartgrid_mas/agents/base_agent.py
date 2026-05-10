@@ -38,6 +38,9 @@ class BaseAgent:
     # History
     x_history: Deque[np.ndarray] = field(default_factory=lambda: deque(maxlen=512))
     y_history: Deque[np.ndarray] = field(default_factory=lambda: deque(maxlen=512))
+    anomaly_flag_history: Deque[int] = field(default_factory=lambda: deque(maxlen=16))
+    anomaly_prob_history: Deque[float] = field(default_factory=lambda: deque(maxlen=16))
+    hybrid_conf_history: Deque[float] = field(default_factory=lambda: deque(maxlen=16))
 
     # Latest computed state snapshot
     last_state: Optional[AgentState] = None

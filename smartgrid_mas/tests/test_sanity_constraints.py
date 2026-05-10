@@ -67,3 +67,39 @@ def test_sigma_threshold_floor_applied():
     assert np.all(agent.thy > 0.0)
     assert hasattr(st, "sigma_floor_x")
     assert hasattr(st, "sigma_floor_y")
+
+
+def test_min_coverage_is_clipped_to_feasible_cap():
+    prev_cov = os.environ.get("SMARTGRID_MIN_COVERAGE_PCT")
+    os.environ["SMARTGRID_MIN_COVERAGE_PCT"] = "0.40"
+    try:
+        agents = [_make_agent(i) for i in range(500)]
+        for a in agents:
+            a.audit_frequency = 0
+            a.last_state = AgentState(
+                x_phys=np.ones(3),
+                y_cyber=np.ones(4),
+                risk_score=0.0,
+                audit_frequency=0,
+            )
+
+        _, stats = enforce_audit_constraints(
+            agents=agents,
+            f_min=1,
+            f_max=5,
+            max_audits_per_cycle=100,
+            audit_cost_per_audit=1.0,
+            operational_cost=1000.0,
+            budget_ratio=0.10,
+            return_stats=True,
+        )
+
+        assert stats["min_agents_covered_target"] == 200.0
+        assert stats["max_coverable_agents"] == 200.0
+        assert stats["allowed_by_cap"] == 200.0
+        assert stats["agents_covered"] <= stats["max_coverable_agents"]
+    finally:
+        if prev_cov is None:
+            del os.environ["SMARTGRID_MIN_COVERAGE_PCT"]
+        else:
+            os.environ["SMARTGRID_MIN_COVERAGE_PCT"] = prev_cov

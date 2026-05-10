@@ -54,8 +54,10 @@ class MetricsLogger:
         dev_sum = 0.0
         freq_sum = 0
         truth_attacks = 0
+        truth_weighted_risk = 0.0  # ground-truth potential risk, invariant to FPR
+        total_criticality = 0.0  # max possible risk if every agent were attacked
         flagged_by_id: Dict[str, int] = {}
-        
+
         for a in agents:
             if a.last_state is None:
                 continue
@@ -64,8 +66,12 @@ class MetricsLogger:
             dev_sum += float(a.last_state.deviation_score)
             freq_sum += int(a.audit_frequency)
             flagged_by_id[a.agent_id] = flag_val
+            crit_w = float(getattr(a.criticality, "weight", 1.0))
+            total_criticality += crit_w
             if truth is not None:
-                truth_attacks += int(truth.get(a.agent_id, 0))
+                truth_label = int(truth.get(a.agent_id, 0))
+                truth_attacks += truth_label
+                truth_weighted_risk += crit_w * truth_label
         
         # Truth-based attack rate (preferred) and flag-based rate (legacy)
         attack_rate_truth = float(truth_attacks / n) if (n and truth is not None) else None
@@ -79,11 +85,15 @@ class MetricsLogger:
         # audited agents that are CLEAN or FALSE_ALARM at this timestep.
         attack_rate_effective = None
         global_risk_effective = None
+        truth_risk_cleared = 0.0  # ground-truth-attack risk that was neutralised this step
         if ledger is not None:
             audited_ids = {e.agent_id for e in ledger.audits_at_timestep(t)}
             agent_by_id = {a.agent_id: a for a in agents}
             dampened = 0.0
             for aid, r_comp in components.items():
+                truth_label = int(truth.get(aid, 0)) if truth is not None else 0
+                # Criticality contribution that COULD be neutralised for this truth-attacked agent
+                truth_potential_here = float(getattr(agent_by_id.get(aid).criticality, "weight", 1.0)) if (truth_label and aid in agent_by_id) else 0.0
                 if aid in audited_ids:
                     # If an audit happened, adjust risk based on outcome (paper: audits mitigate risk)
                     if outcomes and aid in outcomes:
@@ -96,10 +106,12 @@ class MetricsLogger:
                                 flagged_by_id[aid] = 0
                         elif outcome == AuditOutcome.CONFIRMED_ANOMALY:
                             r_adj = 0.0  # confirmed threat audited and isolated/shutdown → fully mitigated for effective risk
+                            truth_risk_cleared += truth_potential_here
                         else:  # MISSED_ANOMALY
                             r_adj = r_comp
                     else:
                         r_adj = 0.0  # generic audited mitigation when outcome unknown
+                        truth_risk_cleared += truth_potential_here
                     dampened += r_adj
                 else:
                     # Response mechanism effect: isolated/shutdown agents contribute
@@ -111,6 +123,7 @@ class MetricsLogger:
                         or not bool(getattr(mitigation, "active", True))
                     ):
                         dampened += 0.0
+                        truth_risk_cleared += truth_potential_here
                     else:
                         dampened += r_comp
             global_risk_effective = float(dampened)
@@ -140,6 +153,9 @@ class MetricsLogger:
             "mean_deviation": mean_dev,
             "global_risk": global_risk,
             "global_risk_effective": global_risk_effective,
+            "truth_weighted_risk": truth_weighted_risk,
+            "truth_risk_cleared": truth_risk_cleared,
+            "total_criticality": total_criticality,
             "freq_sum": freq_sum,  # scheduler intent
             "intended_spend": intended_spend,
             "audits_executed": audits_executed,  # reality

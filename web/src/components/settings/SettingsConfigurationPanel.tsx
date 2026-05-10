@@ -9,11 +9,13 @@ type Param = { key: string; label: string; value: string | number; type: 'number
 const TABS = ['Model Parameters', 'Reward Weights', 'Detection Thresholds', 'Operational Risks & Delays', 'API Config', 'Algorithms & Visualization'] as const
 type Tab = typeof TABS[number]
 
+const REQUIRED_KEYS = ['num_agents', 'episodes', 'fdi_rate', 'dos_rate', 'chain_rate'] as const
+
 const PARAMS: Record<Tab, Param[]> = {
   'Model Parameters': [
-    { key: 'num_agents',       label: 'Number of Agents (N)', value: 100, type: 'number', min: 1, max: 500, step: 1, desc: 'Global agent count for experiments. Allowed range: 1 to 500.' },
+    // { key: 'num_agents', label: 'Number of Agents (N)', value: 100, type: 'number', min: 1, max: 5000, step: 1, desc: 'Maps to SMARTGRID_NUM_AGENTS for run defaults.' },
+    { key: 'seeds', label: 'Seeds (comma-separated)', value: '42,43,44', type: 'text', desc: 'Maps to SMARTGRID_SEEDS for multi-seed reproducible runs.' },
     { key: 'learning_rate',    label: 'Learning Rate (α)', value: 0.01, type: 'number', min: 0.0001, max: 1, step: 0.001, desc: 'Step size for gradient-based audit frequency updates.' },
-    { key: 'discount_factor',  label: 'Discount Factor (γ)', value: 0.9, type: 'number', min: 0.1, max: 1, step: 0.01, desc: 'RL discount factor controlling long-term reward weight.' },
     { key: 'epsilon',          label: 'Epsilon (ε-greedy)',  value: 0.1, type: 'number', min: 0.0, max: 1, step: 0.01, desc: 'Exploration rate for ε-greedy action selection.' },
     { key: 'replay_buffer',    label: 'Replay Buffer Size',  value: 2000,type: 'number', min: 500, max: 50000, step: 100, desc: 'Experience replay buffer capacity. Min 2000 recommended for rare-event coverage.' },
     { key: 'episodes',         label: 'Training Episodes',   value: 200, type: 'number', min: 10, max: 2000, step: 10, desc: 'Number of RL training episodes per run.' },
@@ -34,10 +36,11 @@ const PARAMS: Record<Tab, Param[]> = {
     { key: 'alpha_high',   label: 'α_high (rapid adapt)',  value: 0.8,  type: 'number', min: 0.5, max: 0.99, step: 0.01, desc: 'Smoothing factor during anomalies — fast baseline update.' },
     { key: 'alpha_low',    label: 'α_low (stable)',        value: 0.05, type: 'number', min: 0.001, max: 0.3, step: 0.001, desc: 'Smoothing factor during stable conditions — anchors to history.' },
     { key: 'beta',         label: 'β (threshold adjust)',  value: 0.3,  type: 'number', min: 0.01, max: 1.0, step: 0.01, desc: 'Controls rate of threshold change relative to deviation.' },
-    { key: 'k_scale',      label: 'k (threshold scale)',   value: 3.0,  type: 'number', min: 1.0, max: 10.0, step: 0.1, desc: 'Multiplier for σ in Th_ij = k × σ_ij.' },
-    { key: 'anomaly_th',   label: 'Anomaly Score Cutoff',  value: 1.0,  type: 'number', min: 0.1, max: 5.0, step: 0.1, desc: 'Agent flagged anomalous when S_i(t) ≥ this value.' },
-    { key: 'risk_th',      label: 'Risk Score Threshold',  value: 0.5,  type: 'number', min: 0.1, max: 1.0, step: 0.05, desc: 'Values above this trigger an audit action.' },
-    { key: 'prob_threshold', label: 'Anomaly Probability Threshold', value: 0.999, type: 'number', min: 0.5, max: 1.0, step: 0.001, desc: 'Maps to SMARTGRID_ANOMALY_PROB_THRESHOLD.' },
+    { key: 'k_scale',      label: 'k (threshold scale)',   value: 4.0,  type: 'number', min: 1.0, max: 10.0, step: 0.1, desc: 'Multiplier for σ in Th_ij = k × σ_ij.' },
+    { key: 'anomaly_th',   label: 'Anomaly Score Cutoff',  value: 3.0,  type: 'number', min: 0.1, max: 5.0, step: 0.1, desc: 'Agent flagged anomalous when S_i(t) ≥ this value.' },
+    { key: 'prob_threshold', label: 'Anomaly Probability Threshold', value: 0.97, type: 'number', min: 0.5, max: 1.0, step: 0.001, desc: 'Maps to SMARTGRID_ANOMALY_PROB_THRESHOLD.' },
+    { key: 'hybrid_w_dev', label: 'Hybrid Weight (Deviation)', value: 0.55, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Maps to SMARTGRID_HYBRID_W_DEV.' },
+    { key: 'hybrid_w_prob', label: 'Hybrid Weight (Probability)', value: 0.45, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Maps to SMARTGRID_HYBRID_W_PROB.' },
     { key: 'sigma_window', label: 'Sigma Calibration Window', value: 24, type: 'number', min: 4, max: 500, step: 1, desc: 'Maps to SMARTGRID_THRESHOLD_WINDOW for rolling sigma estimation.' },
   ],
   'Operational Risks & Delays': [
@@ -55,8 +58,12 @@ const PARAMS: Record<Tab, Param[]> = {
     { key: 'api_host', label: 'FastAPI Host', value: 'deployment-configured', type: 'text', desc: 'Backend API host or public URL label.' },
     { key: 'api_port', label: 'FastAPI Port', value: 8000,       type: 'number', min: 1024, max: 65535, step: 1, desc: 'Backend API port.' },
     { key: 'scada_host', label: 'SCADA Host', value: 'deployment-configured', type: 'text', desc: 'Rapid SCADA Web API host.' },
-    { key: 'scada_port', label: 'SCADA Port', value: 10008,      type: 'number', min: 1024, max: 65535, step: 1, desc: 'Rapid SCADA IIS port.' },
+    { key: 'scada_port', label: 'SCADA Port', value: 10109,      type: 'number', min: 1024, max: 65535, step: 1, desc: 'Rapid SCADA local web host port.' },
     { key: 'scada_poll', label: 'Poll Interval (s)', value: 2,   type: 'number', min: 1, max: 60, step: 1, desc: 'Rapid SCADA bridge polling interval in seconds.' },
+    { key: 'scada_demo_phase', label: 'Live Demo Phase', value: 'Independent', type: 'text', desc: 'Maps to SMARTGRID_SCADA_DEMO_ANOMALY_PHASE. Use Independent for realistic per-agent behavior.' },
+    { key: 'scada_rate_preset', label: 'Live Anomaly Rate Preset', value: 'Realistic', type: 'text', desc: 'Maps to SMARTGRID_SCADA_INDEPENDENT_RATE_PRESET. Valid values: Realistic, Balanced, Demo.' },
+    { key: 'scada_anomaly_cycle_seconds', label: 'Anomaly Cycle Seconds', value: 150, type: 'number', min: 20, max: 3600, step: 10, desc: 'Maps to SMARTGRID_SCADA_ANOMALY_CYCLE_SECONDS.' },
+    { key: 'scada_anomaly_intensity', label: 'Anomaly Intensity', value: 1.0, type: 'number', min: 0.1, max: 3.0, step: 0.1, desc: 'Maps to SMARTGRID_SCADA_ANOMALY_INTENSITY.' },
   ],
   'Algorithms & Visualization': [
     { key: 'detector_algo', label: 'Anomaly Detector Algorithm', value: 'LSTM', type: 'text', desc: 'Primary detector currently used in pipeline (LSTM).' },
@@ -79,6 +86,8 @@ export function SettingsConfigurationPanel() {
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [persistedVals, setPersistedVals] = useState<Record<string, string | number> | null>(null)
   const [vals, setVals] = useState<Record<string, string | number>>(
     Object.fromEntries(Object.values(PARAMS).flat().map(p => [p.key, p.value]))
   )
@@ -89,6 +98,8 @@ export function SettingsConfigurationPanel() {
         const res = await fetch('/api/settings/runtime', { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
+        const values = data?.values ?? {}
+        const runtimeEnv = data?.runtime_env ?? {}
         const overrides = data?.runtime_overrides ?? data?.overrides ?? {}
 
         const nextVals: Record<string, string | number> = {}
@@ -106,6 +117,8 @@ export function SettingsConfigurationPanel() {
         assign('k_scale', overrides?.thresholds?.k_sigma)
         assign('anomaly_th', overrides?.thresholds?.score_threshold)
         assign('prob_threshold', overrides?.thresholds?.prob_threshold)
+        assign('hybrid_w_dev', values?.hybrid_w_dev ?? runtimeEnv?.SMARTGRID_HYBRID_W_DEV)
+        assign('hybrid_w_prob', values?.hybrid_w_prob ?? runtimeEnv?.SMARTGRID_HYBRID_W_PROB)
         assign('sigma_window', overrides?.thresholds?.sigma_window)
 
         assign('learning_rate', overrides?.gradient?.lr)
@@ -116,8 +129,23 @@ export function SettingsConfigurationPanel() {
         assign('lstm_num_layers', overrides?.anomaly_model?.lstm?.num_layers)
         assign('lstm_dropout', overrides?.anomaly_model?.lstm?.dropout)
 
+        assign('episodes', values?.episodes)
+        assign('num_agents', values?.num_agents ?? runtimeEnv?.SMARTGRID_NUM_AGENTS)
+        assign('seeds', values?.seeds ?? runtimeEnv?.SMARTGRID_SEEDS)
+        assign('fdi_rate', values?.fdi_rate ?? runtimeEnv?.SMARTGRID_FDI_RATE)
+        assign('dos_rate', values?.dos_rate ?? runtimeEnv?.SMARTGRID_DOS_RATE)
+        assign('chain_rate', values?.chain_rate ?? runtimeEnv?.SMARTGRID_CHAIN_RATE)
+        assign('fault_rate', values?.fault_rate ?? runtimeEnv?.SMARTGRID_FAULT_RATE)
+        assign('api_port', values?.api_port ?? runtimeEnv?.SMARTGRID_API_PORT)
+        assign('scada_poll', values?.scada_poll ?? runtimeEnv?.SMARTGRID_SCADA_POLL_SEC)
+        assign('scada_demo_phase', values?.scada_demo_phase ?? runtimeEnv?.SMARTGRID_SCADA_DEMO_ANOMALY_PHASE)
+        assign('scada_rate_preset', values?.scada_rate_preset ?? runtimeEnv?.SMARTGRID_SCADA_INDEPENDENT_RATE_PRESET)
+        assign('scada_anomaly_cycle_seconds', values?.scada_anomaly_cycle_seconds ?? runtimeEnv?.SMARTGRID_SCADA_ANOMALY_CYCLE_SECONDS)
+        assign('scada_anomaly_intensity', values?.scada_anomaly_intensity ?? runtimeEnv?.SMARTGRID_SCADA_ANOMALY_INTENSITY)
+
         if (Object.keys(nextVals).length > 0) {
           setVals(prev => ({ ...prev, ...nextVals }))
+          setPersistedVals(prev => ({ ...(prev ?? {}), ...nextVals }))
         }
       } catch {
       }
@@ -127,6 +155,15 @@ export function SettingsConfigurationPanel() {
   }, [])
 
   async function handleSave() {
+    setValidationError(null)
+    for (const key of REQUIRED_KEYS) {
+      const value = vals[key]
+      if (value === undefined || value === null || value === '') {
+        setValidationError(`Missing required parameter: ${key}`)
+        return
+      }
+    }
+
     setSaving(true)
     setSaveError(null)
     setSaved(false)
@@ -154,11 +191,11 @@ export function SettingsConfigurationPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-slate-200">Settings & Configuration</h2>
-          <p className="text-xs text-slate-500 mt-1">Merged with run setup — persisted to runtime config/env for effective pipeline runs</p>
+          <p className="text-xs text-slate-500 mt-1">These settings drive experiment runs. Rapid SCADA live scoring uses a separate fixed SCADA profile.</p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setVals(Object.fromEntries(Object.values(PARAMS).flat().map(p => [p.key, p.value])))}
+            onClick={() => setVals(persistedVals ?? Object.fromEntries(Object.values(PARAMS).flat().map(p => [p.key, p.value])))}
             className="flex items-center gap-1.5 text-xs bg-grid-900 hover:bg-slate-700/40 border border-slate-700/50 text-slate-400 px-3 py-1.5 rounded transition-colors"
           >
             <RefreshCw size={11} /> Reset
@@ -166,7 +203,7 @@ export function SettingsConfigurationPanel() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className={`flex items-center gap-1.5 text-xs border px-4 py-1.5 rounded font-semibold transition-colors ${saved ? 'bg-cyber-green/20 border-cyber-green/40 text-cyber-green' : 'bg-cyber-blue/20 border-cyber-blue/40 text-cyber-blue hover:bg-cyber-blue/30'} disabled:opacity-60`}
+            className={`flex items-center gap-1.5 text-xs border px-4 py-1.5 rounded font-semibold transition-colors ${saved ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300' : 'bg-slate-200/10 border-slate-400/40 text-slate-200 hover:bg-slate-200/20'} disabled:opacity-60`}
           >
             <Save size={11} /> {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </button>
@@ -179,16 +216,22 @@ export function SettingsConfigurationPanel() {
         </div>
       )}
 
+      {validationError && (
+        <div className="glass-card border border-amber-500/30 p-3 text-xs text-amber-300">
+          {validationError}
+        </div>
+      )}
+
       <div className="glass-card p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="font-semibold text-slate-300">Operations:</span>
-          <Link href="/integrations" className="text-cyber-blue hover:underline">Integrations</Link>
+          <Link href="/integrations" className="text-slate-300 hover:underline">Integrations</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/scada-live" className="text-cyber-blue hover:underline">SCADA Live</Link>
+          <Link href="/scada-live" className="text-slate-300 hover:underline">SCADA Live</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/api-studio" className="text-cyber-blue hover:underline">API Studio</Link>
+          <Link href="/api-studio" className="text-slate-300 hover:underline">API Studio</Link>
           <span className="text-slate-600">•</span>
-          <Link href="/reports" className="text-cyber-blue hover:underline">Reports</Link>
+          <Link href="/reports" className="text-slate-300 hover:underline">Reports</Link>
         </div>
       </div>
 
@@ -197,7 +240,7 @@ export function SettingsConfigurationPanel() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-xs font-semibold rounded-t transition-colors ${tab === t ? 'bg-cyber-blue/20 text-cyber-blue border-b-2 border-cyber-blue' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`px-4 py-2 text-xs font-semibold rounded-t transition-colors ${tab === t ? 'bg-slate-200/10 text-slate-200 border-b-2 border-slate-300' : 'text-slate-500 hover:text-slate-300'}`}
           >
             {t}
           </button>
@@ -239,7 +282,7 @@ export function SettingsConfigurationPanel() {
                     return { ...prev, [p.key]: nextValue }
                   })
                 }}
-                className="w-full bg-grid-900 border border-slate-700/50 text-slate-200 text-sm px-3 py-2 rounded focus:outline-none focus:border-cyber-blue/60 focus:ring-1 focus:ring-cyber-blue/30 font-mono"
+                className="w-full bg-grid-900 border border-slate-700/50 text-slate-200 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-400/60 focus:ring-1 focus:ring-slate-400/20 font-mono"
               />
               <p className="text-xs text-slate-500">{p.desc}</p>
             </div>
