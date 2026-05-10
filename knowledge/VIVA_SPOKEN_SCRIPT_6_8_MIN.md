@@ -58,6 +58,8 @@ The three modalities vote. If deviation is high AND LSTM probability confirms AN
 
 This is why our false positive rate is 0.24% versus the paper's 3.2%.
 
+I also extended this with a three-layer multi-detector architecture for stealthy attacks. Layer A is the calibrated LSTM threshold I just described. Layer B is a temporal accumulator that flags any agent whose LSTM probability stays at or above 0.55 for five or more consecutive timesteps — this catches sustained low-amplitude attacks like FDI and MITM that never spike high enough for Layer A. Layer C is a set of attack-type sub-detectors: a CUSUM drift test for FDI, a 2-of-3 network rule for DoS based on latency, packet loss, and comm-frequency drop, and an integrity-plus-temporal-jump check for MITM. The layers are combined OR-with-precedence — any layer firing flags the agent, but the type-specific labels override the generic sustained label so downstream typing carries domain meaning.
+
 ---
 
 ## AUDIT SCHEDULING (3:15 – 3:55)
@@ -144,3 +146,9 @@ An RDBMS audit log can be silently edited by an insider. A hash chain cannot be 
 
 **"What does federated learning add?"**
 In a real multi-utility deployment, utilities will not share raw telemetry. Federated learning lets each cluster train locally and share only model weight updates. The global model improves without privacy violations.
+
+**"Did you compare with other detection methods?"**
+Yes. We ran five methods on the same simulation data: deviation-only, LSTM-only, Isolation Forest, One-Class SVM, and our full system. Each baseline was given its best threshold via sweep. Our system achieved 94.23% accuracy and 1.81% FPR, versus the next best at 86.35% accuracy. No single-modality method can achieve both high recall and low FPR — the multi-modal ensemble achieves both.
+
+**"Why not just use Isolation Forest or another ML method?"**
+Isolation Forest achieved 68.85% accuracy and 27.95% FPR on the same data. It learns normal patterns but lacks domain knowledge about attack types — it can't distinguish FDI from DoS from MITM. Our sub-detectors encode attacker domain knowledge (CUSUM for drift, network rules for DoS, integrity checks for MITM), which is much harder to evade than a learned boundary.

@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { loginToPath, requireE2ECredentials } from './helpers/auth'
 
 test('runs page can launch and complete one experiment', async ({ page }, testInfo) => {
-  const { email, password } = requireE2ECredentials()
-
-  await loginToPath(page, '/runs', email, password)
+  await page.goto('/runs', { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByRole('heading', { name: 'Run Configuration' })).toBeVisible()
 

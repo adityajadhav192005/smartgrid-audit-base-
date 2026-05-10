@@ -115,6 +115,15 @@ S_i(t) = w_i × (dx + dy)                ← final anomaly score
 If score_ratio < 3.5 AND no behavioral signature AND LSTM probability < 0.3 → suppress flag
 This eliminates physical-only noise from being classified as attacks
 
+**Three-Layer Multi-Detector Architecture (extends the ensemble above):**
+- **Layer A** — calibrated LSTM threshold (the modality stack above) — catches obvious single-step attacks
+- **Layer B** — temporal accumulator: flag if LSTM probability ≥ 0.55 for ≥ 5 consecutive steps — catches sustained low-amplitude FDI/MITM
+- **Layer C** — attack-type sub-detectors:
+  - C-1 CUSUM drift (Page 1954) on physical residuals → FDI
+  - C-2 2-of-3 network rule (latency × baseline + packet-loss + comm-drop) → DoS
+  - C-3 integrity-drop AND temporal z-jump → MITM
+- **Combiner** — OR-with-precedence: any layer flags the agent; type-specific labels override generic SUSTAINED label
+
 ---
 
 ## Slide 8 — Why 3 Modalities Work Better Than 1
@@ -330,7 +339,23 @@ These are research prototype limitations, not algorithmic failures. The base pap
 
 ---
 
-## Slide 20 — Future Work
+## Slide 20 — Method Comparison Study (NEW)
+
+Five detection methods evaluated on the same simulation data (100 agents, 24h cycle):
+
+| Method | Accuracy | FPR | Recall | F1 |
+|--------|----------|-----|--------|-----|
+| Deviation-Only (base paper) | 81.40% | 9.06% | 36.89% | 41.18% |
+| LSTM-Only | 86.35% | 0.00% | 22.67% | 36.96% |
+| Isolation Forest | 68.85% | 27.95% | 53.92% | 37.92% |
+| One-Class SVM | 46.35% | 59.99% | 75.93% | 33.31% |
+| **Our System** | **94.23%** | **1.81%** | **75.76%** | **82.25%** |
+
+**Speaker note:** "Each baseline was given its best possible threshold via sweep. Our system still wins on accuracy, FPR, and F1 simultaneously. No single method can achieve both high recall and low FPR — the multi-modal ensemble does."
+
+---
+
+## Slide 21 — Future Work
 
 1. **IDS/SIEM integration** — feed real packet_loss and integrity from Snort/Suricata
 2. **Adaptive baselines** — online learning to update baselines from operational data
@@ -362,6 +387,10 @@ These are research prototype limitations, not algorithmic failures. The base pap
 18. Dual workspace (experiment vs live SCADA)
 19. Multi-scale validation (N=100, 200, 500)
 20. Statistical significance testing (10-seed mean + std)
+21. Three-layer multi-detector architecture (Layer A calibrated threshold + Layer B temporal accumulator + Layer C attack-type sub-detectors)
+22. CUSUM-based FDI drift detection (classical SPC applied to false data injection)
+23. Rule-based DoS detection (2-of-3 network signal corroboration)
+24. Integrity + temporal-jump MITM detection (combined spatial / temporal consistency check)
 
 ---
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import base64
 import math
 import time
 import threading
@@ -719,7 +720,10 @@ def _latest_experiment_artifacts() -> tuple[Path, Dict[str, Any], Path | None, p
     events_path = summary_path.with_name("events_dynamic.csv")
     if not events_path.exists():
         return summary_path, summary, None, None
-    df = pd.read_csv(events_path)
+    # Limit to last 5000 rows to avoid reading the full 40MB+ file on every call
+    total = sum(1 for _ in open(events_path, encoding="utf-8")) - 1  # exclude header
+    skip = max(0, total - 5000)
+    df = pd.read_csv(events_path, skiprows=range(1, skip + 1) if skip > 0 else None)
     return summary_path, summary, events_path, df
 
 
@@ -1572,3 +1576,36 @@ def runs_logs(run_id: str, tail: int = 40, _: str = Depends(_security_guard)) ->
     with _runs_lock:
         lines = list(_run_logs.get(run_id, []))
     return {"run_id": run_id, "lines": lines[-n_tail:]}
+
+
+@app.post("/v1/screenshot/save")
+def screenshot_save(payload: Dict[str, Any], _: str = Depends(_security_guard)) -> Dict[str, Any]:
+    """Save a base64-encoded PNG screenshot to knowledge/figures/."""
+    filename = str(payload.get("filename", "screenshot.png"))
+    data_url = str(payload.get("data", ""))
+    if not filename or not data_url:
+        raise HTTPException(status_code=400, detail="filename and data required")
+    if "," in data_url:
+        data_url = data_url.split(",", 1)[1]
+    img_bytes = base64.b64decode(data_url)
+    import re
+    if not re.match(r"^[a-zA-Z0-9_\-]+\.(png|jpg|jpeg)$", filename):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    figures_dir = Path("knowledge") / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    out_path = figures_dir / filename
+    out_path.write_bytes(img_bytes)
+    return {"saved": str(out_path), "bytes": len(img_bytes)}
+
+
+# ---- Method Comparison endpoint ----
+
+@app.get("/v1/comparison/results")
+def comparison_results(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    """Return cached method comparison results (or empty if not yet run)."""
+    results_path = Path("smartgrid_mas") / "results" / "method_comparison.json"
+    if not results_path.exists():
+        return {"status": "not_run", "summaries": []}
+    with open(results_path) as f:
+        data = json.load(f)
+    return {"status": "complete", **data}

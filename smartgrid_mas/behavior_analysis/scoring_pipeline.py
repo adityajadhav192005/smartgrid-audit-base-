@@ -8,6 +8,13 @@ from smartgrid_mas.agents.base_agent import BaseAgent
 from smartgrid_mas.agents.state import AgentState
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score
 from smartgrid_mas.detection.network_attack_evidence import infer_network_attack_evidence
+from smartgrid_mas.detection.multilayer_detection import (
+    combine_layers,
+    cusum_fdi_detector,
+    integrity_mitm_detector,
+    network_dos_detector,
+    sustained_suspicion,
+)
 
 
 def _env_float(key: str, default: float) -> float:
@@ -410,8 +417,8 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     # Tightened defaults (Apr 2026, round 3): aim for accuracy ~93-95%.
     # We now also raise min_strong_features to 3 in ROBUST and require the
     # severe_deviation gate to be at the new score_threshold floor.
-    score_threshold = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 4.40, 4.65, 4.85)
-    prob_threshold = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.95, 0.97, 0.98)
+    score_threshold = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 3.60, 3.85, 4.10)
+    prob_threshold = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.80, 0.85, 0.90)
 
     prior_risk_component = float(getattr(st, "risk_score", agent.risk_score))
     detector_sensitivity = _profile_default_float("SMARTGRID_DETECTION_SENSITIVITY", 1.00, 1.00, 1.00)
@@ -425,7 +432,7 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     low_risk_prob_floor = _profile_default_float("SMARTGRID_LOW_RISK_PROB_FLOOR", 0.82, 0.85, 0.88)
     disagreement_penalty = _profile_default_float("SMARTGRID_DETECTION_DISAGREEMENT_PENALTY", 0.13, 0.16, 0.18)
     feature_peak_min = _profile_default_float("SMARTGRID_DETECTION_FEATURE_PEAK_MIN", 1.50, 1.60, 1.70)
-    min_signal_strength = _profile_default_float("SMARTGRID_DETECTION_MIN_SIGNAL_STRENGTH", 0.50, 0.55, 0.60)
+    min_signal_strength = _profile_default_float("SMARTGRID_DETECTION_MIN_SIGNAL_STRENGTH", 0.38, 0.44, 0.50)
     min_strong_features = max(1, _env_int("SMARTGRID_DETECTION_MIN_STRONG_FEATURES", 3))
 
     prev_flag = int(agent.anomaly_flag_history[-1]) if agent.anomaly_flag_history else 0
@@ -647,8 +654,35 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     # Going lower (e.g. 96-98% accuracy) would require accepting recall < 100%,
     # which is the wrong tradeoff for security-critical infrastructure.
 
+    # ---- Multi-layer detection (Options B + C) ----
+    multilayer_enabled = _env_int("SMARTGRID_MULTILAYER_ENABLED", 1) == 1
+    multilayer_label = "NONE"
+    multilayer_conf = 0.0
+    multilayer_reason = ""
+    if multilayer_enabled and a == 0:
+        layer_b = sustained_suspicion(agent.anomaly_prob_history)
+        layer_c1 = cusum_fdi_detector(agent.x_history, agent.bx, scale=agent.thx)
+        layer_c2 = network_dos_detector(st.y_cyber, agent.by)
+        layer_c3 = integrity_mitm_detector(
+            st.y_cyber, agent.by, y_history=agent.y_history
+        )
+        winner = combine_layers(layer_b, layer_c1, layer_c2, layer_c3)
+        if winner.fired:
+            a = 1
+            st.anomaly_flag = a
+            st.fp_suppressed = 0
+            multilayer_label = winner.label
+            multilayer_conf = winner.confidence
+            multilayer_reason = winner.reason
+    st.multilayer_label = multilayer_label
+    st.multilayer_confidence = float(multilayer_conf)
+    st.multilayer_reason = multilayer_reason
+
     if a == 1:
         attack_type, attack_confidence = _classify_attack_type(agent, st)
+        if multilayer_label not in ("NONE", "SUSTAINED") and multilayer_conf >= attack_confidence:
+            attack_type = multilayer_label
+            attack_confidence = multilayer_conf
         st.attack_type = attack_type
         st.attack_type_confidence = float(attack_confidence)
 

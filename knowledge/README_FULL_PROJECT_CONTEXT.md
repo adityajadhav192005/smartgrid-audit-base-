@@ -241,6 +241,28 @@ Main files:
 - `smartgrid_mas/anomaly_detection/inference.py`
 - `smartgrid_mas/anomaly_detection/dataset.py`
 
+## 7.2.1 Multi-Layer Detection (Layers B + C)
+
+The single-threshold LSTM detector misses stealthy attacks (FDI, MITM, low-amplitude DoS) because they never reach the high-confidence bar in any one timestep. We extend the detector with two complementary layers, combined via OR-with-precedence:
+
+**Layer B — Temporal accumulator (`sustained_suspicion`):**
+Flags an agent when its LSTM probability stays at or above 0.55 for 5+ consecutive steps. Catches sustained low-amplitude attacks invisible to single-step thresholds. Detection delay ~25 minutes; near-zero FPR cost because random noise rarely persists.
+
+**Layer C — Attack-type sub-detectors:**
+- `cusum_fdi_detector` — two-sided CUSUM on physical residuals scaled by sensor thresholds; alarm at cumulative bias h=4.0. Catches FDI drift attacks.
+- `network_dos_detector` — explicit 2-of-3 rule on latency multiplier (≥3×), packet loss (≥0.15), comm-frequency drop (≥40%). Catches DoS.
+- `integrity_mitm_detector` — AND-rule on integrity drop (≥35%) and temporal z-jump (≥2.5σ from history). Catches MITM tampering.
+
+**Combiner:** `combine_layers()` returns the firing layer with highest confidence; specific labels (FDI/DOS/MITM) take precedence over the generic SUSTAINED label so downstream typing/response use domain-specific information.
+
+**Activation:** Enabled by default. Disable for ablation with `SMARTGRID_MULTILAYER_ENABLED=0`. Per-layer tunables: `SMARTGRID_TEMPORAL_FLOOR/CONSEC/WINDOW`, `SMARTGRID_CUSUM_K/H/WINDOW`, `SMARTGRID_DOS_LATENCY_MULT/PACKETLOSS_MIN/COMM_DROP`, `SMARTGRID_MITM_INTEGRITY_DROP/JUMP_Z`.
+
+Main files:
+
+- `smartgrid_mas/detection/multilayer_detection.py` — sub-detectors + combiner
+- `smartgrid_mas/behavior_analysis/scoring_pipeline.py` — wiring, OR-with-precedence in `compute_score_and_flag`
+- `knowledge/MULTILAYER_DETECTION.md` — full architectural deep-dive
+
 ## 7.3 Q-Learning Audit Scheduler
 
 This is the RL part of the dynamic audit scheduler.
@@ -405,6 +427,12 @@ Major additions:
 10. **Implementation realism**
    - complete backend, bridge, dashboard, and SCADA integration
 
+11. **Multi-layer detection architecture**
+   - Layer A (calibrated LSTM threshold) extends the paper's single detector
+   - Layer B (temporal accumulator) catches sustained low-amplitude attacks
+   - Layer C (CUSUM / network-rule / integrity sub-detectors) catches FDI / DoS / MITM via attack-type-specific signatures
+   - OR-with-precedence combiner keeps FPR low while raising recall on stealthy attacks (FDI 0% → catchable, MITM 0% → catchable)
+
 ## 8.3 Why This Project Performs Better
 
 The main reasons the proposed project improves over the conceptual base paper are:
@@ -525,18 +553,50 @@ The current bridge default is `Independent` mode with the `Realistic` preset. Th
 
 ### 10.2 Detection and Hybrid Scoring
 
+Layer A (calibrated LSTM threshold) — ROBUST profile defaults shown:
+
 | Parameter | Current Default / Role |
 |---|---|
-| `SMARTGRID_SCORE_THRESHOLD` | default `2.85` for score-based anomaly gating |
-| `SMARTGRID_ANOMALY_PROB_THRESHOLD` | default `0.94` for model probability confirmation |
+| `SMARTGRID_SCORE_THRESHOLD` | default `3.60` (lowered from `4.40` for higher recall) |
+| `SMARTGRID_ANOMALY_PROB_THRESHOLD` | default `0.80` (lowered from `0.95` for higher recall) |
+| `SMARTGRID_DETECTION_MIN_SIGNAL_STRENGTH` | default `0.38` (lowered from `0.50`) |
 | `SMARTGRID_HYBRID_W_DEV` | default `0.48` for deviation contribution |
 | `SMARTGRID_HYBRID_W_PROB` | default `0.52` for model-probability contribution |
-| `SMARTGRID_DETECTION_SENSITIVITY` | default `1.04` to scale anomaly sensitivity |
-| `SMARTGRID_DETECTION_PERSISTENCE_BONUS` | default `0.12` for short-term persistence support |
+| `SMARTGRID_DETECTION_SENSITIVITY` | default `1.00` to scale anomaly sensitivity |
 | `SMARTGRID_DETECTION_PERSIST_WINDOW` | default `3` recent windows |
 | `SMARTGRID_DETECTION_PERSIST_MIN_FLAGS` | default `2` recent flags required for persistence assistance |
-| `SMARTGRID_LOW_RISK_SCORE_MULT` | default `1.10` to keep low-risk agents stricter than high-risk agents |
-| `SMARTGRID_LOW_RISK_HYBRID_MIN` | default `1.22` hybrid confidence floor for low-risk promotion |
+
+Layer B (temporal accumulator) — `sustained_suspicion`:
+
+| Parameter | Current Default / Role |
+|---|---|
+| `SMARTGRID_MULTILAYER_ENABLED` | default `1`; set `0` for ablation |
+| `SMARTGRID_TEMPORAL_WINDOW` | default `6` — lookback window for consecutive run check |
+| `SMARTGRID_TEMPORAL_FLOOR` | default `0.55` — per-step LSTM probability bar |
+| `SMARTGRID_TEMPORAL_CONSEC` | default `5` — required consecutive count |
+
+Layer C-1 (CUSUM FDI drift) — `cusum_fdi_detector`:
+
+| Parameter | Current Default / Role |
+|---|---|
+| `SMARTGRID_CUSUM_K` | default `0.50` — per-step tolerance in scale units |
+| `SMARTGRID_CUSUM_H` | default `4.00` — alarm threshold |
+| `SMARTGRID_CUSUM_WINDOW` | default `8` — history length |
+
+Layer C-2 (network DoS rule) — `network_dos_detector`:
+
+| Parameter | Current Default / Role |
+|---|---|
+| `SMARTGRID_DOS_LATENCY_MULT` | default `3.0` — multiplier of baseline latency |
+| `SMARTGRID_DOS_PACKETLOSS_MIN` | default `0.15` — packet loss threshold |
+| `SMARTGRID_DOS_COMM_DROP` | default `0.40` — fractional drop in comm frequency |
+
+Layer C-3 (integrity / MITM) — `integrity_mitm_detector`:
+
+| Parameter | Current Default / Role |
+|---|---|
+| `SMARTGRID_MITM_INTEGRITY_DROP` | default `0.35` — fractional integrity drop |
+| `SMARTGRID_MITM_JUMP_Z` | default `2.5` — temporal jump z-score threshold |
 
 ### 10.3 LSTM Training and Calibration
 

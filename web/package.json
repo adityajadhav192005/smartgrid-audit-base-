@@ -7,11 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:e2e:single": "playwright test tests/smoke-login.spec.ts --project=chromium",
     "test:e2e:reports": "playwright test tests/smoke-reports-download.spec.ts --project=chromium",
     "test:e2e:runs": "playwright test tests/smoke-runs-ui.spec.ts --project=chromium",
-    "test:e2e:smoke": "playwright test tests/smoke-login.spec.ts tests/smoke-reports-download.spec.ts tests/smoke-runs-ui.spec.ts --project=chromium",
-    "test:e2e:smoke:headed": "playwright test tests/smoke-login.spec.ts tests/smoke-reports-download.spec.ts tests/smoke-runs-ui.spec.ts --project=chromium --headed --workers=1"
+    "test:e2e:smoke": "playwright test tests/smoke-reports-download.spec.ts tests/smoke-runs-ui.spec.ts --project=chromium",
+    "test:e2e:smoke:headed": "playwright test tests/smoke-reports-download.spec.ts tests/smoke-runs-ui.spec.ts --project=chromium --headed --workers=1"
   },
   "dependencies": {
     "next": "14.2.3",
@@ -32,7 +31,6 @@
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "date-fns": "^3.6.0",
-    "@supabase/supabase-js": "^2.52.0",
     "zustand": "^4.5.2",
     "swr": "^2.2.5"
   },

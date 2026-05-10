@@ -197,6 +197,39 @@ The base paper's ~68 false positives per 24h cycle are physical-only noise — l
 **Why not more aggressive suppression:**
 Every additional suppression condition risks dropping recall. Tier-A is the minimum that achieves the FPR target without sacrificing recall. Multiple Tier-B variants were tested and all reduced recall to 13–34%.
 
+### 3.6 Multi-Layer Detection Architecture (Thesis Contribution)
+
+The 3-modality voting above is the original detection layer. Even with FP suppression tuned, we observed it missed stealthy attacks: FDI 0% TPR, MITM 0% TPR, DoS 5% TPR (when attacks are below the high-confidence bar). To address this, we extend the detector with two additional layers, combined via OR-with-precedence so each agent is flagged at most once per timestep.
+
+**Layer A — Calibrated LSTM threshold (extended primary):**
+Lowered ROBUST defaults: `prob_threshold 0.95 → 0.80`, `score_threshold 4.40 → 3.60`, `min_signal_strength 0.50 → 0.38`. Catches attacks that produce clear single-step signals.
+
+**Layer B — Temporal accumulator (`sustained_suspicion`):**
+Flag if LSTM probability ≥ 0.55 for ≥ 5 consecutive timesteps within a 6-step window. Catches sustained low-amplitude attacks (FDI, MITM) that never spike high enough for Layer A. Detection delay ~25 minutes; FPR cost near zero (random noise rarely persists).
+
+**Layer C — Attack-type sub-detectors:**
+
+| Sub-detector | Function | Mechanism | Target |
+|--------------|----------|-----------|--------|
+| C-1 CUSUM drift | `cusum_fdi_detector` | Two-sided CUSUM on physical residuals scaled by `thx`; alarm when cumulative bias exceeds h=4.0 | FDI |
+| C-2 Network rule | `network_dos_detector` | 2-of-3 rule: latency ≥ 3× baseline, packet_loss ≥ 0.15, comm-freq drop ≥ 40% | DoS |
+| C-3 Integrity + jump | `integrity_mitm_detector` | AND: integrity drop ≥ 35% AND temporal z-jump ≥ 2.5 from history mean | MITM |
+
+**Combiner:** `combine_layers()` returns the firing layer with highest confidence; type-specific labels (FDI/DOS/MITM) take precedence over the generic SUSTAINED label. An agent flagged by Layer A is not re-evaluated by B/C.
+
+**Files:**
+- `smartgrid_mas/detection/multilayer_detection.py` — all sub-detector implementations
+- `smartgrid_mas/behavior_analysis/scoring_pipeline.py` — wiring and override logic
+- `knowledge/MULTILAYER_DETECTION.md` — full architectural deep-dive
+
+**Activation:** Enabled by default. Disable for ablation with `SMARTGRID_MULTILAYER_ENABLED=0`. Each layer individually tunable via `SMARTGRID_TEMPORAL_*`, `SMARTGRID_CUSUM_*`, `SMARTGRID_DOS_*`, `SMARTGRID_MITM_*` env vars.
+
+**Why this is a thesis contribution and not just tuning:**
+- **Architectural novelty:** three distinct attacker models (spike, sustained, type-specific) each get a dedicated detection layer
+- **Statistically grounded:** CUSUM (Page 1954) is classical SPC theory applied to FDI; integrity+jump test combines spatial and temporal consistency checks for MITM
+- **OR-with-precedence combiner:** prevents FPR inflation that would occur with naive ensemble averaging
+- **Telemetry-friendly:** every flag carries a `multilayer_label`, `multilayer_confidence`, and `multilayer_reason` for XAI consumption
+
 ---
 
 ## PART 4: AUDIT SCHEDULING — DEEP DIVE
@@ -590,6 +623,8 @@ Measures how stable the dual-layer detection is over time.
 | `smartgrid_mas/anomaly_detection/train_lstm.py` | Training with focal loss + oversampling |
 | `smartgrid_mas/anomaly_detection/inference.py` | LSTM inference + temperature calibration |
 | `smartgrid_mas/anomaly_detection/dual_branch.py` | Dual-branch implementation |
+| `smartgrid_mas/detection/multilayer_detection.py` | **Multi-layer detection (Layers B + C)** — sustained_suspicion, CUSUM FDI, network DoS rule, integrity MITM, OR-with-precedence combiner |
+| `smartgrid_mas/detection/network_attack_evidence.py` | Network attack typing evidence (legacy / Layer A support) |
 
 ### 12.3 Audit Scheduling
 

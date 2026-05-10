@@ -43,3 +43,6 @@ class AgentState:
     prob_support: float = 0.0
     attack_type: str = "NONE"
     attack_type_confidence: float = 0.0
+    multilayer_label: str = "NONE"
+    multilayer_confidence: float = 0.0
+    multilayer_reason: str = ""

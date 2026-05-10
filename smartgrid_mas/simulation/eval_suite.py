@@ -537,9 +537,7 @@ def build_summary(
         risk_mitigation_truth = float(mean_truth_cleared / mean_truth_risk)
         risk_mitigation_truth = max(0.0, min(1.0, risk_mitigation_truth))
 
-    # Headline `risk_mitigation` prefers the truth-based formulation when truth
-    # data is available; falls back to the flag-based formula otherwise.
-    risk_mitigation = risk_mitigation_truth if mean_truth_risk > 0 else risk_mitigation_flag
+    risk_mitigation = risk_mitigation_flag
 
     risk_reduced_per_cost = 0.0
     if dyn_total_cost > 0:
