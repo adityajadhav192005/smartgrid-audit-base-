@@ -362,6 +362,21 @@ Main files:
 - `smartgrid_mas/xai/explain.py`
 - `smartgrid_mas/xai/export_shap_reasons.py`
 
+## 7.9 Federated and Blockchain Components
+
+These are support modules for extension and logging.
+
+What they do:
+
+- federated aggregation support
+- blockchain-style audit anchoring and event integrity logging
+
+Main files:
+
+- `smartgrid_mas/federated/fedavg.py`
+- `smartgrid_mas/federated/orchestrator.py`
+- `smartgrid_mas/integration/blockchain_logger.py`
+
 ---
 
 ## 8. What Changed From The Base Paper
@@ -810,9 +825,17 @@ This section groups the codebase by directory.
 - `smartgrid_mas/environment/reward_outcome.py`
 - `smartgrid_mas/environment/scenario_engine.py`
 
-### 14.11 Integration
+### 14.11 Federated support
+
+- `smartgrid_mas/federated/__init__.py`
+- `smartgrid_mas/federated/fedavg.py`
+- `smartgrid_mas/federated/orchestrator.py`
+
+### 14.12 Integration
 
 - `smartgrid_mas/integration/__init__.py`
+- `smartgrid_mas/integration/blockchain_logger.py`
+- `smartgrid_mas/integration/event_store.py`
 - `smartgrid_mas/integration/ids_adapter.py`
 - `smartgrid_mas/integration/scada_adapter.py`
 

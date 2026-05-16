@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { StateBadge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
@@ -42,7 +42,7 @@ export default function LivePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="section-header">Experiment Monitor</h1>
-          <p className="text-sm text-slate-400 mt-1">Live experiment-state view across agents, anomaly scores, and risk</p>
+          <p className="text-sm text-slate-500 mt-1">Live experiment-state view across agents, anomaly scores, and risk</p>
         </div>
         <button
           onClick={triggerRefresh}
@@ -71,7 +71,7 @@ export default function LivePage() {
             className={cn('px-3 py-1 rounded-full text-xs border transition-colors',
               typeFilter === t
                 ? 'bg-cyber-blue/20 border-cyber-blue/60 text-cyber-blue'
-                : 'border-slate-700/50 text-slate-500 hover:text-slate-300'
+                : 'border-slate-200 text-slate-500 hover:text-slate-700'
             )}>
             {t}
           </button>
@@ -82,7 +82,7 @@ export default function LivePage() {
             className={cn('px-3 py-1 rounded-full text-xs border transition-colors',
               stateFilter === s
                 ? 'bg-cyber-blue/20 border-cyber-blue/60 text-cyber-blue'
-                : 'border-slate-700/50 text-slate-500 hover:text-slate-300'
+                : 'border-slate-200 text-slate-500 hover:text-slate-700'
             )}>
             {s}
           </button>
@@ -93,7 +93,7 @@ export default function LivePage() {
             className={cn('px-3 py-1 rounded-full text-xs border transition-colors',
               sortBy === k
                 ? 'bg-cyber-amber/20 border-cyber-amber/60 text-cyber-amber'
-                : 'border-slate-700/50 text-slate-500 hover:text-slate-300'
+                : 'border-slate-200 text-slate-500 hover:text-slate-700'
             )}>
             {k === 'riskScore' ? 'Risk' : 'Anomaly'}
           </button>
@@ -105,7 +105,7 @@ export default function LivePage() {
       <div className="glass-card overflow-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-700/60 text-slate-500">
+            <tr className="border-b border-slate-200 text-slate-500">
               {['ID', 'Type', 'State', 'Anomaly Score', 'Risk', 'Phys. Health', 'Cyber Health', 'Criticality', 'Last Attack', 'Audit Triggered'].map(h => (
                 <th key={h} className="text-left px-4 py-3 font-medium whitespace-nowrap">{h}</th>
               ))}
@@ -113,12 +113,12 @@ export default function LivePage() {
           </thead>
           <tbody>
             {filtered.map(a => (
-              <tr key={a.id} className="data-table-row border-b border-slate-800/40">
+              <tr key={a.id} className="data-table-row border-b border-slate-200/40">
                 <td className="px-4 py-2.5 font-mono text-cyber-blue font-medium">{a.id}</td>
-                <td className="px-4 py-2.5 text-slate-300">{a.type}</td>
+                <td className="px-4 py-2.5 text-slate-700">{a.type}</td>
                 <td className="px-4 py-2.5"><StateBadge state={a.state} /></td>
                 <td className="px-4 py-2.5 font-mono">
-                  <span className={a.anomalyScore > 1.0 ? 'text-cyber-red font-bold' : a.anomalyScore > 0.7 ? 'text-cyber-amber' : 'text-slate-300'}>
+                  <span className={a.anomalyScore > 1.0 ? 'text-cyber-red font-bold' : a.anomalyScore > 0.7 ? 'text-cyber-amber' : 'text-slate-700'}>
                     {a.anomalyScore.toFixed(3)}
                   </span>
                 </td>
@@ -128,20 +128,20 @@ export default function LivePage() {
                       <div className="h-full rounded-full transition-all"
                         style={{ width: `${a.riskScore * 100}%`, background: a.riskScore > 0.8 ? '#ff3860' : a.riskScore > 0.5 ? '#ffb700' : '#10b981' }} />
                     </div>
-                    <span className="text-slate-400">{a.riskScore.toFixed(2)}</span>
+                    <span className="text-slate-500">{a.riskScore.toFixed(2)}</span>
                   </div>
                 </td>
                 <td className="px-4 py-2.5">
-                  <span className={a.physicalHealth > 0.8 ? 'text-emerald-400' : a.physicalHealth > 0.6 ? 'text-amber-400' : 'text-red-400'}>
+                  <span className={a.physicalHealth > 0.8 ? 'text-emerald-600' : a.physicalHealth > 0.6 ? 'text-amber-600' : 'text-red-400'}>
                     {(a.physicalHealth * 100).toFixed(0)}%
                   </span>
                 </td>
                 <td className="px-4 py-2.5">
-                  <span className={a.cyberHealth > 0.8 ? 'text-emerald-400' : a.cyberHealth > 0.6 ? 'text-amber-400' : 'text-red-400'}>
+                  <span className={a.cyberHealth > 0.8 ? 'text-emerald-600' : a.cyberHealth > 0.6 ? 'text-amber-600' : 'text-red-400'}>
                     {(a.cyberHealth * 100).toFixed(0)}%
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-slate-400">{a.criticalityWeight.toFixed(1)}</td>
+                <td className="px-4 py-2.5 text-slate-500">{a.criticalityWeight.toFixed(1)}</td>
                 <td className="px-4 py-2.5 text-slate-500">{a.lastAttack}</td>
                 <td className="px-4 py-2.5">
                   {a.auditTriggered

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { MonitorPlay, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,11 +16,11 @@ export function ViewModeBanner({ section, mode = 'experiment', className }: View
     : 'This module is mapped to the latest experiment run and does not switch into SCADA mode.'
 
   return (
-    <div className={cn('glass-card p-3 border border-slate-700/40 flex items-center justify-between gap-3', className)}>
+    <div className={cn('glass-card p-3 border border-slate-200 flex items-center justify-between gap-3', className)}>
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm">
           {mode === 'scada' ? <MonitorPlay size={14} className="text-cyber-teal" /> : <Radio size={14} className="text-cyber-blue" />}
-          <span className="text-slate-200 font-semibold">{section} - {modeLabel}</span>
+          <span className="text-slate-800 font-semibold">{section} - {modeLabel}</span>
         </div>
         <p className="text-xs text-slate-500">{modeHelp}</p>
       </div>

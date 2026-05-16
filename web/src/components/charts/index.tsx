@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, RadarChart, Radar, PolarGrid,
@@ -290,7 +290,7 @@ export function GaugeChart({ value, label, color = '#00d4ff' }: { value: number;
         </PieChart>
       </ResponsiveContainer>
       <div className="text-2xl font-bold font-mono" style={{ color }}>{pct}%</div>
-      <div className="text-xs text-slate-400 mt-0.5">{label}</div>
+      <div className="text-xs text-slate-500 mt-0.5">{label}</div>
     </div>
   )
 }

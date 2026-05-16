@@ -32,14 +32,14 @@ Backend direct:
 ```powershell
 $headers = @{ 'x-api-key' = 'smartgrid-dev-key' }
 Invoke-WebRequest "https://smartgrid-public-api-production.up.railway.app/health" -UseBasicParsing
-Invoke-WebRequest "https://smartgrid-public-api-production.up.railway.app/grid/status" -Headers $headers -UseBasicParsing
+Invoke-WebRequest "https://smartgrid-public-api-production.up.railway.app/v1/blockchain/status" -Headers $headers -UseBasicParsing
 ```
 
 Dashboard proxy (what users actually hit):
 
 ```powershell
 Invoke-WebRequest "https://web-three-kappa-37.vercel.app/api/proxy/health" -UseBasicParsing
-Invoke-WebRequest "https://web-three-kappa-37.vercel.app/api/proxy/grid/status" -UseBasicParsing
+Invoke-WebRequest "https://web-three-kappa-37.vercel.app/api/proxy/blockchain/status" -UseBasicParsing
 ```
 
 Expected: HTTP `200` and JSON responses.
@@ -80,5 +80,5 @@ cmd /c npx vercel deploy --prod --yes \
 
 1. If `/api/proxy/health` returns `503`: check Railway logs first.
 2. If Railway is healthy but proxy fails: redeploy Vercel with correct `SMARTGRID_API_URL`.
-3. If API routes fail with `401`: ensure backend key and frontend `SMARTGRID_API_KEY` match.
+3. If blockchain route fails with `401`: ensure backend key and frontend `SMARTGRID_API_KEY` match.
 4. Avoid temporary tunnels for production use.

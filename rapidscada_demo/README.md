@@ -1,54 +1,108 @@
-# Rapid SCADA Demo Assets
+# Rapid SCADA Demo Project — GRID WITH THE AGENTS
 
-This folder contains the Rapid SCADA project assets used by the live demo integration.
+This directory contains everything needed to set up the Rapid SCADA demo view that mirrors the website's live grid page.
 
-## Included Assets
+---
 
-1. View files for grid visualization
-2. XML definitions for channels and objects
-3. Scheme and configuration support files
-4. Import and publish checklists
+## What You Get
 
-## Purpose
+| File | Purpose |
+|------|---------|
+| `Views/GridWithAgents.html` | Self-contained live grid view (open in browser or load as Rapid SCADA custom view) |
+| `Config/Channels.xml` | Channel definitions for 100 agents (import into Rapid SCADA) |
+| `Config/Objects.xml` | Object hierarchy: Generators → Substations → PMUs → Breakers |
+| `Scheme/GridScheme.sch` | Rapid SCADA scheme file (mnemonics diagram) |
 
-These assets help you:
+---
 
-1. Build the 100-agent Rapid SCADA project model.
-2. Publish channels required by backend mapping.
-3. Validate live data flow into the Smart Grid API.
+## Quick Start (Standalone HTML View)
 
-## Standard Integration Flow
+1. Start the FastAPI server:
+   ```
+   cd smartgrid_mas
+   python -m smartgrid_mas.run_all
+   ```
 
-1. Import XML assets into Rapid SCADA project.
-2. Publish and ensure channels are updating.
-3. Run local backend stack.
-4. Start bridge poller to post batch ingest payloads.
-5. Validate 100 live agents with tracer script.
+2. Open `Views/GridWithAgents.html` directly in any browser.
 
-## Commands
+3. The page auto-connects to `http://localhost:8000` every 2 seconds.
+   - If FastAPI is offline → demo simulation mode runs automatically.
+   - Click **Stop Feed** to halt live polling.
+   - Click **Connect** to resume.
 
-Start stack:
+---
 
+## Rapid SCADA Import Guide
+
+### Step 1 — Create a new project
+
+1. Open Rapid SCADA Administrator (`http://localhost:10008`)
+2. Navigate to **Configuration → Projects → New Project**
+3. Name it: `SmartGridAudit`
+
+### Step 2 — Import channels
+
+1. Go to **Configuration → Channels**
+2. Click **Import → From XML**
+3. Select `Config/Channels.xml`
+4. Confirm — 600 channels will be created (6 per agent × 100 agents)
+
+### Step 3 — Import objects
+
+1. Go to **Configuration → Objects**
+2. Click **Import → From XML**
+3. Select `Config/Objects.xml`
+
+### Step 4 — Add the custom view
+
+1. Go to **Interface → Views**
+2. Click **Add → Web Page** (Rapid SCADA Webstation module)
+3. Set **URL** to the absolute path of `Views/GridWithAgents.html` or host it at a static path
+4. Set **Name**: `GRID WITH THE AGENTS`
+5. Save and publish
+
+### Step 5 — Connect to website
+
+The website's SCADA Live Grid page (`/scada-live`) reads from the FastAPI `/v1/scada/ingest/tags` endpoint.
+The PowerShell bridge `pull_rapidscada_to_api.ps1` pushes Rapid SCADA channel values into FastAPI.
+
+Run the bridge:
 ```powershell
-cd "D:\Mtech Main project\smartgrid-audit-base-"
-\.venv\Scripts\Activate.ps1
-.\scripts\start_local_demo.ps1 -OpenDashboard
+.\pull_rapidscada_to_api.ps1 -RapidScadaUrl "http://localhost:10008" -ApiUrl "http://localhost:8000"
 ```
 
-Trace live agents:
+---
 
-```powershell
-.\scripts\trace_rapidscada_live_agents.ps1
+## Channel Naming Convention
+
+```
+GXXX_VOL   — Generator voltage (V)
+GXXX_CUR   — Generator current (A)
+GXXX_ANO   — Anomaly score (0.0–2.0)
+SXXX_LOD   — Substation load (kW)
+SXXX_LAT   — Substation latency (ms)
+SXXX_ANO   — Anomaly score
+PXXX_VOL   — PMU voltage
+PXXX_FRQ   — PMU frequency (Hz)
+PXXX_ANO   — Anomaly score
+BXXX_STA   — Breaker status (0/1)
+BXXX_FLT   — Fault count
+BXXX_ANO   — Anomaly score
 ```
 
-## Operational Policy
+Agent ranges:
+- **G01–G20**: Power Generators (20 agents)
+- **S21–S50**: Substation Controllers (30 agents)
+- **P51–P75**: PMUs (25 agents)
+- **B76–B100**: Breakers (25 agents)
 
-1. Live mode uses strict no-default ingestion.
-2. Missing required live tags are rejected.
-3. Use batch endpoint, not per-agent ingestion.
+---
 
-## Related Documentation
+## Troubleshooting
 
-1. Full Rapid SCADA runbook: [README_RAPID_SCADA_PROJECT_GUIDE.md](../README_RAPID_SCADA_PROJECT_GUIDE.md)
-2. Architecture overview: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
-3. Root project README: [README.md](../README.md)
+| Symptom | Fix |
+|---------|-----|
+| Grid shows grey cells | FastAPI offline — demo mode active (expected) |
+| `CORS error` in browser console | Add `--cors-origin "*"` to FastAPI startup or open HTML via a local server |
+| Rapid SCADA import fails | Ensure Rapid SCADA v6+ is installed; check Web API module is enabled |
+| No live data after bridge starts | Verify `/v1/scada/ingest/tags` returns 200; check bridge credentials |

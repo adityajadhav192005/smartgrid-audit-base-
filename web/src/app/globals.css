@@ -4,26 +4,25 @@
 
 @layer base {
   :root {
-    /* Neutral, restrained palette. No neon glow; muted steel-blue accent. */
-    --background: 220 14% 8%;
-    --foreground: 210 20% 92%;
-    --card: 220 13% 11%;
-    --card-foreground: 210 20% 92%;
-    --popover: 220 13% 11%;
-    --popover-foreground: 210 20% 92%;
-    --primary: 211 70% 58%;
-    --primary-foreground: 220 16% 8%;
-    --secondary: 220 12% 18%;
-    --secondary-foreground: 210 20% 92%;
-    --muted: 220 10% 16%;
-    --muted-foreground: 215 14% 60%;
-    --accent: 211 60% 50%;
-    --accent-foreground: 220 16% 8%;
-    --destructive: 350 70% 58%;
-    --destructive-foreground: 210 20% 96%;
-    --border: 220 10% 22%;
-    --input: 220 10% 20%;
-    --ring: 211 70% 58%;
+    --background: 0 0% 100%;
+    --foreground: 220 14% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 10%;
+    --primary: 211 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 14% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 211 60% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 350 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 87%;
+    --input: 220 13% 90%;
+    --ring: 211 70% 45%;
     --radius: 0.5rem;
   }
 }
@@ -36,18 +35,17 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
-    /* Flat background. No radial glows, no gradient overlays. */
-    background-color: hsl(220 14% 8%);
+    background-color: hsl(0 0% 100%);
   }
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(220 13% 11%);
+    background: hsl(0 0% 96%);
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(220 10% 28%);
+    background: hsl(220 13% 80%);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -56,68 +54,63 @@
 }
 
 @layer components {
-  /* Plain bordered card. No backdrop blur, no gradient, no glow. */
   .glass-card {
     @apply rounded-md border;
-    background-color: hsl(220 13% 11%);
-    border-color: hsl(220 10% 22%);
+    background-color: hsl(0 0% 100%);
+    border-color: hsl(220 13% 87%);
   }
-  /* Legacy aliases retained but stripped of glow */
   .cyber-border {
     @apply border;
-    border-color: hsl(220 10% 22%);
+    border-color: hsl(220 13% 87%);
   }
   .cyber-glow {
     box-shadow: none;
   }
   .status-healthy {
-    @apply text-emerald-400 bg-emerald-400/10;
+    @apply text-emerald-700 bg-emerald-50;
   }
   .status-warning {
-    @apply text-amber-400 bg-amber-400/10;
+    @apply text-amber-700 bg-amber-50;
   }
   .status-critical {
-    @apply text-red-400 bg-red-400/10;
+    @apply text-red-700 bg-red-50;
   }
   .status-info {
-    @apply text-sky-400 bg-sky-400/10;
+    @apply text-sky-700 bg-sky-50;
   }
   .nav-link {
-    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-slate-400 transition-colors duration-150 cursor-pointer;
+    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-slate-600 transition-colors duration-150 cursor-pointer;
     background: transparent;
   }
   .nav-link:hover {
-    color: hsl(210 20% 92%);
-    background-color: hsl(220 12% 14%);
+    color: hsl(220 14% 10%);
+    background-color: hsl(220 14% 96%);
   }
   .nav-link-active {
-    @apply text-slate-100 border-l-2;
-    background-color: hsl(220 12% 16%);
-    border-left-color: hsl(211 60% 55%);
+    @apply text-slate-900 border-l-2;
+    background-color: hsl(211 60% 96%);
+    border-left-color: hsl(211 60% 45%);
   }
   .kpi-card {
     @apply glass-card p-4 flex flex-col gap-1;
   }
-  /* Restrained section header — sentence case, no uppercase, no tracking. */
   .section-header {
-    @apply text-base font-semibold text-slate-100 mb-2;
+    @apply text-base font-semibold text-slate-900 mb-2;
   }
-  /* Compact uppercase label for table headers / form labels only. */
   .section-eyebrow {
     @apply text-[11px] font-medium uppercase tracking-wide text-slate-500;
   }
   .data-table-row {
-    @apply border-b border-slate-800/60 hover:bg-slate-800/40 transition-colors;
+    @apply border-b border-slate-200 hover:bg-slate-50 transition-colors;
   }
-  /* Report-style table for the Final Report page. */
   .report-table {
     @apply w-full text-sm border-collapse;
   }
   .report-table th {
-    @apply text-left font-medium text-slate-400 border-b border-slate-700/60 py-2 pr-4;
+    @apply text-left font-medium text-slate-600 border-b border-slate-200 py-2 pr-4;
   }
   .report-table td {
-    @apply text-slate-200 border-b border-slate-800/60 py-2 pr-4;
+    @apply text-slate-800 border-b border-slate-200 py-2 pr-4;
   }
   .report-table tr:last-child td {
     @apply border-b-0;

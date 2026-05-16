@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { cn } from '@/lib/utils'
 
 interface BadgeProps {
@@ -9,13 +9,13 @@ interface BadgeProps {
 }
 
 const variants: Record<string, string> = {
-  default:   'bg-slate-700/60 text-slate-300 border-slate-600/40',
+  default:   'bg-slate-700/60 text-slate-700 border-slate-200',
   critical:  'bg-red-950/60   text-red-400   border-red-700/50',
   high:      'bg-orange-950/60 text-orange-400 border-orange-700/50',
-  medium:    'bg-amber-950/60 text-amber-400  border-amber-700/50',
+  medium:    'bg-amber-950/60 text-amber-600  border-amber-700/50',
   low:       'bg-green-950/60 text-green-400  border-green-700/50',
   info:      'bg-blue-950/60  text-blue-400   border-blue-700/50',
-  healthy:   'bg-emerald-950/60 text-emerald-400 border-emerald-700/50',
+  healthy:   'bg-emerald-950/60 text-emerald-600 border-emerald-700/50',
   anomalous: 'bg-orange-950/60  text-orange-300 border-orange-700/50',
   auditing:  'bg-cyan-950/60  text-cyan-400   border-cyan-700/50',
   suspect:   'bg-yellow-950/60 text-yellow-400 border-yellow-700/50',

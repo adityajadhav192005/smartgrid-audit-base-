@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
@@ -44,7 +44,7 @@ export default function RapidScadaAuditsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Rapid SCADA Audit Trail</h1>
-        <p className="text-sm text-slate-400 mt-1">Live SCADA audit decisions, evidence flow, and anomaly-triggered response records</p>
+        <p className="text-sm text-slate-500 mt-1">Live SCADA audit decisions, evidence flow, and anomaly-triggered response records</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -56,15 +56,15 @@ export default function RapidScadaAuditsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-2 glass-card p-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-700/50 text-sm font-semibold text-slate-200">Recent SCADA Audits</div>
+          <div className="px-4 py-3 border-b border-slate-200 text-sm font-semibold text-slate-800">Recent SCADA Audits</div>
           <div className="divide-y divide-slate-800/60">
             {records.map(record => (
-              <button key={record.id} onClick={() => setSelected(record)} className={`w-full text-left p-4 hover:bg-slate-800/30 transition-colors ${selectedRecord?.id === record.id ? 'bg-cyber-blue/5 border-l-2 border-l-cyber-blue' : ''}`}>
+              <button key={record.id} onClick={() => setSelected(record)} className={`w-full text-left p-4 hover:bg-slate-100 transition-colors ${selectedRecord?.id === record.id ? 'bg-cyber-blue/5 border-l-2 border-l-cyber-blue' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-xs font-bold text-cyber-blue">{record.id}</span>
                   <Badge variant={record.severity.toLowerCase() as any}>{record.severity}</Badge>
                 </div>
-                <div className="text-xs text-slate-300 mb-1">{record.agentId}</div>
+                <div className="text-xs text-slate-700 mb-1">{record.agentId}</div>
                 <div className="text-xs text-slate-500">{record.triggerReason}</div>
               </button>
             ))}
@@ -73,7 +73,7 @@ export default function RapidScadaAuditsPage() {
 
         <div className="lg:col-span-3 glass-card p-5 space-y-4">
           {!selectedRecord ? (
-            <div className="text-sm text-slate-400">No live SCADA audit records yet.</div>
+            <div className="text-sm text-slate-500">No live SCADA audit records yet.</div>
           ) : (
             <>
               <div className="flex items-start justify-between">
@@ -83,7 +83,7 @@ export default function RapidScadaAuditsPage() {
                     <Badge variant={selectedRecord.severity.toLowerCase() as any}>{selectedRecord.severity}</Badge>
                     <Badge variant={selectedRecord.status === 'Active' ? 'auditing' : 'low'}>{selectedRecord.status}</Badge>
                   </div>
-                  <div className="text-sm text-slate-400">Agent: <span className="text-slate-200 font-medium">{selectedRecord.agentId}</span></div>
+                  <div className="text-sm text-slate-500">Agent: <span className="text-slate-800 font-medium">{selectedRecord.agentId}</span></div>
                 </div>
                 <div className="text-right text-xs text-slate-500">Started: {selectedRecord.startTime}</div>
               </div>
@@ -99,7 +99,7 @@ export default function RapidScadaAuditsPage() {
               </div>
               <div>
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Audit Summary</div>
-                <p className="text-sm text-slate-300 leading-relaxed bg-grid-900/40 border border-slate-700/30 rounded-lg p-3">{selectedRecord.description}</p>
+                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded-lg p-3">{selectedRecord.description}</p>
               </div>
             </>
           )}

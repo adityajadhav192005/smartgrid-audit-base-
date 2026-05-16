@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "node_modules\\.bin\\next.cmd dev"],
+      "cwd": "web",
+      "port": 3030,
+      "autoPort": true
+    }
+  ]
+}

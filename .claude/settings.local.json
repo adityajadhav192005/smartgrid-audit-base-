@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd //c \"mklink /J node_modules \\\\\"D:\\\\\\\\Mtech Main project\\\\\\\\smartgrid-audit-base-\\\\\\\\web\\\\\\\\node_modules\\\\\"\")",
+      "Bash(npx tsc *)",
+      "Bash(node_modules/.bin/tsc --noEmit -p tsconfig.json)",
+      "PowerShell(Push-Location 'D:\\\\Mtech Main project\\\\smartgrid-audit-base-\\\\.claude\\\\worktrees\\\\clever-chaplygin-9742c3\\\\web'; cmd /c 'node_modules\\\\.bin\\\\tsc.cmd --noEmit -p tsconfig.json'; \"ExitCode: $LASTEXITCODE\"; Pop-Location)"
+    ]
+  }
+}

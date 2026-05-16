@@ -25,6 +25,8 @@ from pydantic import BaseModel, Field
 
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score, anomaly_flag_from_score
 from smartgrid_mas.xai.explain import explain_deviation, explain_audit_decision
+from smartgrid_mas.federated.fedavg import aggregate_vectors, aggregate_state_dicts
+from smartgrid_mas.federated.orchestrator import FederatedCoordinator
 from smartgrid_mas.integration.scada_adapter import (
     get_scada_algorithm_config,
     normalize_scada_tags,
@@ -32,12 +34,13 @@ from smartgrid_mas.integration.scada_adapter import (
 )
 from smartgrid_mas.integration.live_experiment_pipeline import LiveExperimentPipeline
 from smartgrid_mas.integration.ids_adapter import recommend_action_from_alert
+from smartgrid_mas.integration.blockchain_logger import BlockchainLogger
 
 
 app = FastAPI(
     title="SmartGrid MAS API",
     version="0.1.0",
-    description="REST API for SCADA integration, anomaly detection, and XAI.",
+    description="Basic REST API for SCADA integration, XAI, and federated aggregation.",
 )
 
 
@@ -114,6 +117,16 @@ class BatchScoreRequest(BaseModel):
     records: List[ScoreRequest]
 
 
+class FederatedVectorRequest(BaseModel):
+    client_vectors: List[List[float]]
+    sample_counts: List[int]
+
+
+class FederatedStateRequest(BaseModel):
+    client_state_dicts: List[Dict[str, Any]]
+    sample_counts: List[int]
+
+
 class ScadaTagsRequest(BaseModel):
     agent_id: str
     tags: Dict[str, float]
@@ -130,12 +143,51 @@ class IdsAlertRequest(BaseModel):
     alert: Dict[str, Any]
 
 
+class FederatedRegisterRequest(BaseModel):
+    client_id: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class FederatedStartRoundRequest(BaseModel):
+    round_id: str
+    model_name: str = "anomaly_detector"
+    expected_clients: List[str] = Field(default_factory=list)
+    base_model: Optional[Dict[str, Any]] = None
+
+
+class FederatedSubmitUpdateRequest(BaseModel):
+    round_id: str
+    client_id: str
+    sample_count: int = Field(gt=0)
+    model_state: Dict[str, Any]
+
+
+class FederatedFinalizeRoundRequest(BaseModel):
+    round_id: str
+
+
+class BlockchainAnchorRequest(BaseModel):
+    event_type: str = "manual_event"
+    agent_id: str
+    severity: str = "HIGH"
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    force: bool = False
+
+
+class BlockchainVerifyPayloadRequest(BaseModel):
+    payload: Dict[str, Any]
+    prev_hash: str
+    chain_hash: str
+
+
 class RuntimeSettingsPayload(BaseModel):
     values: Dict[str, Any] = Field(default_factory=dict)
     runtime_overrides: Dict[str, Any] = Field(default_factory=dict)
     runtime_env: Dict[str, str] = Field(default_factory=dict)
 
 
+coordinator = FederatedCoordinator()
+blockchain_logger = BlockchainLogger()
 live_experiment_pipeline = LiveExperimentPipeline()
 
 
@@ -662,17 +714,60 @@ def _parse_maybe_literal(value: Any) -> Dict[str, Any] | List[Any]:
     return {}
 
 
+_experiment_cache: Dict[str, Any] = {"mtime": 0.0, "size": 0, "df": None, "summary_mtime": 0.0, "summary": None}
+
+
 def _latest_experiment_artifacts() -> tuple[Path, Dict[str, Any], Path | None, pd.DataFrame | None]:
     summary_path = _latest_summary_path()
-    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    s_mtime = summary_path.stat().st_mtime
+    if s_mtime != _experiment_cache["summary_mtime"]:
+        _experiment_cache["summary"] = json.loads(summary_path.read_text(encoding="utf-8"))
+        _experiment_cache["summary_mtime"] = s_mtime
+    summary = _experiment_cache["summary"]
+
     events_path = summary_path.with_name("events_dynamic.csv")
     if not events_path.exists():
         return summary_path, summary, None, None
-    # Limit to last 5000 rows to avoid reading the full 40MB+ file on every call
-    total = sum(1 for _ in open(events_path, encoding="utf-8")) - 1  # exclude header
-    skip = max(0, total - 5000)
-    df = pd.read_csv(events_path, skiprows=range(1, skip + 1) if skip > 0 else None)
-    return summary_path, summary, events_path, df
+
+    stat = events_path.stat()
+    if stat.st_mtime != _experiment_cache["mtime"] or stat.st_size != _experiment_cache["size"]:
+        total = sum(1 for _ in open(events_path, encoding="utf-8")) - 1
+        if total <= 50000:
+            _df = pd.read_csv(events_path)
+        else:
+            stride = max(1, total // 50000)
+            _df = pd.read_csv(events_path, skiprows=lambda i: i > 0 and i % stride != 0)
+        _df["_risk_score"] = (
+            _df["xai_decision"].astype(str)
+            .str.extract(r"'risk_score':\s*([\d.]+)", expand=False)
+            .astype(float)
+            .fillna(0.0)
+        )
+        _experiment_cache["df"] = _df
+        _experiment_cache["mtime"] = stat.st_mtime
+        _experiment_cache["size"] = stat.st_size
+
+    return summary_path, summary, events_path, _experiment_cache["df"]
+
+
+def _select_interesting_trend(trend: List[Dict[str, Any]], max_points: int = 24) -> List[Dict[str, Any]]:
+    """Return up to *max_points* trend entries, prioritizing timesteps that
+    have non-zero activity so completed-run charts aren't flat."""
+    if len(trend) <= max_points:
+        return trend
+    active = [t for t in trend if t.get("attackCount", 0) > 0 or t.get("anomalyCount", 0) > 0 or t.get("anomalyScore", 0) > 0]
+    if not active:
+        return trend[-max_points:]
+    calm = [t for t in trend if t not in active]
+    budget = max(0, max_points - len(active))
+    if budget > 0 and calm:
+        stride = max(1, len(calm) // budget)
+        sampled_calm = calm[::stride][:budget]
+    else:
+        sampled_calm = []
+    combined = active + sampled_calm
+    combined.sort(key=lambda t: t.get("time", ""))
+    return combined[:max_points]
 
 
 def _build_experiment_telemetry() -> Dict[str, Any]:
@@ -686,48 +781,45 @@ def _build_experiment_telemetry() -> Dict[str, Any]:
     if events_df is not None and not events_df.empty:
         df = events_df.copy()
         if "t" in df.columns:
-            grouped = df.groupby("t", sort=True)
-            for step, frame in grouped:
-                risk_scores = []
-                anomaly_count = 0
-                attack_count = 0
-                audit_count = 0
-                for _, row in frame.iterrows():
-                    xai_decision = _parse_maybe_literal(row.get("xai_decision"))
-                    risk_score = float(xai_decision.get("risk_score", 0.0) or 0.0) if isinstance(xai_decision, dict) else 0.0
-                    risk_scores.append(risk_score)
-                    if risk_score > threshold:
-                        anomaly_count += 1
-                    if str(row.get("severity_level", "")).upper() == "CRITICAL":
-                        attack_count += 1
-                    if str(row.get("audit_success", "")).lower() == "true":
-                        audit_count += 1
+            trend_agg = df.groupby("t", sort=True).agg(
+                mean_risk=("_risk_score", "mean"),
+                anomaly_count=pd.NamedAgg(column="_risk_score", aggfunc=lambda s: int((s > threshold).sum())),
+                attack_count=pd.NamedAgg(column="severity_level", aggfunc=lambda s: int((s.astype(str).str.upper() == "CRITICAL").sum())),
+                audit_count=pd.NamedAgg(column="audit_success", aggfunc=lambda s: int((s.astype(str).str.lower() == "true").sum())),
+            ).reset_index()
+            for _, r in trend_agg.iterrows():
                 trend.append({
-                    "time": f"T{int(step):02d}" if pd.notna(step) else "T00",
-                    "anomalyScore": float(sum(risk_scores) / len(risk_scores)) if risk_scores else 0.0,
-                    "riskScore": float(sum(risk_scores) / len(risk_scores)) if risk_scores else 0.0,
-                    "auditCount": int(audit_count),
-                    "attackCount": int(attack_count),
-                    "anomalyCount": int(anomaly_count),
+                    "time": f"T{int(r['t']):02d}" if pd.notna(r["t"]) else "T00",
+                    "anomalyScore": float(r["mean_risk"]),
+                    "riskScore": float(r["mean_risk"]),
+                    "auditCount": int(r["audit_count"]),
+                    "attackCount": int(r["attack_count"]),
+                    "anomalyCount": int(r["anomaly_count"]),
                 })
 
-        latest_rows = df.sort_values(by=["t"] if "t" in df.columns else df.index.tolist()[:1]).groupby("agent_id", as_index=False).tail(1)
-        for _, row in latest_rows.iterrows():
+        peak_idx = df.groupby("agent_id")["_risk_score"].idxmax()
+        peak_rows = df.loc[peak_idx]
+        audit_counts_full = (
+            df[df["audit_success"].astype(str).str.lower() == "true"]
+            .groupby("agent_id")
+            .size()
+            .to_dict()
+        )
+        for _, row in peak_rows.iterrows():
             xai_decision = _parse_maybe_literal(row.get("xai_decision"))
             xai_physical = _parse_maybe_literal(row.get("xai_top_physical"))
             xai_cyber = _parse_maybe_literal(row.get("xai_top_cyber"))
-            risk_score = float(xai_decision.get("risk_score", 0.0) or 0.0) if isinstance(xai_decision, dict) else 0.0
+            risk_score = float(row["_risk_score"])
             severity = str(row.get("severity_level", "LOW") or "LOW").upper()
             agent_id = _map_numeric_agent_id(row.get("agent_id"))
             agent_type = "Generator" if agent_id.startswith("GEN-") else "Substation" if agent_id.startswith("SUB-") else "PMU" if agent_id.startswith("PMU-") else "Breaker"
-            audit_success = str(row.get("audit_success", "")).lower() == "true"
             agents.append({
                 "id": agent_id,
                 "type": agent_type,
                 "anomalyScore": risk_score,
                 "riskScore": risk_score,
                 "attack": str(row.get("action", "NO_ANOMALY")),
-                "auditCount": 1 if audit_success else 0,
+                "auditCount": int(audit_counts_full.get(row.get("agent_id"), 0)),
                 "severity": severity,
                 "scoreThreshold": threshold,
                 "xai": {
@@ -738,11 +830,17 @@ def _build_experiment_telemetry() -> Dict[str, Any]:
                 "source": "experiment",
                 "criticalityWeight": 1.0 if agent_type == "Generator" else 0.7 if agent_type == "Substation" else 0.3 if agent_type == "PMU" else 0.5,
             })
-
-        latest_event_rows = df.tail(30)
-        for index, row in latest_event_rows.iterrows():
-            xai_decision = _parse_maybe_literal(row.get("xai_decision"))
-            risk_score = float(xai_decision.get("risk_score", 0.0) or 0.0) if isinstance(xai_decision, dict) else 0.0
+        # Prefer interesting events (attacks, anomalies, audits) over the
+        # tail NO_ANOMALY rows that dominate completed runs.
+        interesting_mask = (
+            ~df["action"].astype(str).str.upper().isin({"NO_ANOMALY", "MAINTAIN"})
+        ) | (df["severity_level"].astype(str).str.upper().isin({"CRITICAL", "HIGH", "MEDIUM"}))
+        interesting_rows = df[interesting_mask]
+        if len(interesting_rows) < 5:
+            interesting_rows = df
+        event_rows = interesting_rows.tail(30)
+        for index, row in event_rows.iterrows():
+            risk_score = float(row.get("_risk_score", 0.0) or 0.0)
             agent_id = _map_numeric_agent_id(row.get("agent_id"))
             severity = str(row.get("severity_level", "LOW") or "LOW").lower()
             action = str(row.get("action", "EVENT"))
@@ -900,7 +998,7 @@ def _build_experiment_telemetry() -> Dict[str, Any]:
             "attackFamilyDistribution": attack_family_distribution,
             "auditFrequencyByType": audit_frequency_by_type,
         },
-        "trend": trend[-24:],
+        "trend": _select_interesting_trend(trend),
         "events": list(reversed(events[-20:])),
         "agents": agents,
         "topAgents": top_agents,
@@ -975,7 +1073,7 @@ def _explanations_path() -> Path:
     raise FileNotFoundError("No explanations CSV found. Set SMARTGRID_EXPLANATIONS_PATH or generate logs/audit_explanations.csv")
 
 
-def _score_core(payload: ScoreRequest, anchor_event: bool = False) -> Dict[str, Any]:
+def _score_core(payload: ScoreRequest, anchor_event: bool = True) -> Dict[str, Any]:
     score = deviation_score(
         x_phys=np.asarray(payload.x_phys, dtype=float),
         bx=np.asarray(payload.bx, dtype=float),
@@ -1022,7 +1120,29 @@ def _score_core(payload: ScoreRequest, anchor_event: bool = False) -> Dict[str, 
 
     severity = _severity_from_score(float(score), float(payload.score_threshold))
     result["severity"] = severity
+    if anchor_event:
+        result["ledger"] = _anchor_score_result(payload, result)
     return result
+
+
+def _anchor_score_result(payload: ScoreRequest, result: Dict[str, Any], source: str = "live") -> Dict[str, Any]:
+    anchor_payload = {
+        "agent_id": payload.agent_id,
+        "deviation_score": float(result["deviation_score"]),
+        "anomaly_flag": int(result["anomaly_flag"]),
+        "risk_score": float(result["risk_score"]),
+        "decision": result["decision"],
+        "score_threshold": float(payload.score_threshold),
+        "criticality_weight": float(payload.criticality_weight),
+        "xai_decision": result["xai"]["decision"],
+        "source": str(source or "live"),
+    }
+    return blockchain_logger.anchor_event(
+        event_type="audit_decision",
+        agent_id=payload.agent_id,
+        severity=str(result["severity"]),
+        payload=anchor_payload,
+    )
 
 
 def _process_scada_tags_payload(payload: ScadaTagsRequest) -> Dict[str, Any]:
@@ -1069,6 +1189,12 @@ def _process_scada_tags_batch_payload(payload: BatchScadaTagsRequest) -> List[Di
 
         is_primary_agent = str(record.agent_id).strip().upper() == SCADA_PRIMARY_AGENT_ID.upper()
         payload_source = str(getattr(record, "source", "live") or "live").strip().lower()
+        should_anchor = (payload_source != "fallback") and (
+            is_primary_agent or int(result.get("anomaly_flag", 0)) >= 1
+        )
+        if should_anchor:
+            result["ledger"] = _anchor_score_result(req, result, source=payload_source)
+
         rapid_scada_live.ingest_snapshot(
             agent_id=record.agent_id,
             tags=normalized_tags,
@@ -1102,6 +1228,9 @@ def _process_scada_tags_payload_legacy(payload: ScadaTagsRequest) -> Dict[str, A
     result = _score_core(req, anchor_event=False)
     is_primary_agent = str(payload.agent_id).strip().upper() == SCADA_PRIMARY_AGENT_ID.upper()
     payload_source = str(getattr(payload, "source", "live") or "live").strip().lower()
+    should_anchor = (payload_source != "fallback") and (is_primary_agent or int(result.get("anomaly_flag", 0)) >= 1)
+    if should_anchor:
+        result["ledger"] = _anchor_score_result(req, result, source=payload_source)
     rapid_scada_live.ingest_snapshot(
         agent_id=payload.agent_id,
         tags=normalized_tags,
@@ -1132,6 +1261,48 @@ def shutdown_event() -> None:
 def health() -> Dict[str, str]:
     return {"status": "ok"}
 
+
+@app.get("/v1/db/health")
+def db_health(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return blockchain_logger.status()
+
+
+@app.get("/v1/blockchain/status")
+def blockchain_status(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return blockchain_logger.status()
+
+
+@app.get("/v1/blockchain/events")
+def blockchain_events(limit: int = 50, _: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return blockchain_logger.recent_events(limit=limit)
+
+
+@app.get("/v1/blockchain/events/{event_id}/verify")
+def blockchain_verify_event(event_id: int, _: str = Depends(_security_guard)) -> Dict[str, Any]:
+    out = blockchain_logger.verify_event(event_id)
+    if not out.get("exists", False):
+        raise HTTPException(status_code=404, detail=f"Event id {event_id} not found")
+    return out
+
+
+@app.post("/v1/blockchain/verify-payload")
+def blockchain_verify_payload(payload: BlockchainVerifyPayloadRequest, _: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return blockchain_logger.verify_payload(
+        payload=payload.payload,
+        prev_hash=payload.prev_hash,
+        chain_hash=payload.chain_hash,
+    )
+
+
+@app.post("/v1/blockchain/anchor")
+def blockchain_anchor(payload: BlockchainAnchorRequest, _: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return blockchain_logger.anchor_event(
+        event_type=payload.event_type,
+        agent_id=payload.agent_id,
+        severity=payload.severity,
+        payload=payload.payload,
+        force=payload.force,
+    )
 
 
 @app.get("/grid/status")
@@ -1290,6 +1461,82 @@ def ids_alert(payload: IdsAlertRequest, _: str = Depends(_security_guard)) -> Di
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+@app.post("/v1/federated/aggregate/vector")
+def fedavg_vector(payload: FederatedVectorRequest, _: str = Depends(_security_guard)) -> Dict:
+    try:
+        agg = aggregate_vectors(payload.client_vectors, payload.sample_counts)
+        return {"aggregated_vector": agg, "num_clients": len(payload.client_vectors)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/federated/aggregate/state")
+def fedavg_state(payload: FederatedStateRequest, _: str = Depends(_security_guard)) -> Dict:
+    try:
+        agg = aggregate_state_dicts(payload.client_state_dicts, payload.sample_counts)
+        return {"aggregated_state": agg, "num_clients": len(payload.client_state_dicts)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/federated/clients/register")
+def federated_register_client(
+    payload: FederatedRegisterRequest,
+    _: str = Depends(_security_guard),
+) -> Dict:
+    try:
+        return coordinator.register_client(payload.client_id, payload.metadata)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/federated/rounds/start")
+def federated_start_round(
+    payload: FederatedStartRoundRequest,
+    _: str = Depends(_security_guard),
+) -> Dict:
+    try:
+        return coordinator.start_round(
+            round_id=payload.round_id,
+            model_name=payload.model_name,
+            expected_clients=payload.expected_clients,
+            base_model=payload.base_model,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/federated/rounds/submit")
+def federated_submit_update(
+    payload: FederatedSubmitUpdateRequest,
+    _: str = Depends(_security_guard),
+) -> Dict:
+    try:
+        return coordinator.submit_update(
+            round_id=payload.round_id,
+            client_id=payload.client_id,
+            sample_count=payload.sample_count,
+            model_state=payload.model_state,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/federated/rounds/finalize")
+def federated_finalize_round(
+    payload: FederatedFinalizeRoundRequest,
+    _: str = Depends(_security_guard),
+) -> Dict:
+    try:
+        return coordinator.finalize_round(payload.round_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/v1/federated/status")
+def federated_status(_: str = Depends(_security_guard)) -> Dict:
+    return coordinator.get_status()
 
 
 @app.post("/v1/runs/start")

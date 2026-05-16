@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -68,15 +68,15 @@ export function Sidebar() {
   const { scadaConnected } = useDashboard()
 
   return (
-    <aside className="w-60 flex-shrink-0 flex flex-col bg-slate-950 border-r border-slate-800 overflow-y-auto">
+    <aside className="w-60 flex-shrink-0 flex flex-col bg-slate-50 border-r border-slate-200 overflow-y-auto">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-slate-800">
+      <div className="px-4 py-4 border-b border-slate-200">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded border border-slate-700 flex items-center justify-center">
-            <Cpu className="w-3.5 h-3.5 text-slate-400" />
+          <div className="w-7 h-7 rounded border border-slate-300 flex items-center justify-center">
+            <Cpu className="w-3.5 h-3.5 text-slate-500" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-100 leading-tight">SmartGrid MAS</div>
+            <div className="text-sm font-semibold text-slate-900 leading-tight">SmartGrid MAS</div>
             <div className="text-[10px] text-slate-500 leading-tight">Audit framework dashboard</div>
           </div>
         </div>
@@ -106,14 +106,14 @@ export function Sidebar() {
       </nav>
 
       {/* Footer status */}
-      <div className="px-4 py-3 border-t border-white/5">
+      <div className="px-4 py-3 border-t border-slate-200">
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           Backend: Online
         </div>
         <div className="text-[10px] mt-0.5">
           <span className="text-slate-500">SCADA:</span>{' '}
-          <span className={scadaConnected ? 'text-emerald-400' : 'text-amber-400'}>
+          <span className={scadaConnected ? 'text-emerald-600' : 'text-amber-600'}>
             {scadaConnected ? 'Connected' : 'Disconnected'}
           </span>
         </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
@@ -356,7 +356,7 @@ export default function RunsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Experiment Control</h1>
-        <p className="text-sm text-slate-400 mt-1">Configure, launch, and observe experiment execution</p>
+        <p className="text-sm text-slate-500 mt-1">Configure, launch, and observe experiment execution</p>
       </div>
 
       <ViewModeBanner section="Experiment Control" />
@@ -374,8 +374,8 @@ export default function RunsPage() {
         {/* Config card */}
         <div className="glass-card p-5 space-y-4 lg:col-span-2">
           <div className="flex items-center gap-2 mb-2">
-            <Settings2 size={14} className="text-slate-300" />
-            <h3 className="text-sm font-semibold text-slate-200">Experiment Parameters</h3>
+            <Settings2 size={14} className="text-slate-700" />
+            <h3 className="text-sm font-semibold text-slate-800">Experiment Parameters</h3>
           </div>
 
           {/* Presets */}
@@ -384,7 +384,7 @@ export default function RunsPage() {
             <div className="flex flex-wrap gap-2">
               {configPresets.map(p => (
                 <button key={p.id} onClick={() => applyPreset(p.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${preset === p.id ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300' : 'border-slate-700/50 text-slate-500 hover:text-slate-300'}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${preset === p.id ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300' : 'border-slate-200 text-slate-500 hover:text-slate-700'}`}>
                   {p.label}
                 </button>
               ))}
@@ -401,14 +401,14 @@ export default function RunsPage() {
                 min={1}
                 max={500}
                 onChange={e => setN(String(Math.max(1, Math.min(500, Number(e.target.value) || 1))))}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyber-blue/50"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400"
               />
             </div>
             {/* Training episodes */}
             <div>
               <label className="text-xs text-slate-500 block mb-1.5 font-medium">Training Episodes</label>
               <input type="number" value={episodes} onChange={e => setEpisodes(e.target.value)}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60" />
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400" />
             </div>
           </div>
 
@@ -420,7 +420,7 @@ export default function RunsPage() {
               max={24}
               value={cycleHours}
               onChange={e => setCycleHours(String(Math.max(1, Math.min(24, Number(e.target.value) || 1))))}
-              className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
             />
           </div>
 
@@ -430,7 +430,7 @@ export default function RunsPage() {
             <div className="flex flex-wrap gap-2">
               {['FDI', 'DoS', 'Jamming', 'Coordinated', 'MITM', 'Replay'].map(a => (
                 <button key={a} onClick={() => toggle(a)}
-                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${attacks.includes(a) ? 'bg-red-500/10 border-red-400/40 text-red-300' : 'border-slate-700/50 text-slate-500 hover:text-slate-300'}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${attacks.includes(a) ? 'bg-red-500/10 border-red-400/40 text-red-300' : 'border-slate-200 text-slate-500 hover:text-slate-700'}`}>
                   {a}
                 </button>
               ))}
@@ -446,7 +446,7 @@ export default function RunsPage() {
                 max={100}
                 value={fdiRate}
                 onChange={e => setFdiRate(String(clampPercent(e.target.value, 10)))}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
               />
             </div>
             <div>
@@ -457,7 +457,7 @@ export default function RunsPage() {
                 max={100}
                 value={dosRate}
                 onChange={e => setDosRate(String(clampPercent(e.target.value, 5)))}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
               />
             </div>
             <div>
@@ -468,7 +468,7 @@ export default function RunsPage() {
                 max={100}
                 value={chainRate}
                 onChange={e => setChainRate(String(clampPercent(e.target.value, 20)))}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
               />
             </div>
           </div>
@@ -478,12 +478,12 @@ export default function RunsPage() {
             <div>
               <label className="text-xs text-slate-500 block mb-1.5">λ_audit (cost penalty)</label>
               <input type="number" value={lambdaAudit} step="0.05" onChange={e => setLambdaAudit(e.target.value)}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60" />
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400" />
             </div>
             <div>
               <label className="text-xs text-slate-500 block mb-1.5">λ_attack (security penalty)</label>
               <input type="number" value={lambdaAttack} step="0.5" onChange={e => setLambdaAttack(e.target.value)}
-                className="w-full bg-grid-900 border border-slate-700/60 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400/60" />
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400" />
             </div>
           </div>
 
@@ -499,7 +499,7 @@ export default function RunsPage() {
                   className={`px-3 py-2 rounded-lg text-xs border transition-colors ${
                     optimizationProfile === p
                       ? 'bg-cyber-blue/10 border-cyber-blue/60 text-cyber-blue'
-                      : 'border-slate-700/50 text-slate-500 hover:text-slate-300'
+                      : 'border-slate-200 text-slate-500 hover:text-slate-700'
                   }`}
                 >
                   <div className="font-semibold">{p}</div>
@@ -525,7 +525,7 @@ export default function RunsPage() {
                   className={`px-3 py-2 rounded-lg text-xs border transition-colors ${
                     ablationMode === m
                       ? 'bg-purple-500/10 border-purple-400/60 text-purple-300'
-                      : 'border-slate-700/50 text-slate-500 hover:text-slate-300'
+                      : 'border-slate-200 text-slate-500 hover:text-slate-700'
                   }`}
                 >
                   <div className="font-semibold">{m.replace('_', ' ')}</div>
@@ -539,19 +539,19 @@ export default function RunsPage() {
             </div>
           </div>
 
-          <div className="glass-card p-3 border-slate-700/40">
+          <div className="glass-card p-3 border-slate-200">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400">Live Run Status</span>
+              <span className="text-xs text-slate-500">Live Run Status</span>
               <Badge variant={statusLabel === 'RUNNING' || statusLabel === 'QUEUED' ? 'auditing' : statusLabel === 'COMPLETED' ? 'healthy' : 'low'}>
                 {statusLabel}
               </Badge>
             </div>
-            <div className="text-xs text-slate-400 space-y-1">
-              <div>Run ID: <span className="text-slate-200 font-mono">{liveRun?.run_id ?? '-'}</span></div>
-              <div>Started: <span className="text-slate-300">{liveRun?.started_at ?? '-'}</span></div>
-              <div>Finished: <span className="text-slate-300">{liveRun?.finished_at ?? '-'}</span></div>
+            <div className="text-xs text-slate-500 space-y-1">
+              <div>Run ID: <span className="text-slate-800 font-mono">{liveRun?.run_id ?? '-'}</span></div>
+              <div>Started: <span className="text-slate-700">{liveRun?.started_at ?? '-'}</span></div>
+              <div>Finished: <span className="text-slate-700">{liveRun?.finished_at ?? '-'}</span></div>
               {liveRun?.summary && (
-                <div className="pt-1 text-slate-300">
+                <div className="pt-1 text-slate-700">
                   Cost Eff: {formatPct(liveRun.summary.cost_efficiency ?? 0)} · Risk Mit: {formatPct(liveRun.summary.risk_mitigation ?? 0)} · F1: {(liveRun.summary.f1 ?? 0).toFixed(3)}
                 </div>
               )}
@@ -560,46 +560,46 @@ export default function RunsPage() {
           </div>
 
           {liveRun?.summary && (
-            <div className="glass-card p-3 border-slate-700/40">
+            <div className="glass-card p-3 border-slate-200">
               <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-wider">Experiment Results Summary</p>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-slate-300">
+                <table className="w-full text-xs text-slate-700">
                   <tbody>
                     {/* Removed duplicate 'Number of Agents (N)' row as requested */}
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Attack Rate Reduction</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Attack Rate Reduction</td>
                       <td className="py-1 text-right">{formatPct(liveRun.summary.attack_rate_reduction ?? liveRun.summary.risk_mitigation ?? 0)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Cost Efficiency</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Cost Efficiency</td>
                       <td className="py-1 text-right">{formatPct(liveRun.summary.cost_efficiency ?? 0)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Risk Mitigation</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Risk Mitigation</td>
                       <td className="py-1 text-right">{formatPct(liveRun.summary.risk_mitigation ?? 0)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Accuracy</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Accuracy</td>
                       <td className="py-1 text-right">{formatPct(liveRun.summary.detection_accuracy ?? liveRun.summary.accuracy ?? 0)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Precision / Recall / F1</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Precision / Recall / F1</td>
                       <td className="py-1 text-right">{fmtNum(liveRun.summary.precision)} / {fmtNum(liveRun.summary.recall)} / {fmtNum(liveRun.summary.f1)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">TPR / TNR / FPR / FNR</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">TPR / TNR / FPR / FNR</td>
                       <td className="py-1 text-right">{fmtNum(liveRun.summary.tpr)} / {fmtNum(liveRun.summary.tnr)} / {fmtNum(liveRun.summary.fpr)} / {fmtNum(liveRun.summary.fnr)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Coverage / Cross-layer Stability</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Coverage / Cross-layer Stability</td>
                       <td className="py-1 text-right">{formatPct(normalizedLiveRun?.auditCoverage ?? liveRun.summary.audit_coverage ?? liveRun.summary.coverage_cycle_dynamic ?? 0)} / {fmtNum(normalizedLiveRun?.crossLayerStability ?? liveRun.summary.cross_layer_stability)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/30">
-                      <td className="py-1 text-slate-400">Runtime (s) / Iterations</td>
+                    <tr className="border-b border-slate-200">
+                      <td className="py-1 text-slate-500">Runtime (s) / Iterations</td>
                       <td className="py-1 text-right">{fmtRuntime(normalizedLiveRun?.runtimeSeconds ?? liveRun.summary.runtime_seconds ?? liveRun.summary.execution_seconds ?? liveRun.summary.total_runtime_sec, 2)} / {(normalizedLiveRun?.convergenceIterations ?? liveRun.summary.convergence_iterations ?? liveRun.summary.convergence_steps ?? liveRun.summary.iterations ?? 0) || '-'}</td>
                     </tr>
                     <tr>
-                      <td className="py-1 text-slate-400">Audits / Attacks (detected/resolved)</td>
+                      <td className="py-1 text-slate-500">Audits / Attacks (detected/resolved)</td>
                       <td className="py-1 text-right">{normalizedLiveRun?.auditsTriggered ?? liveRun.summary.audits_triggered ?? '-'} / {normalizedLiveRun?.attacksDetected ?? liveRun.summary.attacks_detected ?? '-'} / {normalizedLiveRun?.attacksResolved ?? liveRun.summary.attacks_resolved ?? '-'}</td>
                     </tr>
                   </tbody>
@@ -622,9 +622,9 @@ export default function RunsPage() {
           {launchError && <p className="text-xs text-cyber-red">{launchError}</p>}
 
           {logLines.length > 0 && (
-            <div className="bg-grid-900 border border-slate-700/40 rounded-lg p-3 max-h-52 overflow-auto">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 max-h-52 overflow-auto">
               <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-wider">Live Run Log (tail)</p>
-              <pre className="text-[10px] text-slate-300 whitespace-pre-wrap">{logLines.join('\n')}</pre>
+              <pre className="text-[10px] text-slate-700 whitespace-pre-wrap">{logLines.join('\n')}</pre>
             </div>
           )}
         </div>
@@ -633,16 +633,16 @@ export default function RunsPage() {
         <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-3">
             <Clock size={14} className="text-slate-500" />
-            <h3 className="text-sm font-semibold text-slate-200">Recent Runs</h3>
+            <h3 className="text-sm font-semibold text-slate-800">Recent Runs</h3>
           </div>
           <div className="space-y-2">
             {(liveRuns.length > 0 ? liveRuns.slice(0, 4) : []).map((r: any) => (
-              <div key={r.run_id ?? r.id} className="glass-card p-2.5 border-slate-700/30 text-xs">
+              <div key={r.run_id ?? r.id} className="glass-card p-2.5 border-slate-200 text-xs">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono text-slate-300 text-[10px]">{r.run_id ?? r.id}</span>
+                  <span className="font-mono text-slate-700 text-[10px]">{r.run_id ?? r.id}</span>
                   <Badge variant={(normalizeStatus(r.status) === 'running' || normalizeStatus(r.status) === 'queued') ? 'auditing' : (normalizeStatus(r.status) === 'completed' ? 'healthy' : 'low')} pulse={normalizeStatus(r.status) === 'running'}>{r.status}</Badge>
                 </div>
-                <div className="text-slate-400">N={r.params?.num_agents ?? r.agents ?? '-'} — {r.params?.ablation_mode ?? r.attacks ?? '-'}</div>
+                <div className="text-slate-500">N={r.params?.num_agents ?? r.agents ?? '-'} — {r.params?.ablation_mode ?? r.attacks ?? '-'}</div>
                 <div className="flex gap-3 mt-1 text-slate-500">
                   <span>Cost: {fmtPercentOrDash(r.summary?.cost_efficiency ?? r.costEfficiency)}</span>
                   <span>Risk: {fmtPercentOrDash(r.summary?.risk_mitigation ?? r.riskMitigation)}</span>

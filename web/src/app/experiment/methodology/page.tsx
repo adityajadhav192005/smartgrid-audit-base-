@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Badge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
@@ -24,14 +24,14 @@ const DETECTION_LAYERS = [
   {
     label: 'Layer 3 - Cryptographic Integrity',
     icon: Hash,
-    color: 'text-amber-400',
+    color: 'text-amber-600',
     formula: 'CRC32(payload) + H_entropy(window)',
     desc: 'CRC32 checksums + hash entropy + cross-field correlation. Catches stealthy FDI/MITM attacks crafted to evade statistical scoring.',
   },
   {
     label: 'Layer 4 - 2-of-3 Voting Ensemble',
     icon: GitMerge,
-    color: 'text-emerald-400',
+    color: 'text-emerald-600',
     formula: 'flag = (1[s>theta_dev] + 1[p>theta_lstm] + 1[integrity_low]) >= 2',
     desc: 'Unified detector flags an agent when any 2 of the 3 modalities agree, balancing recall against false alarm rate.',
   },
@@ -97,7 +97,7 @@ export default function ExperimentMethodologyPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Methodology - Detection Architecture</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Five-layer hybrid detection pipeline plus RL+Gradient audit scheduling. Ablation: <span className="text-cyber-blue font-mono">{ablation}</span>, profile: <span className="text-cyber-blue font-mono">{profile}</span>.
         </p>
       </div>
@@ -111,7 +111,7 @@ export default function ExperimentMethodologyPage() {
 
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyber-blue" />
             Five-Layer Detection Pipeline
           </h3>
@@ -122,13 +122,13 @@ export default function ExperimentMethodologyPage() {
           {DETECTION_LAYERS.map(layer => {
             const Icon = layer.icon
             return (
-              <div key={layer.label} className="glass-card p-3 border-slate-700/40">
+              <div key={layer.label} className="glass-card p-3 border-slate-200">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Icon className={`w-4 h-4 ${layer.color}`} />
-                  <span className="text-xs font-semibold text-slate-200">{layer.label}</span>
+                  <span className="text-xs font-semibold text-slate-800">{layer.label}</span>
                 </div>
                 <div className="font-mono text-[11px] text-cyber-blue mb-1.5 break-all">{layer.formula}</div>
-                <div className="text-xs text-slate-400 leading-relaxed">{layer.desc}</div>
+                <div className="text-xs text-slate-500 leading-relaxed">{layer.desc}</div>
               </div>
             )
           })}
@@ -139,32 +139,32 @@ export default function ExperimentMethodologyPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="glass-card p-4 lg:col-span-2">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-200">Per-Attack-Type Detection (TPR / FNR / FPR)</h3>
+              <h3 className="text-sm font-semibold text-slate-800">Per-Attack-Type Detection (TPR / FNR / FPR)</h3>
               <Badge variant="info">vs Base Paper aggregate-only</Badge>
             </div>
             <div className="h-64"><PerAttackBarChart data={perAttackRows} /></div>
           </div>
           <div className="glass-card p-4">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">Attack Typing</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">Attack Typing</h3>
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Typing Accuracy</span>
-                <span className="font-mono text-slate-200">{((attackTyping?.typingAccuracy ?? 0) * 100).toFixed(2)}%</span>
+                <span className="font-mono text-slate-800">{((attackTyping?.typingAccuracy ?? 0) * 100).toFixed(2)}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Macro TPR</span>
-                <span className="font-mono text-slate-200">{((attackTyping?.macroTpr ?? 0) * 100).toFixed(2)}%</span>
+                <span className="font-mono text-slate-800">{((attackTyping?.macroTpr ?? 0) * 100).toFixed(2)}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Macro FPR</span>
-                <span className="font-mono text-slate-200">{((attackTyping?.macroFpr ?? 0) * 100).toFixed(2)}%</span>
+                <span className="font-mono text-slate-800">{((attackTyping?.macroFpr ?? 0) * 100).toFixed(2)}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Positive Support</span>
-                <span className="font-mono text-slate-200">{attackTyping?.positiveSupport ?? 0}</span>
+                <span className="font-mono text-slate-800">{attackTyping?.positiveSupport ?? 0}</span>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 leading-relaxed">
+            <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed">
               Attack family classifier (DOS / MITM / NETWORK) operates on Branch-2 cyber metrics and UNSW-NB15 priors. The base paper does not classify attack family, only flags anomalous/not.
             </div>
           </div>
@@ -173,10 +173,10 @@ export default function ExperimentMethodologyPage() {
 
       {perAttackRows.length > 0 && (
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Per-Attack Confusion Detail</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Per-Attack Confusion Detail</h3>
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-500 border-b border-slate-700/50">
+              <tr className="text-slate-500 border-b border-slate-200">
                 {['Attack Type', 'TPR', 'FNR', 'FPR', 'Accuracy', 'Truth', 'Predicted'].map(h => (
                   <th key={h} className="text-left py-2 pr-6 font-medium">{h}</th>
                 ))}
@@ -184,12 +184,12 @@ export default function ExperimentMethodologyPage() {
             </thead>
             <tbody>
               {perAttackRows.map(row => (
-                <tr key={row.name} className="data-table-row border-b border-slate-800/40">
+                <tr key={row.name} className="data-table-row border-b border-slate-200/40">
                   <td className="py-2 pr-6 font-mono text-cyber-blue">{row.name}</td>
-                  <td className="py-2 pr-6 font-mono text-emerald-400">{(row.tpr * 100).toFixed(1)}%</td>
+                  <td className="py-2 pr-6 font-mono text-emerald-600">{(row.tpr * 100).toFixed(1)}%</td>
                   <td className="py-2 pr-6 font-mono text-red-400">{(row.fnr * 100).toFixed(1)}%</td>
-                  <td className="py-2 pr-6 font-mono text-amber-400">{(row.fpr * 100).toFixed(2)}%</td>
-                  <td className="py-2 pr-6 font-mono text-slate-300">{(row.accuracy * 100).toFixed(1)}%</td>
+                  <td className="py-2 pr-6 font-mono text-amber-600">{(row.fpr * 100).toFixed(2)}%</td>
+                  <td className="py-2 pr-6 font-mono text-slate-700">{(row.accuracy * 100).toFixed(1)}%</td>
                   <td className="py-2 pr-6 font-mono text-slate-500">{row.support}</td>
                   <td className="py-2 pr-6 font-mono text-slate-500">{row.predicted}</td>
                 </tr>
@@ -202,7 +202,7 @@ export default function ExperimentMethodologyPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-200">Statistical Significance</h3>
+            <h3 className="text-sm font-semibold text-slate-800">Statistical Significance</h3>
             <Badge variant="healthy">Paired tests vs fixed baseline</Badge>
           </div>
           {Object.keys(statTests).length === 0 ? (
@@ -213,10 +213,10 @@ export default function ExperimentMethodologyPage() {
                 const sig = Boolean(val.significant)
                 const pStr = formatPValue(val.pValue)
                 return (
-                  <div key={key} className="glass-card p-3 border-slate-700/40">
+                  <div key={key} className="glass-card p-3 border-slate-200">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <div className="text-xs font-semibold text-slate-200">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                        <div className="text-xs font-semibold text-slate-800">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                         <div className="text-[11px] text-slate-500 mt-0.5">{formatTestName(val.test)}</div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -233,14 +233,14 @@ export default function ExperimentMethodologyPage() {
               })}
             </div>
           )}
-          <div className="mt-3 pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 leading-relaxed">
+          <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed">
             Paired t-test (Welch fallback to Wilcoxon) on per-timestep series. The base paper reports mean differences without significance testing.
           </div>
         </div>
 
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-400" />
+          <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-emerald-600" />
             Audit Scheduler Convergence
           </h3>
           <div className="grid grid-cols-2 gap-3 mb-3">
@@ -265,22 +265,22 @@ export default function ExperimentMethodologyPage() {
               <div className="text-[10px] text-slate-500 mt-0.5">scheduler ablation</div>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-700/40 text-[11px] text-slate-500 leading-relaxed">
+          <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed">
             Hybrid scheduler runs Q-learning for directional decisions (INC/HOLD/DEC) refined by gradient descent for magnitude. Cluster budget allocated proportionally by aggregate cluster risk.
           </div>
           <div className="mt-2 text-[11px] text-slate-500 leading-relaxed">
-            <span className="text-amber-400 font-semibold">vs paper:</span> base paper reports 12 RL iterations to converge. Our higher iteration count reflects a larger state space (we encode 9 physical+cyber metrics + LSTM probability + cluster label + cyber-attack-family prior, vs paper&apos;s 6 metrics). Larger state space requires more samples for Q-table coverage. Per-step inference latency stays sub-50 ms.
+            <span className="text-amber-600 font-semibold">vs paper:</span> base paper reports 12 RL iterations to converge. Our higher iteration count reflects a larger state space (we encode 9 physical+cyber metrics + LSTM probability + cluster label + cyber-attack-family prior, vs paper's 6 metrics). Larger state space requires more samples for Q-table coverage. Per-step inference latency stays sub-50 ms.
           </div>
         </div>
       </div>
 
       <div className="glass-card p-4">
-        <h3 className="text-sm font-semibold text-slate-200 mb-3">Optimization Profile - {profile}</h3>
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">Optimization Profile - {profile}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {(['ROBUST', 'BALANCED', 'COST'] as const).map(p => (
-            <div key={p} className={`glass-card p-3 ${p === profile ? 'border-cyber-blue/60' : 'border-slate-700/40'}`}>
+            <div key={p} className={`glass-card p-3 ${p === profile ? 'border-cyber-blue/60' : 'border-slate-200'}`}>
               <div className="flex items-center justify-between mb-1">
-                <span className={`text-xs font-semibold ${p === profile ? 'text-cyber-blue' : 'text-slate-300'}`}>{p}</span>
+                <span className={`text-xs font-semibold ${p === profile ? 'text-cyber-blue' : 'text-slate-700'}`}>{p}</span>
                 {p === profile && <Badge variant="healthy">active</Badge>}
               </div>
               <div className="text-[11px] text-slate-500 leading-relaxed">{PROFILE_DESCRIPTIONS[p]}</div>
@@ -290,7 +290,7 @@ export default function ExperimentMethodologyPage() {
       </div>
 
       <div className="glass-card p-4">
-        <h3 className="text-sm font-semibold text-slate-200 mb-3">Design Notes</h3>
+        <h3 className="text-sm font-semibold text-slate-800 mb-3">Design Notes</h3>
         <div className="flex flex-wrap gap-2">
           <Badge variant="info">Latest-run telemetry</Badge>
           <Badge variant="healthy">Explainable (XAI)</Badge>

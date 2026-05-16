@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
@@ -157,7 +157,7 @@ export default function ResearchPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Research & Validation</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Ablation comparison, Pareto frontier across optimization profiles, audit prioritisation by agent type, and dual-branch LSTM training validation.
         </p>
       </div>
@@ -178,7 +178,7 @@ export default function ResearchPage() {
       {/* Ablation comparison */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <GitMerge className="w-4 h-4 text-purple-400" />
             Scheduler Ablation - HYBRID vs RL_ONLY vs GRADIENT_ONLY
           </h3>
@@ -190,7 +190,7 @@ export default function ResearchPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-500 border-b border-slate-700/50">
+              <tr className="text-slate-500 border-b border-slate-200">
                 {['Mode', 'Run', 'Cost Efficiency', 'Audit Coverage', 'Accuracy', 'F1', 'Risk Mitigation', 'RL Iters', 'Grad Iters'].map(h => (
                   <th key={h} className="text-left py-2 pr-6 font-medium">{h}</th>
                 ))}
@@ -198,16 +198,16 @@ export default function ResearchPage() {
             </thead>
             <tbody>
               {ablationRuns.map(({ mode, run }) => (
-                <tr key={mode} className="data-table-row border-b border-slate-800/40">
+                <tr key={mode} className="data-table-row border-b border-slate-200/40">
                   <td className="py-2 pr-6 font-mono text-cyber-blue font-semibold">{mode.replace('_', ' ')}</td>
                   <td className="py-2 pr-6 font-mono text-slate-500">{run?.run_id ?? '—'}</td>
-                  <td className="py-2 pr-6 font-mono text-emerald-400">{formatPct(run?.summary?.cost_efficiency)}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-200">{formatPct(run?.summary?.coverage_cycle_dynamic ?? run?.summary?.audit_coverage)}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-200">{formatPct(run?.summary?.accuracy)}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-200">{formatPct(run?.summary?.f1)}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-200">{formatPct(run?.summary?.risk_mitigation)}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-300">{run?.summary?.rl_iterations ?? '—'}</td>
-                  <td className="py-2 pr-6 font-mono text-slate-300">{run?.summary?.gradient_iterations ?? '—'}</td>
+                  <td className="py-2 pr-6 font-mono text-emerald-600">{formatPct(run?.summary?.cost_efficiency)}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-800">{formatPct(run?.summary?.coverage_cycle_dynamic ?? run?.summary?.audit_coverage)}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-800">{formatPct(run?.summary?.accuracy)}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-800">{formatPct(run?.summary?.f1)}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-800">{formatPct(run?.summary?.risk_mitigation)}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-700">{run?.summary?.rl_iterations ?? '—'}</td>
+                  <td className="py-2 pr-6 font-mono text-slate-700">{run?.summary?.gradient_iterations ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -223,8 +223,8 @@ export default function ResearchPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="glass-card p-4 lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-amber-400" />
+            <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-amber-600" />
               Pareto Frontier - Cost Efficiency vs Detection Accuracy
             </h3>
             <Badge variant="info">3 optimization profiles</Badge>
@@ -240,19 +240,19 @@ export default function ResearchPage() {
           </div>
         </div>
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Profile Trade-off</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Profile Trade-off</h3>
           <div className="space-y-2 text-xs">
             {profileRuns.map(({ profile, run }) => (
-              <div key={profile} className="glass-card p-3 border-slate-700/40">
+              <div key={profile} className="glass-card p-3 border-slate-200">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold" style={{ color: PROFILE_COLORS[profile] ?? '#94a3b8' }}>{profile}</span>
                   {run ? <Badge variant="healthy">found</Badge> : <Badge variant="info">not run</Badge>}
                 </div>
                 {run?.summary ? (
-                  <div className="text-[11px] text-slate-400 space-y-0.5">
-                    <div>Cost Eff: <span className="font-mono text-slate-200">{formatPct(run.summary.cost_efficiency)}</span></div>
-                    <div>Accuracy: <span className="font-mono text-slate-200">{formatPct(run.summary.accuracy)}</span></div>
-                    <div>FPR: <span className="font-mono text-slate-200">{formatPct(run.summary.fpr, 2)}</span></div>
+                  <div className="text-[11px] text-slate-500 space-y-0.5">
+                    <div>Cost Eff: <span className="font-mono text-slate-800">{formatPct(run.summary.cost_efficiency)}</span></div>
+                    <div>Accuracy: <span className="font-mono text-slate-800">{formatPct(run.summary.accuracy)}</span></div>
+                    <div>FPR: <span className="font-mono text-slate-800">{formatPct(run.summary.fpr, 2)}</span></div>
                   </div>
                 ) : (
                   <div className="text-[11px] text-slate-500">Launch this profile from Runs config.</div>
@@ -267,7 +267,7 @@ export default function ResearchPage() {
       {attackFamily.length > 0 && (
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-200">Attack Family Distribution (Truth vs Detected)</h3>
+            <h3 className="text-sm font-semibold text-slate-800">Attack Family Distribution (Truth vs Detected)</h3>
             <Badge variant="info">FDI / DOS / MITM / CHAIN / FAULT</Badge>
           </div>
           <div className="h-64">
@@ -283,7 +283,7 @@ export default function ResearchPage() {
       {/* Audit frequency by agent type */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyber-blue" />
             Audit Prioritisation by Agent Type
           </h3>
@@ -307,7 +307,7 @@ export default function ResearchPage() {
       {/* LSTM training curve */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Cpu className="w-4 h-4 text-purple-400" />
             Dual-Branch LSTM Training Validation
           </h3>
@@ -317,30 +317,30 @@ export default function ResearchPage() {
           <LSTMTrainingCurveChart data={LSTM_TRAINING_CURVE} />
         </div>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="glass-card p-2 border-slate-700/40">
+          <div className="glass-card p-2 border-slate-200">
             <div className="text-slate-500 text-[10px] uppercase">Final Loss</div>
-            <div className="font-mono text-amber-400 text-base">0.063</div>
+            <div className="font-mono text-amber-600 text-base">0.063</div>
           </div>
-          <div className="glass-card p-2 border-slate-700/40">
+          <div className="glass-card p-2 border-slate-200">
             <div className="text-slate-500 text-[10px] uppercase">Final Val Acc</div>
-            <div className="font-mono text-emerald-400 text-base">97.9%</div>
+            <div className="font-mono text-emerald-600 text-base">97.9%</div>
           </div>
-          <div className="glass-card p-2 border-slate-700/40">
+          <div className="glass-card p-2 border-slate-200">
             <div className="text-slate-500 text-[10px] uppercase">Architecture</div>
             <div className="font-mono text-cyber-blue text-base">2 × LSTM</div>
           </div>
-          <div className="glass-card p-2 border-slate-700/40">
+          <div className="glass-card p-2 border-slate-200">
             <div className="text-slate-500 text-[10px] uppercase">Hidden Size</div>
             <div className="font-mono text-cyber-blue text-base">64</div>
           </div>
         </div>
         <div className="mt-3 text-[11px] text-slate-500 leading-relaxed">
           Two PyTorch LSTM models (grid branch and network branch) trained on real datasets. Weights persisted to
-          <span className="font-mono text-slate-300"> data/anomaly_inputs/lstm_pretrained.pt</span> and
-          <span className="font-mono text-slate-300"> lstm_network.pt</span>. The base paper describes LSTM as future work
+          <span className="font-mono text-slate-700"> data/anomaly_inputs/lstm_pretrained.pt</span> and
+          <span className="font-mono text-slate-700"> lstm_network.pt</span>. The base paper describes LSTM as future work
           but does not implement it.
           <br />
-          <span className="text-amber-400">Note: per-epoch loss/accuracy was not persisted at training time, so the curve above is a representative illustration of the trajectory, not a recorded run. Final evaluation accuracy of the trained checkpoint is reported separately on the runs page.</span>
+          <span className="text-amber-600">Note: per-epoch loss/accuracy was not persisted at training time, so the curve above is a representative illustration of the trajectory, not a recorded run. Final evaluation accuracy of the trained checkpoint is reported separately on the runs page.</span>
         </div>
       </div>
     </div>

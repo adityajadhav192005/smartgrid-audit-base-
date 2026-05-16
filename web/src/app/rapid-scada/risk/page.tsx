@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
@@ -47,7 +47,7 @@ export default function RapidScadaRiskPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Rapid SCADA Risk Analytics</h1>
-        <p className="text-sm text-slate-400 mt-1">Live deviation trends, SCADA risk scores, and feature-level explanation from current telemetry</p>
+        <p className="text-sm text-slate-500 mt-1">Live deviation trends, SCADA risk scores, and feature-level explanation from current telemetry</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -59,25 +59,25 @@ export default function RapidScadaRiskPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Live Anomaly Score Trend</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Live Anomaly Score Trend</h3>
           <div className="h-48"><AnomalyTrendChart data={trend} /></div>
         </div>
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Audit and Attack Event Volume</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Audit and Attack Event Volume</h3>
           <div className="h-48"><SystemHealthAreaChart data={trend} /></div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">SCADA Risk Radar</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">SCADA Risk Radar</h3>
           <div className="h-52"><AgentRadarChart data={radarData} /></div>
         </div>
         <div className="glass-card p-4 lg:col-span-2">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Top Live Anomalous Agents</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Top Live Anomalous Agents</h3>
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-500 border-b border-slate-700/50">
+              <tr className="text-slate-500 border-b border-slate-200">
                 {['Agent', 'Type', 'Anomaly Score', 'Risk Score', 'Source', '# Audits'].map(h => (
                   <th key={h} className="text-left py-2 pr-4 font-medium">{h}</th>
                 ))}
@@ -85,13 +85,13 @@ export default function RapidScadaRiskPage() {
             </thead>
             <tbody>
               {topAgents.map(agent => (
-                <tr key={agent.id} className="data-table-row border-b border-slate-800/40 cursor-pointer" onClick={() => setSelectedAgentId(agent.id)}>
+                <tr key={agent.id} className="data-table-row border-b border-slate-200/40 cursor-pointer" onClick={() => setSelectedAgentId(agent.id)}>
                   <td className="py-1.5 pr-4 font-mono text-cyber-blue">{agent.id}</td>
-                  <td className="py-1.5 pr-4 text-slate-400">{agent.type}</td>
-                  <td className="py-1.5 pr-4 font-mono text-slate-300">{agent.anomalyScore.toFixed(3)}</td>
-                  <td className="py-1.5 pr-4 font-mono text-slate-400">{agent.riskScore.toFixed(2)}</td>
+                  <td className="py-1.5 pr-4 text-slate-500">{agent.type}</td>
+                  <td className="py-1.5 pr-4 font-mono text-slate-700">{agent.anomalyScore.toFixed(3)}</td>
+                  <td className="py-1.5 pr-4 font-mono text-slate-500">{agent.riskScore.toFixed(2)}</td>
                   <td className="py-1.5 pr-4 text-slate-500 uppercase">{agent.source ?? 'live'}</td>
-                  <td className="py-1.5 text-slate-400">{agent.auditCount}</td>
+                  <td className="py-1.5 text-slate-500">{agent.auditCount}</td>
                 </tr>
               ))}
             </tbody>
@@ -101,33 +101,33 @@ export default function RapidScadaRiskPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Selected Agent Feature Contribution</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Selected Agent Feature Contribution</h3>
           {!selectedAgent ? (
             <p className="text-sm text-slate-500">No live SCADA explanation available.</p>
           ) : (
             <div className="space-y-4 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-cyber-blue">{selectedAgent.id}</span>
-                <span className="text-slate-400">source {selectedAgent.source ?? 'live'} · severity {selectedAgent.severity ?? 'LOW'}</span>
+                <span className="text-slate-500">source {selectedAgent.source ?? 'live'} · severity {selectedAgent.severity ?? 'LOW'}</span>
               </div>
               <div>
-                <div className="text-slate-300 font-medium mb-2">Physical Top Features</div>
+                <div className="text-slate-700 font-medium mb-2">Physical Top Features</div>
                 <div className="space-y-2">
                   {topPhysicalFeatures.length === 0 ? <div className="text-slate-500">No physical XAI available.</div> : topPhysicalFeatures.map((row: Record<string, unknown>, index: number) => (
-                    <div key={`phys-${index}`} className="flex justify-between border-b border-slate-800/40 pb-1">
-                      <span className="text-slate-300">{String(row.feature ?? 'feature')}</span>
-                      <span className="font-mono text-slate-400">{Number(row.relative_contribution ?? 0).toFixed(3)}</span>
+                    <div key={`phys-${index}`} className="flex justify-between border-b border-slate-200/40 pb-1">
+                      <span className="text-slate-700">{String(row.feature ?? 'feature')}</span>
+                      <span className="font-mono text-slate-500">{Number(row.relative_contribution ?? 0).toFixed(3)}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div>
-                <div className="text-slate-300 font-medium mb-2">Cyber Top Features</div>
+                <div className="text-slate-700 font-medium mb-2">Cyber Top Features</div>
                 <div className="space-y-2">
                   {topCyberFeatures.length === 0 ? <div className="text-slate-500">No cyber XAI available.</div> : topCyberFeatures.map((row: Record<string, unknown>, index: number) => (
-                    <div key={`cyber-${index}`} className="flex justify-between border-b border-slate-800/40 pb-1">
-                      <span className="text-slate-300">{String(row.feature ?? 'feature')}</span>
-                      <span className="font-mono text-slate-400">{Number(row.relative_contribution ?? 0).toFixed(3)}</span>
+                    <div key={`cyber-${index}`} className="flex justify-between border-b border-slate-200/40 pb-1">
+                      <span className="text-slate-700">{String(row.feature ?? 'feature')}</span>
+                      <span className="font-mono text-slate-500">{Number(row.relative_contribution ?? 0).toFixed(3)}</span>
                     </div>
                   ))}
                 </div>
@@ -137,7 +137,7 @@ export default function RapidScadaRiskPage() {
         </div>
 
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">Active SCADA Detection Configuration</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Active SCADA Detection Configuration</h3>
           <div className="grid grid-cols-2 gap-4 text-xs">
             {[
               { param: 'Audit threshold', value: scoreThreshold.toFixed(2), desc: 'Deviation score boundary for audit escalation' },
@@ -145,9 +145,9 @@ export default function RapidScadaRiskPage() {
               { param: 'PMU latency', value: Number(gridStatus?.rapid_scada?.config?.profiles?.pmu?.cyber_defaults?.latency ?? 2).toFixed(1), desc: 'PMU latency baseline (ms)' },
               { param: 'Breaker comm freq', value: Number(gridStatus?.rapid_scada?.config?.profiles?.breaker?.cyber_defaults?.comm_freq ?? 50).toFixed(1), desc: 'Breaker cyber comm baseline' },
             ].map(item => (
-              <div key={item.param} className="glass-card p-3 border-slate-700/30">
+              <div key={item.param} className="glass-card p-3 border-slate-200">
                 <div className="font-mono text-cyber-teal text-base font-bold">{item.value}</div>
-                <div className="text-slate-300 mt-1 font-medium">{item.param}</div>
+                <div className="text-slate-700 mt-1 font-medium">{item.param}</div>
                 <div className="text-slate-500 mt-0.5">{item.desc}</div>
               </div>
             ))}

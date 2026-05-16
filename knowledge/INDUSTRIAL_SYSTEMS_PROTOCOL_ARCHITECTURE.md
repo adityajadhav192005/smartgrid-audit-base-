@@ -184,8 +184,8 @@ The paper's approach (and ours) uses deviation scoring as the explainable core, 
 ```
 Substation (Modbus/OPC UA) → Rapid SCADA → SmartGrid Backend → Operator Dashboard
 Control Room EMS           ↗               ↓
-PMU Measurement System    ↗               XAI Explanation Engine
-IDS/SIEM (Snort)         ↗               Audit Scheduling Engine
+PMU Measurement System    ↗               Blockchain Ledger
+IDS/SIEM (Snort)         ↗               Federated Learning Hub
 ```
 
 ### 8.2 What Would Change In Production
@@ -196,7 +196,8 @@ IDS/SIEM (Snort)         ↗               Audit Scheduling Engine
 | Cyber metrics | Engineered baselines | Snort/Suricata IDS feed |
 | Baselines | Hand-set | Learned from historical data |
 | LSTM checkpoint | Trained on simulation | Retrained on real utility data |
-| Audit storage | SQLite audit ledger | PostgreSQL or time-series DB |
+| Blockchain | SQLite-backed audit chain | Hyperledger Fabric or Ethereum |
+| Federated learning | FedAvg across simulated clusters | Real distributed deployment |
 
 ---
 
@@ -221,7 +222,8 @@ This project implements multiple layers of detection (defense in depth):
 2. **LSTM anomaly probability** — second line, temporal pattern detection
 3. **Behavioral signature** — third line, temporal step/ramp/oscillation patterns
 4. **Tier-A FP suppression** — reduces false positives from physical-only outliers
-5. **Multi-layer detection** — CUSUM for FDI, network rules for DoS, integrity checks for MITM
+5. **Blockchain audit ledger** — tamper-evident record of all audit decisions
+6. **Federated learning** — aggregated knowledge across agent clusters
 
 ---
 
@@ -242,4 +244,4 @@ Examiners may ask about standards:
 - **Protect:** Audit scheduling increases inspection of high-risk assets
 - **Detect:** 3-modality anomaly detection (deviation + LSTM + behavioral)
 - **Respond:** Response workflow and mitigation actions
-- **Recover:** Audit trail and incident timeline for post-incident analysis
+- **Recover:** Audit trail and blockchain ledger for post-incident analysis

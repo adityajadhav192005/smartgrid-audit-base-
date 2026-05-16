@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
 import { Badge } from '@/components/ui/Badge'
@@ -33,7 +33,7 @@ export default function RapidScadaResponsePage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Rapid SCADA Response Workflow</h1>
-        <p className="text-sm text-slate-400 mt-1">Live SCADA response sequence, mitigation actions, and current policy outcomes</p>
+        <p className="text-sm text-slate-500 mt-1">Live SCADA response sequence, mitigation actions, and current policy outcomes</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -45,16 +45,16 @@ export default function RapidScadaResponsePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Response Pipeline</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Response Pipeline</h3>
           <div className="space-y-3">
             {responseSteps.map(step => (
               <div key={step.step} className={`flex gap-3 text-xs ${step.done ? '' : 'opacity-40'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${step.done ? 'bg-cyber-green/20 border border-cyber-green/40 text-cyber-green' : 'bg-slate-800 border border-slate-700 text-slate-500'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${step.done ? 'bg-cyber-green/20 border border-cyber-green/40 text-cyber-green' : 'bg-slate-100 border border-slate-300 text-slate-500'}`}>
                   {step.done ? 'OK' : step.step}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-200">{step.icon} {step.action}</span>
+                    <span className="font-semibold text-slate-800">{step.icon} {step.action}</span>
                     <span className="text-slate-600">{step.time}</span>
                   </div>
                   <div className="text-slate-500 mt-0.5">{step.detail}</div>
@@ -65,15 +65,15 @@ export default function RapidScadaResponsePage() {
         </div>
 
         <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Live Response Event Log</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Live Response Event Log</h3>
           <div className="space-y-2">
             {events.map(event => (
-              <div key={event.id} className="flex gap-3 text-xs py-1.5 border-b border-slate-800/40">
+              <div key={event.id} className="flex gap-3 text-xs py-1.5 border-b border-slate-200/40">
                 <span className="text-slate-600 font-mono w-16 shrink-0">{event.ts}</span>
                 <Badge variant={event.type === 'ATTACK' || event.type === 'ANOMALY' ? 'critical' : event.type === 'AUDIT' ? 'info' : 'high'}>
                   {event.type}
                 </Badge>
-                <span className="text-slate-400">{event.msg}</span>
+                <span className="text-slate-500">{event.msg}</span>
               </div>
             ))}
           </div>

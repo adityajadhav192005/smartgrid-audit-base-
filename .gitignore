@@ -103,28 +103,3 @@ archive/old_docs/
 !requirements.txt
 !logs/.gitkeep
 .vercel
-.env*.local
-
-# ========================
-# Additional exclusions
-# Build artifacts (already tracked — must git rm --cached)
-web/.next/
-
-# Logs and databases
-logs/*.db
-logs/pytest_tmp/
-rapidscada_local/ScadaWeb/log/
-rapidscada_local/*/log/
-rapidscada_local_web/log/
-
-# Temp files
-tmp_*.log
-*.pid
-web/.next-dev.log
-web/.next-dev.pid
-
-# Test results
-web/test-results/
-
-# Claude Code session data
-.claude/

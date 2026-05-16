@@ -1,0 +1,69 @@
+  ▲ Next.js 14.2.3
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.5s
+ ○ Compiling /api/proxy/grid/status ...
+ ✓ Compiled /api/proxy/grid/status in 7.3s (614 modules)
+ GET /api/proxy/grid/status 200 in 7765ms
+ GET /api/proxy/grid/status 200 in 4851ms
+ ✓ Compiled in 671ms (591 modules)
+ GET /api/proxy/experiment/telemetry 404 in 2422ms
+ GET /api/proxy/experiment/telemetry 404 in 8294ms
+ GET /api/proxy/grid/status 200 in 436ms
+ GET /api/proxy/grid/status 200 in 72ms
+ GET /api/proxy/experiment/telemetry 404 in 46ms
+ GET /api/proxy/grid/status 200 in 52ms
+ GET /api/proxy/experiment/telemetry 404 in 40ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.9s (1679 modules)
+ GET /api/proxy/grid/status 200 in 2361ms
+ GET / 200 in 3473ms
+ GET /api/proxy/grid/status 200 in 42ms
+ GET /api/proxy/experiment/telemetry 404 in 91ms
+ GET /api/proxy/grid/status 200 in 72ms
+ GET /login 404 in 75ms
+ GET /api/proxy/experiment/telemetry 404 in 28ms
+ GET /api/proxy/grid/status 200 in 72ms
+ GET /api/proxy/grid/status 200 in 50ms
+ GET /api/proxy/experiment/telemetry 404 in 60ms
+ GET /api/proxy/grid/status 200 in 46ms
+ GET /api/proxy/grid/status 200 in 46ms
+ GET /api/proxy/experiment/telemetry 404 in 66ms
+ GET /api/proxy/grid/status 200 in 46ms
+ GET /api/proxy/experiment/telemetry 404 in 53ms
+ GET /api/proxy/grid/status 200 in 47ms
+ GET /api/proxy/grid/status 200 in 60ms
+ GET /api/proxy/experiment/telemetry 404 in 53ms
+ GET /api/proxy/grid/status 200 in 37ms
+ GET /api/proxy/experiment/telemetry 404 in 53ms
+ GET /api/proxy/grid/status 200 in 97ms
+ GET /api/proxy/grid/status 503 in 19ms
+ GET / 200 in 428ms
+ GET /api/proxy/grid/status 503 in 113ms
+ GET /api/proxy/grid/status 503 in 113ms
+ GET /api/proxy/experiment/telemetry 404 in 121ms
+ GET /api/proxy/experiment/telemetry 404 in 118ms
+ GET /api/proxy/grid/status 503 in 20ms
+ GET /api/proxy/experiment/telemetry 404 in 50ms
+ GET /api/proxy/grid/status 503 in 13ms
+ GET /api/proxy/grid/status 503 in 19ms
+ GET /api/proxy/experiment/telemetry 404 in 59ms
+ ✓ Compiled in 839ms (1660 modules)
+ ✓ Compiled in 310ms (1660 modules)
+ ✓ Compiled in 405ms (1668 modules)
+ ✓ Compiled in 284ms (841 modules)
+ ✓ Compiled in 157ms (841 modules)
+ ✓ Compiled in 237ms (841 modules)
+ ✓ Compiled in 164ms (841 modules)
+ ✓ Compiled in 128ms (841 modules)
+ ✓ Compiled in 174ms (841 modules)
+ ✓ Compiled in 217ms (841 modules)
+ ✓ Compiled in 616ms (1668 modules)
+ ✓ Compiled in 391ms (1670 modules)
+ ✓ Compiled in 150ms (842 modules)
+ ✓ Compiled in 469ms (1656 modules)
+ ✓ Compiled in 166ms (842 modules)
+ ✓ Compiled in 164ms (842 modules)
+ ✓ Compiled in 148ms (842 modules)

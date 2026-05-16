@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Badge } from '@/components/ui/Badge'
 import { Clock, ListTree } from 'lucide-react'
@@ -11,17 +11,17 @@ export default function ExperimentTimelinePage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Experiment Incident Timeline</h1>
-        <p className="text-sm text-slate-400 mt-1">Latest-run event sequence from detection through audit and response actions</p>
+        <p className="text-sm text-slate-500 mt-1">Latest-run event sequence from detection through audit and response actions</p>
       </div>
 
-      <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-300">
+      <div className="glass-card p-3 border-cyber-blue/20 text-xs text-slate-700">
         Run <span className="font-mono text-cyber-blue">{summary?.runId ?? 'n/a'}</span> · status {summary?.status ?? 'unknown'} · {events.length} timeline events
       </div>
 
       <div className="glass-card p-4">
         <div className="flex items-center gap-2 mb-4">
           <ListTree size={14} className="text-cyan-400" />
-          <h3 className="text-sm font-semibold text-slate-200">Timeline</h3>
+          <h3 className="text-sm font-semibold text-slate-800">Timeline</h3>
         </div>
         <div className="space-y-3">
           {events.map((event, index) => (
@@ -32,7 +32,7 @@ export default function ExperimentTimelinePage() {
                 </div>
                 {index < events.length - 1 && <div className="w-px flex-1 bg-slate-700/60 mt-1" />}
               </div>
-              <div className="glass-card p-3 border-slate-700/30 flex-1">
+              <div className="glass-card p-3 border-slate-200 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Badge variant={event.severity === 'critical' ? 'critical' : event.severity === 'high' ? 'high' : event.severity === 'medium' ? 'medium' : 'info'}>
@@ -42,7 +42,7 @@ export default function ExperimentTimelinePage() {
                   </div>
                   <Clock size={12} className="text-slate-600" />
                 </div>
-                <p className="text-sm text-slate-300 mt-2">{event.msg}</p>
+                <p className="text-sm text-slate-700 mt-2">{event.msg}</p>
               </div>
             </div>
           ))}

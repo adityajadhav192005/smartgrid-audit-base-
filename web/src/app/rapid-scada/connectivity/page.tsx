@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
@@ -71,37 +71,37 @@ export default function RapidScadaConnectivityPage() {
     <div className="space-y-6">
       <div>
         <h1 className="section-header">Rapid SCADA Connectivity</h1>
-        <p className="text-sm text-slate-400 mt-1">Dedicated live SCADA connection health, bridge status, and current tag availability</p>
+        <p className="text-sm text-slate-500 mt-1">Dedicated live SCADA connection health, bridge status, and current tag availability</p>
       </div>
 
       <div className="glass-card p-5 space-y-4">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              {scadaConnected ? <Wifi size={14} className="text-emerald-400" /> : <WifiOff size={14} className="text-red-400" />}
-              <span className="font-semibold text-slate-200">Rapid SCADA Live</span>
+              {scadaConnected ? <Wifi size={14} className="text-emerald-600" /> : <WifiOff size={14} className="text-red-400" />}
+              <span className="font-semibold text-slate-800">Rapid SCADA Live</span>
               <Badge variant="info" className="text-[10px]">Telemetry</Badge>
             </div>
             <div className="text-xs text-slate-500 mt-1">Live SCADA bridge, polling state, and current tag availability</div>
           </div>
-          <span className={cn('text-xs font-semibold', scadaConnected ? 'text-emerald-400' : 'text-red-400')}>
+          <span className={cn('text-xs font-semibold', scadaConnected ? 'text-emerald-600' : 'text-red-400')}>
             {scadaConnected ? 'CONNECTED' : 'DISCONNECTED'}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           {cards.map(card => (
-            <div key={card.label} className="glass-card p-3 border-slate-700/30">
+            <div key={card.label} className="glass-card p-3 border-slate-200">
               <div className="text-slate-500 mb-1">{card.label}</div>
-              <div className={cn('font-mono text-sm break-all', card.ok ? 'text-slate-200' : 'text-red-300')}>{card.value}</div>
+              <div className={cn('font-mono text-sm break-all', card.ok ? 'text-slate-800' : 'text-red-300')}>{card.value}</div>
             </div>
           ))}
         </div>
 
-        <div className="rounded overflow-hidden border border-slate-700/40">
+        <div className="rounded overflow-hidden border border-slate-200">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-grid-900/60">
+              <tr className="bg-slate-50">
                 <th className="text-left px-3 py-1.5 text-slate-500 font-medium">Live Tag</th>
                 <th className="text-right px-3 py-1.5 text-slate-500 font-medium">Value</th>
               </tr>
@@ -110,7 +110,7 @@ export default function RapidScadaConnectivityPage() {
               {Object.entries(liveTags).slice(0, 10).map(([key, value]) => (
                 <tr key={key} className="data-table-row">
                   <td className="px-3 py-1.5 font-mono text-cyber-blue/80">{key}</td>
-                  <td className="px-3 py-1.5 text-right text-slate-300">{Number(value).toFixed(3)}</td>
+                  <td className="px-3 py-1.5 text-right text-slate-700">{Number(value).toFixed(3)}</td>
                 </tr>
               ))}
               {Object.keys(liveTags).length === 0 && (
@@ -131,7 +131,7 @@ export default function RapidScadaConnectivityPage() {
         </div>
       </div>
 
-      <div className="glass-card p-4 text-xs text-slate-400 space-y-2">
+      <div className="glass-card p-4 text-xs text-slate-500 space-y-2">
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           <span><span className="text-slate-500">Last backend check:</span> {lastCheck}</span>
           {scadaConnection?.last_success_utc && (
@@ -142,10 +142,10 @@ export default function RapidScadaConnectivityPage() {
             <span className="text-red-300"><span className="text-slate-500">Last error:</span> {scadaConnection.last_error}</span>
           )}
         </div>
-        <div className="border-t border-slate-800 pt-2 text-[11px] text-slate-500">
-          <span className="font-medium text-slate-400">Data sources — </span>
-          <span className="text-emerald-400">Physical</span>: voltage, current, load, frequency, breaker status read live from Rapid SCADA channels.{' '}
-          <span className="text-amber-400">Cyber</span>: latency, packet_loss, integrity, comm_freq are synthetic baseline values
+        <div className="border-t border-slate-200 pt-2 text-[11px] text-slate-500">
+          <span className="font-medium text-slate-500">Data sources — </span>
+          <span className="text-emerald-600">Physical</span>: voltage, current, load, frequency, breaker status read live from Rapid SCADA channels.{' '}
+          <span className="text-amber-600">Cyber</span>: latency, packet_loss, integrity, comm_freq are synthetic baseline values
           (no IDS/SIEM integration; in production these would come from Snort/Suricata or a network monitoring agent).
         </div>
       </div>

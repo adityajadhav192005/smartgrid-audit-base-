@@ -1,4 +1,4 @@
-"use client"
+﻿'use client'
 
 import { useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,7 @@ const STATE_BG: Record<AgentState, string> = {
   Anomalous: 'bg-orange-950/50 border-orange-500/35',
   'Under Audit': 'bg-cyan-950/50 border-cyan-500/35',
   Attacked: 'bg-red-950/60 border-red-500/50',
-  Offline: 'bg-slate-900/30 border-slate-700/20',
+  Offline: 'bg-slate-50 border-slate-200',
 }
 
 const STATE_PULSE: Record<AgentState, string> = {
@@ -121,7 +121,7 @@ export default function ScadaLivePage() {
         <div className="flex items-center gap-2">
           <div className={cn(
             'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border',
-            isConnected ? 'bg-emerald-900/20 border-emerald-500/30 text-emerald-400' : 'bg-slate-800/40 border-slate-600/20 text-slate-500',
+            isConnected ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-500',
           )}>
             {isConnected ? <Wifi size={11} /> : <WifiOff size={11} />}
             {isConnected ? 'LIVE' : 'OFFLINE'}
@@ -130,7 +130,7 @@ export default function ScadaLivePage() {
       </div>
 
       {connError && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-950/25 border border-amber-500/25 text-amber-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-950/25 border border-amber-500/25 text-amber-700 text-xs flex-shrink-0">
           <AlertTriangle size={11} /> {connError}
         </div>
       )}
@@ -142,11 +142,11 @@ export default function ScadaLivePage() {
         </div>
       )}
 
-      <div className="glass-card p-3 border-cyan-500/20 text-xs text-slate-300 flex items-center justify-between">
+      <div className="glass-card p-3 border-cyan-500/20 text-xs text-slate-700 flex items-center justify-between">
         <span>
           Fresh snapshot only: <span className="font-mono text-cyan-300">{freshestUpdate || 'n/a'}</span>
         </span>
-        <span className="text-slate-400">
+        <span className="text-slate-500">
           source live {sourceCounts.live} · mixed {sourceCounts.mixed} · fallback {sourceCounts.fallback}
         </span>
       </div>
@@ -163,9 +163,9 @@ export default function ScadaLivePage() {
           <div key={ch.label} className={cn('glass-card p-3 space-y-1', !isConnected && 'opacity-40')}>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-500 uppercase tracking-wider">{ch.label}</span>
-              <ch.Icon size={10} className={isConnected ? (ch.ok ? 'text-emerald-400' : 'text-red-400') : 'text-slate-600'} />
+              <ch.Icon size={10} className={isConnected ? (ch.ok ? 'text-emerald-600' : 'text-red-400') : 'text-slate-600'} />
             </div>
-            <div className={cn('text-base font-bold font-mono leading-tight', isConnected ? (ch.ok ? 'text-slate-100' : 'text-red-300') : 'text-slate-600')}>
+            <div className={cn('text-base font-bold font-mono leading-tight', isConnected ? (ch.ok ? 'text-slate-900' : 'text-red-300') : 'text-slate-600')}>
               {ch.value}
             </div>
             {ch.unit && <div className="text-[10px] text-slate-600">{ch.unit}</div>}
@@ -176,7 +176,7 @@ export default function ScadaLivePage() {
       <div className="flex gap-3 flex-1 min-h-0">
         <div className="glass-card p-3 flex flex-col gap-2 flex-1 min-w-0 min-h-0">
           <div className="flex items-center justify-between flex-shrink-0">
-            <span className="text-xs font-semibold text-slate-300">10 x 10 Agent Grid</span>
+            <span className="text-xs font-semibold text-slate-700">10 x 10 Agent Grid</span>
             <div className="flex items-center gap-3 text-[10px] text-slate-500">
               <span><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block mr-1" />Healthy: {scadaStatusCounts.healthy}</span>
               <span><span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block mr-1" />Flagged: {scadaStatusCounts.anomalous + scadaStatusCounts.suspect + scadaStatusCounts.underAudit}</span>
@@ -224,8 +224,8 @@ export default function ScadaLivePage() {
         <div className="w-72 flex-shrink-0 flex flex-col gap-3 min-h-0">
           <div className="glass-card p-3 flex-shrink-0">
             <div className="flex items-center gap-2 mb-2">
-              <Activity size={12} className={isConnected ? 'text-emerald-400 animate-pulse' : 'text-slate-500'} />
-              <span className="text-xs font-semibold text-slate-300">System Status</span>
+              <Activity size={12} className={isConnected ? 'text-emerald-600 animate-pulse' : 'text-slate-500'} />
+              <span className="text-xs font-semibold text-slate-700">System Status</span>
             </div>
             <div className="space-y-1.5 text-xs">
               {[
@@ -240,15 +240,15 @@ export default function ScadaLivePage() {
               ].map(row => (
                 <div key={row.k} className="flex justify-between">
                   <span className="text-slate-500">{row.k}</span>
-                  <span className={cn('font-mono font-semibold', row.ok ? 'text-emerald-400' : 'text-red-400')}>{row.v}</span>
+                  <span className={cn('font-mono font-semibold', row.ok ? 'text-emerald-600' : 'text-red-400')}>{row.v}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="glass-card p-3 flex-shrink-0">
-            <div className="text-xs font-semibold text-slate-300 mb-2">Active SCADA Algorithm</div>
-            <div className="space-y-1.5 text-[11px] text-slate-400">
+            <div className="text-xs font-semibold text-slate-700 mb-2">Active SCADA Algorithm</div>
+            <div className="space-y-1.5 text-[11px] text-slate-500">
               <div className="flex justify-between">
                 <span>Audit threshold</span>
                 <span className="font-mono text-cyan-300">{Number(scadaConfig?.score_threshold ?? 3).toFixed(2)}</span>
@@ -278,9 +278,9 @@ export default function ScadaLivePage() {
 
           <div className="glass-card p-3 flex flex-col flex-1 min-h-0">
             <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-              <AlertTriangle size={12} className="text-amber-400" />
-              <span className="text-xs font-semibold text-slate-300">Live Events</span>
-              {isConnected && <span className="ml-auto text-[9px] text-emerald-400 font-mono animate-pulse">fresh</span>}
+              <AlertTriangle size={12} className="text-amber-600" />
+              <span className="text-xs font-semibold text-slate-700">Live Events</span>
+              {isConnected && <span className="ml-auto text-[9px] text-emerald-600 font-mono animate-pulse">fresh</span>}
             </div>
             <div className="overflow-y-auto flex-1 space-y-1 pr-0.5">
               {liveEvents.length === 0 ? (
@@ -288,12 +288,12 @@ export default function ScadaLivePage() {
                   {isConnected ? 'Monitoring current snapshot' : 'Waiting for SCADA connection'}
                 </p>
               ) : liveEvents.map(event => (
-                <div key={event.id} className="rounded px-2 py-1.5 text-[10px] border space-y-0.5 bg-slate-900/20 border-slate-700/20">
+                <div key={event.id} className="rounded px-2 py-1.5 text-[10px] border space-y-0.5 bg-slate-50 border-slate-200">
                   <div className="flex justify-between">
-                    <span className="font-bold font-mono text-slate-200">{event.type}</span>
+                    <span className="font-bold font-mono text-slate-800">{event.type}</span>
                     <span className="text-slate-500 font-mono">{event.ts}</span>
                   </div>
-                  <div className="text-slate-400">{event.msg}</div>
+                  <div className="text-slate-500">{event.msg}</div>
                 </div>
               ))}
             </div>

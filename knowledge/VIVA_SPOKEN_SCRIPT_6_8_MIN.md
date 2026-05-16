@@ -105,11 +105,13 @@ The physical tags — voltage, current, load, frequency, breaker status — come
 
 ## ADDITIONAL CONTRIBUTIONS (5:10 – 5:45)
 
-Beyond detection and scheduling, the project adds two more contributions.
+Beyond detection and scheduling, the project adds three more contributions.
 
-First, XAI — explainability. The dashboard shows exactly which features contributed most to each anomaly flag. An operator can see: this generator was flagged because voltage deviated by 18% and latency spiked by 12x simultaneously. This builds operator trust and makes the system auditable.
+First, blockchain audit ledger. Every audit decision is recorded as a hash-chained event. If anyone tampers with the audit record, the chain integrity check fails. This addresses the paper's call for tamper-evident audit trails.
 
-Second, method comparison study. We evaluated five detection methods on the same data: deviation-only, LSTM-only, Isolation Forest, One-Class SVM, and our full system. Our system achieved 94.23% accuracy and 82.25% F1, versus the next best at 86.35% accuracy. This validates that the multi-modal ensemble is not just marginally better — it is fundamentally superior.
+Second, federated learning. Model weights from different agent clusters are aggregated using FedAvg. This means no single point shares raw data — privacy is preserved while the global model improves.
+
+Third, XAI — explainability. The dashboard shows exactly which features contributed most to each anomaly flag. An operator can see: this generator was flagged because voltage deviated by 18% and latency spiked by 12x simultaneously. This builds operator trust and makes the system auditable.
 
 ---
 
@@ -117,7 +119,7 @@ Second, method comparison study. We evaluated five detection methods on the same
 
 In conclusion, this project takes the theoretical framework from Priyadarsini et al. and builds it into a working operational system.
 
-The contributions are: 3-modality anomaly detection with a 3-layer multi-detector architecture that outperforms the base paper, a hybrid Q-learning and gradient scheduler that reduces audit cost while maintaining coverage, live Rapid SCADA integration, explainability at the feature level, and a comparative study validating our approach against four baseline methods.
+The contributions are: 3-modality anomaly detection that outperforms the base paper, a hybrid Q-learning and gradient scheduler that reduces audit cost while maintaining coverage, live Rapid SCADA integration, explainability at the feature level, blockchain audit trail, and federated learning for privacy-preserving model aggregation.
 
 The framework is demonstrated on N=100 agents, validated against the base paper's methodology, and operates in real-time through a 26-page operational dashboard.
 
@@ -139,6 +141,11 @@ Deep RL needs orders of magnitude more training data, is harder to interpret, an
 **"What is future work?"**
 Three things: IDS/SIEM integration for real cyber metrics, adaptive baselines via online learning instead of hand-set values, and physical PLC/RTU integration for real field measurements.
 
+**"Why blockchain for audit trails?"**
+An RDBMS audit log can be silently edited by an insider. A hash chain cannot be modified without breaking the integrity check. For a security-critical system, tamper evidence is not optional.
+
+**"What does federated learning add?"**
+In a real multi-utility deployment, utilities will not share raw telemetry. Federated learning lets each cluster train locally and share only model weight updates. The global model improves without privacy violations.
 
 **"Did you compare with other detection methods?"**
 Yes. We ran five methods on the same simulation data: deviation-only, LSTM-only, Isolation Forest, One-Class SVM, and our full system. Each baseline was given its best threshold via sweep. Our system achieved 94.23% accuracy and 1.81% FPR, versus the next best at 86.35% accuracy. No single-modality method can achieve both high recall and low FPR — the multi-modal ensemble achieves both.

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { cn } from '@/lib/utils'
 
 interface KPIStatCardProps {
@@ -41,7 +41,7 @@ export function KPIStatCard({ label, value, help, sub, trend, trendValue, color 
       s.border, s.glow, className
     )} title={help ?? DEFAULT_HELP[label] ?? label}>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">{label}</span>
+        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">{label}</span>
         {icon && <span className={cn('opacity-60 group-hover:opacity-100', s.text)}>{icon}</span>}
       </div>
       <div className={cn('text-2xl font-bold font-mono', s.text)}>{value}</div>

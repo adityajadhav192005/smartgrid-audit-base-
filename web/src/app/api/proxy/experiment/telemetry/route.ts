@@ -26,7 +26,7 @@ export async function GET() {
     try {
       const r = await fetch(`${api}/experiment/telemetry`, {
         headers: { 'x-api-key': API_KEY },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(30000),
         cache: 'no-store',
       })
       if (!r.ok) { lastError = `HTTP ${r.status} from ${api}`; continue }
