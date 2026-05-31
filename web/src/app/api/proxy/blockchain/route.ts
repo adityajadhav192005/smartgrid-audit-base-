@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const DEFAULT_PUBLIC_API = 'https://smartgrid-public-api-1001036509634.us-central1.run.app'
-const LOCAL_API = 'http://127.0.0.1:8000'
+const LOCAL_API = process.env.SMARTGRID_LOCAL_API ?? 'http://127.0.0.1:8000'
 const FASTAPI = process.env.SMARTGRID_API_URL ?? DEFAULT_PUBLIC_API
 const API_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
 

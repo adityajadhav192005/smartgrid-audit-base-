@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 const FASTAPI = process.env.SMARTGRID_API_URL ?? 'https://smartgrid-public-api-1001036509634.us-central1.run.app'
 const SETTINGS_API = process.env.SMARTGRID_SETTINGS_API_URL
 const API_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
+const LOCAL_API = process.env.SMARTGRID_LOCAL_API ?? 'http://127.0.0.1:8000'
 
 function candidateApis(): string[] {
-  const options = [FASTAPI, SETTINGS_API, 'http://127.0.0.1:8000']
+  const options = [LOCAL_API, FASTAPI, SETTINGS_API]
     .filter((value): value is string => Boolean(value && value.trim()))
     .map(value => value.replace(/\/+$/, ''))
 

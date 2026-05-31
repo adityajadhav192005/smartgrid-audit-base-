@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 type SettingsPayload = Record<string, string | number>
 
 const DEFAULT_FASTAPI = 'https://smartgrid-public-api-1001036509634.us-central1.run.app'
+const LOCAL_API = process.env.SMARTGRID_LOCAL_API ?? 'http://127.0.0.1:8000'
 const FASTAPI = process.env.SMARTGRID_API_URL ?? DEFAULT_FASTAPI
 const FASTAPI_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
 const SETTINGS_API = process.env.SMARTGRID_SETTINGS_API_URL
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 function candidateApis(): string[] {
-  const options = ['http://127.0.0.1:8000', FASTAPI, SETTINGS_API, DEFAULT_FASTAPI]
+  const options = [LOCAL_API, FASTAPI, SETTINGS_API, DEFAULT_FASTAPI]
     .filter((value): value is string => Boolean(value && value.trim()))
     .map(value => value.replace(/\/+$/, ''))
 

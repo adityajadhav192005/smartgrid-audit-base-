@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const API_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
-const LOCAL_API = 'http://127.0.0.1:8000'
+const LOCAL_API = process.env.SMARTGRID_LOCAL_API ?? 'http://127.0.0.1:8000'
 
 export const dynamic = 'force-dynamic'
 

@@ -430,7 +430,7 @@ export default function RunsPage() {
             <div className="flex flex-wrap gap-2">
               {['FDI', 'DoS', 'Jamming', 'Coordinated', 'MITM', 'Replay'].map(a => (
                 <button key={a} onClick={() => toggle(a)}
-                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${attacks.includes(a) ? 'bg-red-500/10 border-red-400/40 text-red-300' : 'border-slate-200 text-slate-500 hover:text-slate-700'}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${attacks.includes(a) ? 'bg-red-500/10 border-red-500/60 text-red-700 font-medium' : 'border-slate-200 text-slate-500 hover:text-slate-700'}`}>
                   {a}
                 </button>
               ))}
@@ -524,7 +524,7 @@ export default function RunsPage() {
                   onClick={() => setAblationMode(m)}
                   className={`px-3 py-2 rounded-lg text-xs border transition-colors ${
                     ablationMode === m
-                      ? 'bg-purple-500/10 border-purple-400/60 text-purple-300'
+                      ? 'bg-purple-500/10 border-purple-500/60 text-purple-800'
                       : 'border-slate-200 text-slate-500 hover:text-slate-700'
                   }`}
                 >
