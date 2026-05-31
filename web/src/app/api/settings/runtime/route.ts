@@ -1,28 +1,10 @@
 import { NextResponse } from 'next/server'
+import { NO_STORE_HEADERS, proxyFetch } from '@/lib/proxyClient'
 
 type SettingsPayload = Record<string, string | number>
 
-const DEFAULT_FASTAPI = 'https://smartgrid-public-api-1001036509634.us-central1.run.app'
-const LOCAL_API = process.env.SMARTGRID_LOCAL_API ?? 'http://127.0.0.1:8000'
-const FASTAPI = process.env.SMARTGRID_API_URL ?? DEFAULT_FASTAPI
-const FASTAPI_KEY = process.env.SMARTGRID_API_KEY ?? 'smartgrid-dev-key'
-const SETTINGS_API = process.env.SMARTGRID_SETTINGS_API_URL
-const NO_STORE_HEADERS = {
-  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-  Pragma: 'no-cache',
-  Expires: '0',
-}
-
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function candidateApis(): string[] {
-  const options = [LOCAL_API, FASTAPI, SETTINGS_API, DEFAULT_FASTAPI]
-    .filter((value): value is string => Boolean(value && value.trim()))
-    .map(value => value.replace(/\/+$/, ''))
-
-  return Array.from(new Set(options))
-}
 
 function toNumber(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -151,103 +133,49 @@ function buildRuntimeEnv(payload: SettingsPayload): Record<string, string> {
 }
 
 export async function GET() {
-  const apis = candidateApis()
-  if (apis.length === 0) {
-    return NextResponse.json({ status: 'error', detail: 'SMARTGRID_API_URL is not configured' }, { status: 500, headers: NO_STORE_HEADERS })
+  const { status, data, backend } = await proxyFetch({
+    path: '/v1/settings/runtime',
+    timeoutMs: 8000,
+  })
+  if (status >= 400) {
+    return NextResponse.json(
+      { status: 'error', detail: (data as any)?.detail ?? `Backend request failed (${status})` },
+      { status, headers: NO_STORE_HEADERS },
+    )
   }
-
-  let lastError = ''
-  try {
-    for (const api of apis) {
-      try {
-        const response = await fetch(`${api}/v1/settings/runtime`, {
-          method: 'GET',
-          headers: {
-            'x-api-key': FASTAPI_KEY,
-          },
-          cache: 'no-store',
-        })
-
-        const data = await response.json().catch(() => ({}))
-        if (response.status === 404) {
-          lastError = data?.detail ?? `Not found on ${api}`
-          continue
-        }
-
-        if (!response.ok) {
-          return NextResponse.json(
-            { status: 'error', detail: data?.detail ?? `Backend request failed (${response.status})` },
-            { status: response.status, headers: NO_STORE_HEADERS }
-          )
-        }
-
-        return NextResponse.json(data, { headers: NO_STORE_HEADERS })
-      } catch (error) {
-        lastError = String(error)
-      }
-    }
-
-    return NextResponse.json({ status: 'error', detail: lastError || 'No settings backend responded' }, { status: 503, headers: NO_STORE_HEADERS })
-  } catch (error) {
-    return NextResponse.json({ status: 'error', detail: String(error) }, { status: 500, headers: NO_STORE_HEADERS })
-  }
+  return NextResponse.json(data, { status: 200, headers: NO_STORE_HEADERS })
 }
 
 export async function POST(req: Request) {
-  const apis = candidateApis()
-  if (apis.length === 0) {
-    return NextResponse.json({ status: 'error', detail: 'SMARTGRID_API_URL is not configured' }, { status: 500, headers: NO_STORE_HEADERS })
+  const payload = (await req.json()) as SettingsPayload
+  const overrides = buildRuntimeOverrides(payload)
+  const envMap = buildRuntimeEnv(payload)
+
+  const { status, data, backend } = await proxyFetch({
+    path: '/v1/settings/runtime',
+    method: 'POST',
+    body: {
+      values: payload,
+      runtime_overrides: overrides,
+      runtime_env: envMap,
+    },
+    timeoutMs: 10000,
+  })
+
+  if (status >= 400) {
+    return NextResponse.json(
+      { status: 'error', detail: (data as any)?.detail ?? `Backend request failed (${status})` },
+      { status, headers: NO_STORE_HEADERS },
+    )
   }
 
-  try {
-    const payload = (await req.json()) as SettingsPayload
-
-    const overrides = buildRuntimeOverrides(payload)
-    const envMap = buildRuntimeEnv(payload)
-
-    let lastError = ''
-
-    for (const api of apis) {
-      try {
-        const response = await fetch(`${api}/v1/settings/runtime`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-api-key': FASTAPI_KEY,
-          },
-          body: JSON.stringify({
-            values: payload,
-            runtime_overrides: overrides,
-            runtime_env: envMap,
-          }),
-        })
-
-        const data = await response.json().catch(() => ({}))
-        if (response.status === 404) {
-          lastError = data?.detail ?? `Not found on ${api}`
-          continue
-        }
-
-        if (!response.ok) {
-          return NextResponse.json(
-            { status: 'error', detail: data?.detail ?? `Backend request failed (${response.status})` },
-            { status: response.status, headers: NO_STORE_HEADERS }
-          )
-        }
-
-        return NextResponse.json({
-          status: 'ok',
-          message: 'Runtime settings persisted to backend',
-          backend: data,
-          backend_url: api,
-        }, { headers: NO_STORE_HEADERS })
-      } catch (error) {
-        lastError = String(error)
-      }
-    }
-
-    return NextResponse.json({ status: 'error', detail: lastError || 'No settings backend responded' }, { status: 503, headers: NO_STORE_HEADERS })
-  } catch (error) {
-    return NextResponse.json({ status: 'error', detail: String(error) }, { status: 500, headers: NO_STORE_HEADERS })
-  }
+  return NextResponse.json(
+    {
+      status: 'ok',
+      message: 'Runtime settings persisted to backend',
+      backend: data,
+      backend_url: backend,
+    },
+    { headers: NO_STORE_HEADERS },
+  )
 }

@@ -79,8 +79,17 @@ smartgrid_mas/data/*.pt
 # Cache
 cache/
 tmp/
+tmp*/
+.pytest_cache/
+# Node (root-level — keep web/node_modules/ rule below for explicitness)
+/node_modules/
 web/node_modules/
 web/.next/
+# Next.js trace artifact (kept tracked accidentally in some past commits)
+web/.next/trace
+# Test artifacts
+Test Result/
+logs/pytest_tmp/
 # Temporary files
 *.bak
 *.tmp

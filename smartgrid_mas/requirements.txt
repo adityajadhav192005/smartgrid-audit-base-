@@ -1,13 +1,5 @@
-numpy>=1.26
-pandas>=2.2
-scikit-learn>=1.5
-pyyaml>=6.0.2
-tqdm>=4.66
-matplotlib>=3.9
-scipy>=1.11
-pytest>=7.4
-fastapi>=0.115
-uvicorn>=0.30
-pydantic>=2.5
-psutil>=5.9
-torch==2.3.1
+# Deprecated — the canonical requirements file is at the repo root.
+# Kept as a pointer so existing tooling that runs
+#   pip install -r smartgrid_mas/requirements.txt
+# still works.
+-r ../requirements.txt

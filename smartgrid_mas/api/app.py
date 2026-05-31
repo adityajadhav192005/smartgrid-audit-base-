@@ -35,7 +35,11 @@ from smartgrid_mas.integration.scada_adapter import (
 from smartgrid_mas.integration.live_experiment_pipeline import LiveExperimentPipeline
 from smartgrid_mas.integration.ids_adapter import recommend_action_from_alert
 from smartgrid_mas.integration.blockchain_logger import BlockchainLogger
+from smartgrid_mas.integration.scada_live_scenario import ScadaLiveScenario
 
+
+# Organic attack simulation for SCADA live pipeline (toggle: SMARTGRID_LIVE_SCENARIO=0 to disable)
+_scada_live_scenario = ScadaLiveScenario()
 
 app = FastAPI(
     title="SmartGrid MAS API",
@@ -46,12 +50,43 @@ app = FastAPI(
 
 # ---------------------------------------------------------------------------
 # Security guard (API key + simple rate limit + anti-replay)
+#
+# Rate-limit and nonce state below is module-level and therefore PER PROCESS:
+# it does not share across uvicorn workers or scaled-out Cloud Run instances.
+# For multi-instance deployments, move both into Redis (or any shared store).
 # ---------------------------------------------------------------------------
+_DEV_API_KEY = "smartgrid-dev-key"
 _rate_window_sec = int(os.environ.get("SMARTGRID_API_RATE_WINDOW_SEC", "60"))
 _rate_limit_per_window = int(os.environ.get("SMARTGRID_API_RATE_LIMIT", "120"))
 _replay_window_sec = int(os.environ.get("SMARTGRID_API_REPLAY_WINDOW_SEC", "300"))
 _rate_buckets: Dict[str, deque[float]] = defaultdict(deque)
 _nonce_seen: Dict[str, float] = {}
+
+
+def _resolve_api_key() -> str:
+    """Resolve the expected API key, refusing the dev default in production.
+
+    Production is detected via SMARTGRID_ENV=production (or =prod). In that
+    mode, SMARTGRID_API_KEY MUST be set explicitly to a non-default value;
+    otherwise the request is rejected so we never silently authenticate
+    callers against a guessable key.
+    """
+    env_mode = os.environ.get("SMARTGRID_ENV", "").strip().lower()
+    is_production = env_mode in ("production", "prod")
+    configured = os.environ.get("SMARTGRID_API_KEY", "").strip()
+
+    if is_production:
+        if not configured or configured == _DEV_API_KEY:
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Server misconfigured: SMARTGRID_API_KEY must be set to a "
+                    "non-default value when SMARTGRID_ENV=production."
+                ),
+            )
+        return configured
+
+    return configured or _DEV_API_KEY
 
 
 def _prune_nonce_cache(now_ts: float) -> None:
@@ -66,7 +101,7 @@ def _security_guard(
     x_nonce: str | None = Header(default=None),
 ) -> str:
     """Security gate: API key auth + rate limiting + optional anti-replay."""
-    expected = os.environ.get("SMARTGRID_API_KEY", "smartgrid-dev-key")
+    expected = _resolve_api_key()
     if x_api_key != expected:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
@@ -224,6 +259,12 @@ class RapidScadaLiveClient:
         self.last_score: Dict[str, Any] | None = None
         self.agent_snapshots: Dict[str, Dict[str, Any]] = {}
 
+        # Injection hold: agents with injected attacks are protected from
+        # being overwritten by clean bridge data for N poll cycles.
+        self._injection_hold: Dict[str, int] = {}   # agent_id → remaining hold polls
+        self._injection_hold_default = int(os.environ.get(
+            "SMARTGRID_INJECTION_HOLD_POLLS", "30"))  # ~150s at 5s poll
+
     def ingest_snapshot(
         self,
         agent_id: str,
@@ -253,6 +294,35 @@ class RapidScadaLiveClient:
                 self.last_attempt_ts = now
                 self.consecutive_failures = 0
                 self.last_error = None
+
+    def hold_agents(self, agent_ids: List[str], polls: int | None = None) -> None:
+        """Mark agents as injection-held so bridge polls won't overwrite them."""
+        hold = polls if polls is not None else self._injection_hold_default
+        with self._lock:
+            for aid in agent_ids:
+                self._injection_hold[aid] = hold
+
+    def tick_holds(self) -> None:
+        """Called once per bridge poll cycle to decrement hold counters."""
+        with self._lock:
+            expired = []
+            for aid, remaining in self._injection_hold.items():
+                if remaining <= 1:
+                    expired.append(aid)
+                else:
+                    self._injection_hold[aid] = remaining - 1
+            for aid in expired:
+                del self._injection_hold[aid]
+
+    def is_held(self, agent_id: str) -> bool:
+        """Check if an agent is currently under injection hold."""
+        with self._lock:
+            return agent_id in self._injection_hold
+
+    def held_agents_info(self) -> Dict[str, int]:
+        """Return {agent_id: remaining_polls} for dashboard status."""
+        with self._lock:
+            return dict(self._injection_hold)
 
     def configured(self) -> bool:
         return bool(self.enabled and self.source_url)
@@ -402,6 +472,66 @@ class RapidScadaLiveClient:
                 "last_error": self.last_error,
             }
 
+    def _compute_grid_summary(self) -> Dict[str, float]:
+        """
+        Compute real engineering-unit values aggregated across all live agent
+        snapshots.  The bridge sends ratio-format tags (raw / nominal) so we
+        scale them back to physical units using ENG_SCALE constants.
+        """
+        from smartgrid_mas.integration.scada_adapter import ENG_SCALE
+
+        voltages: list[float] = []
+        currents: list[float] = []
+        frequencies: list[float] = []
+        latencies: list[float] = []
+        loads: list[float] = []
+        breaker_statuses: list[float] = []
+
+        for snap in self.agent_snapshots.values():
+            t = snap.get("tags", {})
+            if not t:
+                continue
+            aid = str(snap.get("agent_id", "")).upper()
+
+            v = t.get("voltage")
+            if v is not None and aid.startswith("GEN"):
+                fv = float(v)
+                voltages.append(fv * ENG_SCALE["voltage"] if 0.0 <= fv <= 2.0 else fv)
+
+            f = t.get("frequency")
+            if f is not None and (aid.startswith("GEN") or aid.startswith("PMU")):
+                ff = float(f)
+                frequencies.append(ff * ENG_SCALE["frequency"] if 0.0 <= ff <= 2.0 else ff)
+
+            c = t.get("current")
+            if c is not None and aid.startswith("GEN"):
+                fc = float(c)
+                currents.append(fc * ENG_SCALE["current"] if 0.0 <= fc <= 2.0 else fc)
+
+            lat = t.get("latency")
+            if lat is not None:
+                latencies.append(float(lat) * 20.0)  # nominal latency = 20ms
+
+            load = t.get("substation_load") or t.get("power")
+            if load is not None and aid.startswith("SUB"):
+                loads.append(float(load) * ENG_SCALE.get("power", 250.0))
+
+            brk = t.get("breaker_status")
+            if brk is not None and aid.startswith("BRK"):
+                breaker_statuses.append(float(brk))
+
+        def _avg(lst: list[float], dp: int = 1) -> float | None:
+            return round(sum(lst) / len(lst), dp) if lst else None
+
+        return {
+            "voltage": _avg(voltages, 1),
+            "frequency": _avg(frequencies, 3),
+            "current": _avg(currents, 1),
+            "latency": _avg(latencies, 1),
+            "substation_load": _avg(loads, 0),
+            "breaker_status": round(_avg(breaker_statuses, 0) or 0),
+        }
+
     def snapshot(self) -> Dict[str, Any]:
         connection = self.status()
         with self._lock:
@@ -411,9 +541,12 @@ class RapidScadaLiveClient:
                 dict(snapshot)
                 for _, snapshot in sorted(self.agent_snapshots.items(), key=lambda item: item[0])
             ]
+            grid_summary = self._compute_grid_summary() if self.agent_snapshots else {}
+        # Prefer real engineering-scaled grid summary; fall back to primary agent tags
+        display_tags = grid_summary if grid_summary else tags
         return {
             "connection": connection,
-            "live_tags": tags,
+            "live_tags": display_tags,
             "live_score": score,
             "agent_scores": agent_scores,
             "config": get_scada_algorithm_config(score_threshold=self.score_threshold),
@@ -1153,8 +1286,27 @@ def _process_scada_tags_payload(payload: ScadaTagsRequest) -> Dict[str, Any]:
 
 
 def _process_scada_tags_batch_payload(payload: BatchScadaTagsRequest) -> List[Dict[str, Any]]:
+    # ── Organic attack simulation: corrupt a random subset of tags each poll ──
+    records_to_process = list(payload.records)
+    if _scada_live_scenario.cfg.enabled:
+        scenario_records = [
+            {"agent_id": r.agent_id, "tags": dict(r.tags)}
+            for r in records_to_process
+        ]
+        _scada_live_scenario.apply(scenario_records)
+        # Rebuild records with corrupted tags (avoids Pydantic model mutation)
+        patched: List[ScadaTagsRequest] = []
+        for rec, sr in zip(records_to_process, scenario_records):
+            patched.append(ScadaTagsRequest(
+                agent_id=rec.agent_id,
+                tags=sr["tags"],
+                criticality_weight=rec.criticality_weight,
+                score_threshold=rec.score_threshold,
+            ))
+        records_to_process = patched
+
     prepared_records: List[Dict[str, Any]] = []
-    for record in payload.records:
+    for record in records_to_process:
         normalized_tags = normalize_scada_tags(record.tags)
         req_dict = scada_tags_to_score_request(
             agent_id=record.agent_id,
@@ -1260,6 +1412,17 @@ def shutdown_event() -> None:
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/v1/scada/live-scenario/status")
+def live_scenario_status(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    """Current state of the organic attack simulation."""
+    return {
+        "enabled": _scada_live_scenario.cfg.enabled,
+        "active_attacks": _scada_live_scenario.get_active_attacks(),
+        "active_count": _scada_live_scenario.active_count,
+        "poll_count": _scada_live_scenario._poll_count,
+    }
 
 
 @app.get("/v1/db/health")
@@ -1444,9 +1607,26 @@ def scada_ingest_tags(payload: ScadaTagsRequest, _: str = Depends(_security_guar
 def scada_ingest_tags_batch(payload: BatchScadaTagsRequest, _: str = Depends(_security_guard)) -> Dict[str, Any]:
     """Ingest a full SCADA grid snapshot in one request to avoid per-agent rate limiting."""
     try:
-        results = _process_scada_tags_batch_payload(payload)
+        # Tick injection hold counters each bridge poll cycle
+        rapid_scada_live.tick_holds()
+
+        # Filter out agents that are under injection hold — their attack
+        # snapshots should persist and not be overwritten by clean bridge data.
+        filtered_records = [
+            r for r in payload.records
+            if not rapid_scada_live.is_held(r.agent_id)
+        ]
+        held_count = len(payload.records) - len(filtered_records)
+
+        if filtered_records:
+            filtered_payload = BatchScadaTagsRequest(records=filtered_records)
+            results = _process_scada_tags_batch_payload(filtered_payload)
+        else:
+            results = []
+
         return {
             "count": len(results),
+            "held_count": held_count,
             "results": results,
         }
     except Exception as e:
@@ -1460,6 +1640,161 @@ def ids_alert(payload: IdsAlertRequest, _: str = Depends(_security_guard)) -> Di
         return recommend_action_from_alert(payload.alert)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+#  Live SCADA Attack Injection (Demo / Presentation)
+# ---------------------------------------------------------------------------
+
+class AttackInjectionRequest(BaseModel):
+    """Inject a simulated cyber-physical attack into the live SCADA pipeline.
+
+    The injected data flows through the FULL detection pipeline:
+    normalization → LSTM → deviation scoring → multi-layer detection → audit → XAI.
+    """
+    attack_type: str = "FDI"  # FDI, DoS, MITM, COORDINATED
+    target_count: int = 60    # number of agents to attack
+    severity: float = 0.8     # 0.0-1.0 attack intensity
+    target_types: List[str] = Field(default_factory=lambda: ["GEN", "SUB", "PMU", "BRK"])
+
+
+@app.post("/v1/scada/inject-attack")
+def scada_inject_attack(
+    payload: AttackInjectionRequest,
+    _: str = Depends(_security_guard),
+) -> Dict[str, Any]:
+    """Inject a simulated attack into the live SCADA pipeline for demo purposes.
+
+    This creates corrupted tag payloads and feeds them through the normal
+    ingest pipeline so the ENTIRE detection stack processes them authentically.
+    """
+    import random
+
+    attack_type = payload.attack_type.upper()
+    severity = max(0.1, min(1.0, payload.severity))
+    target_count = max(1, min(100, payload.target_count))
+    target_types = [t.upper() for t in payload.target_types]
+
+    # Build list of all possible agent IDs by requested types
+    all_agents: List[Dict[str, Any]] = []
+    if "GEN" in target_types:
+        for i in range(1, 21):
+            all_agents.append({"agent_id": f"GEN-{i:02d}", "type": "GEN", "cw": 1.0})
+    if "SUB" in target_types:
+        for i in range(21, 51):
+            all_agents.append({"agent_id": f"SUB-{i}", "type": "SUB", "cw": 0.8})
+    if "PMU" in target_types:
+        for i in range(51, 76):
+            all_agents.append({"agent_id": f"PMU-{i}", "type": "PMU", "cw": 0.9})
+    if "BRK" in target_types:
+        for i in range(76, 101):
+            all_agents.append({"agent_id": f"BRK-{i}", "type": "BRK", "cw": 0.7})
+
+    # Randomly select target_count agents
+    random.shuffle(all_agents)
+    targets = all_agents[:target_count]
+
+    # Build corrupted tag payloads based on attack type
+    injected_records: List[ScadaTagsRequest] = []
+    for agent in targets:
+        agent_id = agent["agent_id"]
+        agent_type = agent["type"]
+
+        # Start with normal-ish baseline tags
+        tags: Dict[str, float] = {
+            "voltage": 1.0,
+            "frequency": 1.0,
+            "current": 1.0,
+            "latency": 0.1,
+            "packet_loss": 0.01,
+            "integrity": 1.0,
+            "comm_freq": 0.8,
+            "breaker_status": 1.0,  # CLOSED = normal
+        }
+
+        noise = lambda: random.uniform(-0.02, 0.02)
+
+        if attack_type == "FDI":
+            # False Data Injection: corrupt physical measurements
+            tags["voltage"] = 1.0 + severity * random.uniform(0.5, 1.5) + noise()
+            tags["current"] = 1.0 + severity * random.uniform(0.3, 1.0) + noise()
+            tags["frequency"] = 1.0 + severity * random.uniform(0.2, 0.6) + noise()
+        elif attack_type == "DOS":
+            # Denial of Service: spike latency, drop comm, increase packet loss
+            tags["latency"] = 0.1 + severity * random.uniform(3.0, 8.0)
+            tags["packet_loss"] = min(1.0, 0.01 + severity * random.uniform(0.15, 0.5))
+            tags["comm_freq"] = max(0.0, 0.8 - severity * random.uniform(0.4, 0.7))
+            # DoS trips breakers on BRK agents
+            if agent_type == "BRK":
+                tags["breaker_status"] = 0.0
+        elif attack_type == "MITM":
+            # Man-in-the-Middle: degrade integrity + sudden measurement jumps
+            tags["integrity"] = max(0.0, 1.0 - severity * random.uniform(0.35, 0.7))
+            tags["voltage"] = 1.0 + severity * random.uniform(0.8, 2.0) + noise()
+            tags["latency"] = 0.1 + severity * random.uniform(1.0, 3.0)
+            # Severe MITM trips breakers on BRK agents
+            if agent_type == "BRK" and severity > 0.5:
+                tags["breaker_status"] = 0.0
+        elif attack_type == "COORDINATED":
+            # Coordinated: combine FDI + DoS + integrity degradation
+            tags["voltage"] = 1.0 + severity * random.uniform(0.4, 1.2) + noise()
+            tags["current"] = 1.0 + severity * random.uniform(0.3, 0.8) + noise()
+            tags["latency"] = 0.1 + severity * random.uniform(2.0, 6.0)
+            tags["packet_loss"] = min(1.0, 0.01 + severity * random.uniform(0.1, 0.3))
+            tags["integrity"] = max(0.0, 1.0 - severity * random.uniform(0.2, 0.5))
+            tags["comm_freq"] = max(0.0, 0.8 - severity * random.uniform(0.2, 0.5))
+            # Coordinated always trips breakers on BRK agents
+            if agent_type == "BRK":
+                tags["breaker_status"] = 0.0
+
+        injected_records.append(ScadaTagsRequest(
+            agent_id=agent_id,
+            tags=tags,
+            criticality_weight=agent["cw"],
+            score_threshold=float(os.environ.get("SMARTGRID_SCADA_SCORE_THRESHOLD", "3.0")),
+        ))
+
+    # Process through the FULL pipeline (same path as real SCADA data)
+    try:
+        batch = BatchScadaTagsRequest(records=injected_records)
+        results = _process_scada_tags_batch_payload(batch)
+
+        # Hold injected agents so bridge polls don't overwrite them.
+        # Attacks persist for ~150 seconds (30 polls × 5s) by default.
+        target_ids = [a["agent_id"] for a in targets]
+        rapid_scada_live.hold_agents(target_ids)
+
+        anomaly_count = sum(
+            1 for r in results
+            if int(r.get("result", {}).get("anomaly_flag", 0)) >= 1
+        )
+        normal_count = len(results) - anomaly_count
+
+        hold_polls = rapid_scada_live._injection_hold_default
+        hold_secs = hold_polls * rapid_scada_live.poll_sec
+
+        return {
+            "status": "injected",
+            "attack_type": attack_type,
+            "severity": severity,
+            "agents_targeted": len(targets),
+            "agents_anomaly": anomaly_count,
+            "agents_normal": normal_count,
+            "hold_duration_sec": hold_secs,
+            "target_ids": target_ids,
+            "sample_results": [
+                {
+                    "agent_id": r.get("result", {}).get("agent_id", r.get("normalized_request", {}).get("agent_id", "")),
+                    "deviation_score": r.get("result", {}).get("deviation_score", 0),
+                    "anomaly_flag": r.get("result", {}).get("anomaly_flag", 0),
+                    "decision": r.get("result", {}).get("decision", ""),
+                    "severity": r.get("result", {}).get("severity", ""),
+                }
+                for r in results[:5]
+            ],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Attack injection failed: {e}")
 
 
 @app.post("/v1/federated/aggregate/vector")
