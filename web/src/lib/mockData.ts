@@ -40,18 +40,18 @@ export const anomalyTrend = hours.map((h, i) => ({
 }))
 
 export const attackTypeDistribution = [
-  { name: 'False Data Injection', value: 38, color: '#ff3860' },
-  { name: 'Denial of Service', value: 22, color: '#ffb700' },
-  { name: 'Comm. Jamming', value: 15, color: '#bd00ff' },
+  { name: 'False Data Injection', value: 38, color: '#ef4444' },
+  { name: 'Denial of Service', value: 22, color: '#f59e0b' },
+  { name: 'Comm. Jamming', value: 15, color: '#8b5cf6' },
   { name: 'Coordinated Attack', value: 14, color: '#ff6b35' },
-  { name: 'Replay Attack', value: 7, color: '#00d4ff' },
+  { name: 'Replay Attack', value: 7, color: '#3b82f6' },
   { name: 'MITM', value: 4, color: '#00f5d4' },
 ]
 
 export const agentStatusDistribution = [
   { name: 'Healthy', value: 81, color: '#10b981' },
   { name: 'Anomalous', value: 9, color: '#f59e0b' },
-  { name: 'Under Audit', value: 4, color: '#00d4ff' },
+  { name: 'Under Audit', value: 4, color: '#3b82f6' },
   { name: 'Attacked', value: 5, color: '#ef4444' },
   { name: 'Isolated', value: 1, color: '#6366f1' },
 ]

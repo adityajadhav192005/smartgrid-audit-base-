@@ -228,7 +228,7 @@ class IntegrityValidator:
     @staticmethod
     def _compute_crc32(data: str) -> int:
         """Compute CRC32 checksum of string data."""
-        return np.uint32(hashlib.md5(data.encode()).hexdigest()[:8], 16)
+        return np.uint32(int(hashlib.md5(data.encode()).hexdigest()[:8], 16))
 
 
 class HybridAnomalyDetector:

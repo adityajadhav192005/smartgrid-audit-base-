@@ -53,7 +53,6 @@ def rl_schedule_step(
     actions: Dict[str, int] = {}
     rewards: Dict[str, float] = {}
     state_before: Dict[str, tuple] = {}
-    rewards: Dict[str, float] = {}
 
     # Pre-compute budget allowance for soft penalties (keeps reward scale consistent)
     budget_allowed = float(budget_ratio * operational_cost)

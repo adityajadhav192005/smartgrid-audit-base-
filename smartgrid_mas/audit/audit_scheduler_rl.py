@@ -341,9 +341,10 @@ class QLearningAuditScheduler:
             for k_str, v in checkpoint["Q"].items():
                 # Parse string representation of tuple back to tuple
                 try:
-                    k_tuple = eval(k_str)  # Safe here since it's from our own checkpoint
+                    import ast
+                    k_tuple = ast.literal_eval(k_str)
                     self.Q[k_tuple] = v
-                except:
+                except (ValueError, TypeError, SyntaxError):
                     continue
             
             self.iteration_count = checkpoint.get("iteration_count", 0)

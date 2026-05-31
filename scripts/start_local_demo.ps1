@@ -149,9 +149,17 @@ if (-not $NoBridge) {
         Write-Warning "Skipping bridge launch because API is not reachable at http://127.0.0.1:$ApiPort/health"
     }
     else {
-        $cmd = "Set-Location '$repoRoot'; `$env:SMARTGRID_API_KEY='$ApiKey'; `$env:RAPID_SCADA_URL='http://127.0.0.1:$ScadaPort'; `$env:SMARTGRID_SCADA_INGEST_URL='http://127.0.0.1:$ApiPort/v1/scada/ingest/tags/batch'; `$env:SMARTGRID_SCADA_AGENT_ID='GEN-01'; `$env:SMARTGRID_SCADA_PRIMARY_AGENT_ID='GEN-01'; `$env:SMARTGRID_SCADA_POLL_SECONDS='$BridgePollSeconds'; `$env:SMARTGRID_SCADA_SCORE_THRESHOLD='3.0'; `$env:SMARTGRID_SCADA_CONNECTED_GRACE_SEC='60'; while (`$true) { try { powershell -ExecutionPolicy Bypass -File '$bridgeScript' } catch { Write-Host 'Bridge stopped:' `$_.Exception.Message -ForegroundColor Red }; Write-Host 'Restarting bridge in 2s...' -ForegroundColor Yellow; Start-Sleep -Seconds 2 }"
+        # Wait for Rapid SCADA web to be fully ready before launching bridge
+        Write-Host "Waiting for Rapid SCADA to be ready..." -ForegroundColor Yellow
+        $scadaReady = Wait-HttpReachable -Url "http://127.0.0.1:$ScadaPort/" -MaxWaitSec 15 -PollSec 2
+        if ($scadaReady) {
+            Write-Host "Rapid SCADA is ready" -ForegroundColor Green
+        } else {
+            Write-Host "Rapid SCADA not yet ready - bridge will retry on first poll" -ForegroundColor Yellow
+        }
+        $cmd = "Set-Location '$repoRoot'; `$env:SMARTGRID_API_KEY='$ApiKey'; `$env:RAPID_SCADA_URL='http://127.0.0.1:$ScadaPort'; `$env:SMARTGRID_SCADA_INGEST_URL='http://127.0.0.1:$ApiPort/v1/scada/ingest/tags/batch'; `$env:SMARTGRID_SCADA_POLL_SECONDS='$BridgePollSeconds'; `$env:SMARTGRID_SCADA_SCORE_THRESHOLD='3.0'; while (`$true) { try { powershell -ExecutionPolicy Bypass -File '$bridgeScript' } catch { Write-Host 'Bridge stopped:' `$_.Exception.Message -ForegroundColor Red }; Write-Host 'Restarting bridge in 2s...' -ForegroundColor Yellow; Start-Sleep -Seconds 2 }"
         Start-ComponentWindow -Title "SCADA Bridge" -Command $cmd
-        Write-Host "Launched SCADA bridge" -ForegroundColor Green
+        Write-Host "Launched SCADA bridge (100 agents)" -ForegroundColor Green
     }
 }
 

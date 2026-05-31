@@ -42,12 +42,12 @@ module.exports = {
            existing components, but neon values replaced with restrained
            professional tones. */
         cyber: {
-          blue:   '#5b8fc7',
-          teal:   '#4fb3a3',
-          green:  '#5dba80',
-          amber:  '#c9a14a',
-          red:    '#c95a6a',
-          purple: '#8c7bc0',
+          blue:   '#3b82f6',
+          teal:   '#14b8a6',
+          green:  '#22c55e',
+          amber:  '#f59e0b',
+          red:    '#ef4444',
+          purple: '#8b5cf6',
         },
         grid: {
           900: '#ffffff',

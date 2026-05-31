@@ -1,9 +1,0 @@
-{
-  "/api/proxy/grid/status/route": "app/api/proxy/grid/status/route.js",
-  "/experiment/risk/page": "app/experiment/risk/page.js",
-  "/experiment/threats/page": "app/experiment/threats/page.js",
-  "/experiment/overview/page": "app/experiment/overview/page.js",
-  "/rapid-scada/overview/page": "app/rapid-scada/overview/page.js",
-  "/rapid-scada/threats/page": "app/rapid-scada/threats/page.js",
-  "/api/proxy/experiment/telemetry/route": "app/api/proxy/experiment/telemetry/route.js"
-}

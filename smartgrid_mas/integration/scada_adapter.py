@@ -61,112 +61,130 @@ def _agent_profile(agent_id: str) -> Dict[str, Any]:
     normalized = str(agent_id or "").strip().upper()
 
     if normalized.startswith("GEN-"):
+        # Baselines calibrated to actual Rapid SCADA 100-agent bridge output.
+        # Bridge flow: raw/nominal → ratio → API ENG_SCALE (ratio * scale).
+        # GEN phys channels: Voltage (~231V), Current (~13A).
+        # Bridge fills frequency=1.0 → ENG_SCALE → 50.  Power inferred ~0.03.
+        # Cyber: bridge ratios (raw/nominal) — lat~0.17, pkt~0.003, int~0.99, cf~0.80
         phys_defaults = {
-            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_VOLTAGE_BASELINE", "230.0")),
+            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_VOLTAGE_BASELINE", "231.0")),
             "frequency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_FREQUENCY_BASELINE", "50.0")),
-            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_CURRENT_BASELINE", "15.0")),
-            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_POWER_BASELINE", "3.0")),
-            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_RESPONSE_TIME_BASELINE", "3.0")),
+            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_CURRENT_BASELINE", "13.0")),
+            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_POWER_BASELINE", "0.03")),
+            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_RESPONSE_TIME_BASELINE", "3.5")),
         }
         cyber_defaults = {
-            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_LATENCY_BASELINE", "3.0")),
-            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_PACKET_LOSS_BASELINE", "0.001")),
-            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_INTEGRITY_BASELINE", "1.0")),
-            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_COMM_FREQ_BASELINE", "50.0")),
+            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_LATENCY_BASELINE", "0.17")),
+            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_PACKET_LOSS_BASELINE", "0.003")),
+            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_INTEGRITY_BASELINE", "0.99")),
+            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_COMM_FREQ_BASELINE", "0.80")),
         }
         thx = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_VOLTAGE_THRESHOLD", "12.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_FREQUENCY_THRESHOLD", "0.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_CURRENT_THRESHOLD", "8.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_POWER_THRESHOLD", "2.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_RESPONSE_TIME_THRESHOLD", "4.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_VOLTAGE_THRESHOLD", "20.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_FREQUENCY_THRESHOLD", "10.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_CURRENT_THRESHOLD", "15.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_POWER_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_RESPONSE_TIME_THRESHOLD", "5.0")),
         ]
         thy = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_LATENCY_THRESHOLD", "1.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_PACKET_LOSS_THRESHOLD", "0.01")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_INTEGRITY_THRESHOLD", "0.1")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_COMM_FREQ_THRESHOLD", "8.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_LATENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_PACKET_LOSS_THRESHOLD", "0.05")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_INTEGRITY_THRESHOLD", "0.2")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_GEN_COMM_FREQ_THRESHOLD", "0.5")),
         ]
     elif normalized.startswith("SUB-"):
+        # SUB phys channels: Load (~189), PhysLatency (~4), AnomalyScore (skipped).
+        # Bridge maps Load→"voltage" (189/230→0.82→*230=189), PhysLat→"current" (4/100→*100=4).
+        # Bridge fills frequency=1.0 → 50.  Power inferred ~0.008.
+        # SUB cyber: 3 channels (no latency): pkt~0.003, int~0.98, com~48→/60=0.80.
+        # Bridge fills latency≈0.15 with jitter (no cyber latency channel for SUB).
+        # Previously filled 1.0 which LSTM interpreted as DoS-like.
         phys_defaults = {
-            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_VOLTAGE_BASELINE", "230.0")),
+            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_VOLTAGE_BASELINE", "189.0")),
             "frequency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_FREQUENCY_BASELINE", "50.0")),
-            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_CURRENT_BASELINE", "12.0")),
-            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_POWER_BASELINE", "180.0")),
-            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_RESPONSE_TIME_BASELINE", "4.0")),
+            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_CURRENT_BASELINE", "4.0")),
+            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_POWER_BASELINE", "0.01")),
+            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_RESPONSE_TIME_BASELINE", "20.0")),
         }
         cyber_defaults = {
-            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_LATENCY_BASELINE", "4.0")),
-            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_PACKET_LOSS_BASELINE", "0.001")),
-            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_INTEGRITY_BASELINE", "1.0")),
-            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_COMM_FREQ_BASELINE", "50.0")),
+            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_LATENCY_BASELINE", "0.15")),
+            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_PACKET_LOSS_BASELINE", "0.003")),
+            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_INTEGRITY_BASELINE", "0.98")),
+            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_COMM_FREQ_BASELINE", "0.80")),
         }
         thx = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_VOLTAGE_THRESHOLD", "12.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_FREQUENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_VOLTAGE_THRESHOLD", "40.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_FREQUENCY_THRESHOLD", "10.0")),
             float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_CURRENT_THRESHOLD", "10.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_POWER_THRESHOLD", "80.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_RESPONSE_TIME_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_POWER_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_RESPONSE_TIME_THRESHOLD", "20.0")),
         ]
         thy = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_LATENCY_THRESHOLD", "1.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_PACKET_LOSS_THRESHOLD", "0.01")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_INTEGRITY_THRESHOLD", "0.1")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_COMM_FREQ_THRESHOLD", "8.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_LATENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_PACKET_LOSS_THRESHOLD", "0.05")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_INTEGRITY_THRESHOLD", "0.2")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_SUB_COMM_FREQ_THRESHOLD", "0.5")),
         ]
     elif normalized.startswith("PMU-"):
+        # PMU phys channels: Voltage (~231V), Frequency (~50Hz), AnomalyScore (skipped).
+        # Bridge fills current=1.0 → ENG_SCALE → 100.  Power inferred ~0.23.
+        # Cyber: lat~0.12, pkt~0.003, int~0.99, cf~0.81.
         phys_defaults = {
-            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_VOLTAGE_BASELINE", "230.0")),
+            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_VOLTAGE_BASELINE", "231.0")),
             "frequency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_FREQUENCY_BASELINE", "50.0")),
-            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_CURRENT_BASELINE", "0.5")),
-            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_POWER_BASELINE", "1.0")),
-            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_RESPONSE_TIME_BASELINE", "2.0")),
+            "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_CURRENT_BASELINE", "100.0")),
+            "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_POWER_BASELINE", "0.23")),
+            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_RESPONSE_TIME_BASELINE", "2.3")),
         }
         cyber_defaults = {
-            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_LATENCY_BASELINE", "2.0")),
-            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_PACKET_LOSS_BASELINE", "0.001")),
-            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_INTEGRITY_BASELINE", "1.0")),
-            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_COMM_FREQ_BASELINE", "50.0")),
+            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_LATENCY_BASELINE", "0.12")),
+            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_PACKET_LOSS_BASELINE", "0.003")),
+            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_INTEGRITY_BASELINE", "0.99")),
+            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_COMM_FREQ_BASELINE", "0.81")),
         }
         thx = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_VOLTAGE_THRESHOLD", "10.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_FREQUENCY_THRESHOLD", "0.3")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_CURRENT_THRESHOLD", "1.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_POWER_THRESHOLD", "1.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_RESPONSE_TIME_THRESHOLD", "3.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_VOLTAGE_THRESHOLD", "20.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_FREQUENCY_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_CURRENT_THRESHOLD", "20.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_POWER_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_RESPONSE_TIME_THRESHOLD", "5.0")),
         ]
         thy = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_LATENCY_THRESHOLD", "1.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_PACKET_LOSS_THRESHOLD", "0.01")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_INTEGRITY_THRESHOLD", "0.1")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_COMM_FREQ_THRESHOLD", "8.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_LATENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_PACKET_LOSS_THRESHOLD", "0.05")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_INTEGRITY_THRESHOLD", "0.2")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_PMU_COMM_FREQ_THRESHOLD", "0.5")),
         ]
     elif normalized.startswith("BRK-"):
+        # BRK phys channels: Status (~1), FaultCount (~0), AnomalyScore (skipped).
+        # Bridge maps Status→"voltage" (1/230→*230=1), FaultCount→"current" (0/100→*100=0).
+        # Bridge fills frequency=1.0 → 50.  Power=0 (no V*I).
+        # Cyber: lat~0.17, pkt~0.004, int~0.99, cf~0.79.
         phys_defaults = {
-            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_VOLTAGE_BASELINE", "230.0")),
+            "voltage": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_VOLTAGE_BASELINE", "1.0")),
             "frequency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_FREQUENCY_BASELINE", "50.0")),
             "current": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_CURRENT_BASELINE", "0.0")),
             "power": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_POWER_BASELINE", "0.0")),
-            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_RESPONSE_TIME_BASELINE", "3.0")),
+            "response_time": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_RESPONSE_TIME_BASELINE", "3.3")),
         }
         cyber_defaults = {
-            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_LATENCY_BASELINE", "3.0")),
-            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_PACKET_LOSS_BASELINE", "0.001")),
-            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_INTEGRITY_BASELINE", "1.0")),
-            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_COMM_FREQ_BASELINE", "50.0")),
+            "latency": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_LATENCY_BASELINE", "0.17")),
+            "packet_loss": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_PACKET_LOSS_BASELINE", "0.004")),
+            "integrity": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_INTEGRITY_BASELINE", "0.99")),
+            "comm_freq": float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_COMM_FREQ_BASELINE", "0.79")),
         }
         thx = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_VOLTAGE_THRESHOLD", "15.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_FREQUENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_VOLTAGE_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_FREQUENCY_THRESHOLD", "10.0")),
             float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_CURRENT_THRESHOLD", "5.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_POWER_THRESHOLD", "2.0")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_RESPONSE_TIME_THRESHOLD", "4.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_POWER_THRESHOLD", "5.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_RESPONSE_TIME_THRESHOLD", "5.0")),
         ]
         thy = [
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_LATENCY_THRESHOLD", "1.5")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_PACKET_LOSS_THRESHOLD", "0.01")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_INTEGRITY_THRESHOLD", "0.1")),
-            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_COMM_FREQ_THRESHOLD", "8.0")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_LATENCY_THRESHOLD", "0.5")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_PACKET_LOSS_THRESHOLD", "0.05")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_INTEGRITY_THRESHOLD", "0.2")),
+            float(os.environ.get("SMARTGRID_SCADA_PROFILE_BRK_COMM_FREQ_THRESHOLD", "0.5")),
         ]
     else:
         phys_defaults = dict(SCADA_COMPANY_PROFILE["phys_defaults"])
@@ -241,7 +259,9 @@ def normalize_scada_tags(tags: Dict[str, float]) -> Dict[str, float]:
         normalized.setdefault("substation_load", inferred_kw)
 
     if breaker_status is None:
-        normalized["breaker_status"] = 1.0 if current > 0.5 else 0.0
+        # Default: breakers are CLOSED (1.0) in normal operation.
+        # Only OPEN (0.0) when an anomaly trips them — handled downstream.
+        normalized["breaker_status"] = 1.0
 
     return normalized
 

@@ -121,7 +121,7 @@ export default function AnomaliesPage() {
                           className="h-full rounded-full"
                           style={{
                             width: `${Math.min((agent.anomalyScore / Math.max(scoreThreshold, 0.1)) * 100, 100)}%`,
-                            background: agent.anomalyScore > scoreThreshold ? '#ff3860' : agent.anomalyScore > scoreThreshold * 0.7 ? '#ffb700' : '#00d4ff',
+                            background: agent.anomalyScore > scoreThreshold ? '#ef4444' : agent.anomalyScore > scoreThreshold * 0.7 ? '#f59e0b' : '#3b82f6',
                           }}
                         />
                       </div>

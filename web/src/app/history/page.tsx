@@ -10,9 +10,9 @@ import { formatPct } from '@/lib/utils'
 import { BarChart2, TrendingUp, Database, Clock } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-const GRID_COLOR = 'rgba(255,255,255,0.05)'
+const GRID_COLOR = '#e5e7eb'
 const LABEL_STYLE = { fill: '#94a3b8', fontSize: 11 }
-const TIP_STYLE = { backgroundColor: '#0a1628', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 8, color: '#e2e8f0', fontSize: 12 }
+const TIP_STYLE = { backgroundColor: '#0a1628', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, color: '#e2e8f0', fontSize: 12 }
 
 export default function HistoryPage() {
   const { viewMode, scadaConnected, refreshTick } = useDashboard()
@@ -106,9 +106,9 @@ export default function HistoryPage() {
               <YAxis tick={LABEL_STYLE} tickLine={false} axisLine={false} domain={[0, 110]} unit="%" />
               <Tooltip contentStyle={TIP_STYLE} formatter={(v: number) => [`${v}%`]} />
               <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-              <Bar dataKey="costEff" name="Cost Efficiency" fill="#00d4ff" radius={[4, 4, 0, 0]} maxBarSize={30} />
-              <Bar dataKey="riskMit" name="Risk Mitigation" fill="#ffb700" radius={[4, 4, 0, 0]} maxBarSize={30} />
-              <Bar dataKey="accuracy" name="Detection Accuracy" fill="#39ff14" radius={[4, 4, 0, 0]} maxBarSize={30} />
+              <Bar dataKey="costEff" name="Cost Efficiency" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={30} />
+              <Bar dataKey="riskMit" name="Risk Mitigation" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={30} />
+              <Bar dataKey="accuracy" name="Detection Accuracy" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={30} />
             </BarChart>
           </ResponsiveContainer>
         </div>

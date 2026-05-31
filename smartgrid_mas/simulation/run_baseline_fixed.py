@@ -71,8 +71,6 @@ def run_fixed_audit_24h(
     steps = int((cycle_hours * 60) / timestep_minutes)
     cluster_window_eff = min(cluster_window, max(5, steps // 2 if steps > 1 else 1))
     cluster_period = 10 if steps >= 30 else max(1, steps // 3)
-    cluster_window_eff = min(cluster_window, max(5, steps // 2 if steps > 1 else 1))
-    cluster_period = 10 if steps >= 30 else max(1, steps // 3)
     
     scenario = ScenarioEngine(
         agents,
@@ -203,5 +201,3 @@ def run_fixed_audit_24h(
     }
     
     return metrics.records, event_log, y_true, y_pred, initial_system_risk, final_system_risk, convergence_info
-    
-    return metrics.records, event_log, y_true, y_pred, initial_system_risk, final_system_risk

@@ -1,10 +1,10 @@
 ﻿'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Wifi, WifiOff, Activity, AlertTriangle, Zap, Radio,
-  Gauge, ArrowUpDown, ShieldAlert, Cpu,
+  Gauge, ArrowUpDown, ShieldAlert, Cpu, Flame, RotateCcw,
 } from 'lucide-react'
 import { useDashboard } from '@/lib/dashboardContext'
 import { useLiveTelemetry } from '@/lib/liveTelemetry'
@@ -46,6 +46,58 @@ const SOURCE_RING = {
 export default function ScadaLivePage() {
   const { setScadaConnected } = useDashboard()
   const { gridStatus, liveAgents, events, agentSnapshots, error } = useLiveTelemetry(2000)
+
+  // Attack injection state
+  const [attackType, setAttackType] = useState<string>('FDI')
+  const [attackCount, setAttackCount] = useState<number>(60)
+  const [attackSeverity, setAttackSeverity] = useState<number>(0.8)
+  const [attackLoading, setAttackLoading] = useState(false)
+  const [attackResult, setAttackResult] = useState<{ anomaly: number; total: number; type: string } | null>(null)
+  const [showAttackPanel, setShowAttackPanel] = useState(false)
+
+  const injectAttack = useCallback(async () => {
+    setAttackLoading(true)
+    setAttackResult(null)
+    try {
+      const res = await fetch('/api/proxy/scada/inject-attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attack_type: attackType,
+          target_count: attackCount,
+          severity: attackSeverity,
+          target_types: ['GEN', 'SUB', 'PMU', 'BRK'],
+        }),
+      })
+      if (!res.ok) {
+        // Try direct backend
+        const direct = await fetch('http://127.0.0.1:8000/v1/scada/inject-attack', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': 'smartgrid-dev-key',
+          },
+          body: JSON.stringify({
+            attack_type: attackType,
+            target_count: attackCount,
+            severity: attackSeverity,
+            target_types: ['GEN', 'SUB', 'PMU', 'BRK'],
+          }),
+        })
+        if (direct.ok) {
+          const data = await direct.json()
+          setAttackResult({ anomaly: data.agents_anomaly, total: data.agents_targeted, type: data.attack_type })
+        }
+      } else {
+        const data = await res.json()
+        setAttackResult({ anomaly: data.agents_anomaly, total: data.agents_targeted, type: data.attack_type })
+      }
+    } catch (e) {
+      console.error('Attack injection failed:', e)
+    } finally {
+      setAttackLoading(false)
+    }
+  }, [attackType, attackCount, attackSeverity])
 
   useEffect(() => {
     setScadaConnected(Boolean(gridStatus?.rapid_scada?.connection?.connected))
@@ -274,6 +326,90 @@ export default function ScadaLivePage() {
                 <span className="font-mono">{Boolean(experimentStatus?.lstm_enabled) ? 'ON' : 'OFF'}</span>
               </div>
             </div>
+          </div>
+
+          {/* Attack Injection Panel */}
+          <div className="glass-card p-3 flex-shrink-0 border-red-500/20">
+            <button
+              onClick={() => setShowAttackPanel(!showAttackPanel)}
+              className="flex items-center gap-2 w-full text-left"
+            >
+              <Flame size={12} className="text-red-400" />
+              <span className="text-xs font-semibold text-slate-700">Attack Injection</span>
+              <span className="ml-auto text-[9px] text-slate-500">{showAttackPanel ? '▲' : '▼'}</span>
+            </button>
+
+            {showAttackPanel && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-1 flex-wrap">
+                  {['FDI', 'DoS', 'MITM', 'COORDINATED'].map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setAttackType(t)}
+                      className={cn(
+                        'px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors',
+                        attackType === t
+                          ? 'bg-red-500/20 border-red-500/50 text-red-300'
+                          : 'bg-slate-800/50 border-slate-600/30 text-slate-500 hover:border-red-500/30'
+                      )}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Agents to attack</span>
+                    <span className="font-mono text-red-300">{attackCount}</span>
+                  </div>
+                  <input
+                    type="range" min={10} max={100} step={5} value={attackCount}
+                    onChange={e => setAttackCount(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Severity</span>
+                    <span className="font-mono text-red-300">{(attackSeverity * 100).toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range" min={0.1} max={1.0} step={0.1} value={attackSeverity}
+                    onChange={e => setAttackSeverity(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  />
+                </div>
+
+                <button
+                  onClick={injectAttack}
+                  disabled={attackLoading || !isConnected}
+                  className={cn(
+                    'w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all',
+                    attackLoading
+                      ? 'bg-slate-700 text-slate-500 cursor-wait'
+                      : 'bg-red-600/80 hover:bg-red-500 text-white border border-red-500/50 shadow-lg shadow-red-500/10'
+                  )}
+                >
+                  {attackLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <RotateCcw size={11} className="animate-spin" /> Injecting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <Flame size={11} /> Launch {attackType} Attack ({attackCount} agents)
+                    </span>
+                  )}
+                </button>
+
+                {attackResult && (
+                  <div className="rounded-lg px-2 py-1.5 text-[10px] bg-red-950/40 border border-red-500/30 text-red-300">
+                    <span className="font-bold">{attackResult.type}</span> injected → {attackResult.anomaly}/{attackResult.total} detected as anomaly
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="glass-card p-3 flex flex-col flex-1 min-h-0">

@@ -66,10 +66,11 @@ def _agent_type_from_id(agent_id: str) -> AgentType:
 
 
 def _feature_names(request: Dict[str, Any], fallback: List[str]) -> List[str]:
-    values = request.get("feature_names_phys" if fallback is PHYS_FEATURE_NAMES else "feature_names_cyber")
+    is_phys = fallback == PHYS_FEATURE_NAMES
+    values = request.get("feature_names_phys" if is_phys else "feature_names_cyber")
     if isinstance(values, list) and values:
         return [str(v) for v in values]
-    target_len = len(request.get("x_phys" if fallback is PHYS_FEATURE_NAMES else "y_cyber", []))
+    target_len = len(request.get("x_phys" if is_phys else "y_cyber", []))
     return fallback[:target_len] if target_len > 0 else list(fallback)
 
 

@@ -39,7 +39,7 @@ const OPTIMIZATION_PROFILES = ['ROBUST', 'BALANCED', 'COST']
 
 const PROFILE_COLORS: Record<string, string> = {
   ROBUST: '#10b981',
-  BALANCED: '#00d4ff',
+  BALANCED: '#3b82f6',
   COST: '#f59e0b',
 }
 

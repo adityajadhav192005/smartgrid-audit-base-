@@ -72,3 +72,416 @@
 2026-04-25 17:25:34 [ADITYA][adity][INF] The application is ready for operating
 2026-04-25 17:26:23 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
 2026-04-25 17:27:00 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-21 21:26:33 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-21 21:26:33 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-21 21:26:34 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-21 21:26:37 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-21 21:26:37 [ADITYA][adity][INF] The application is ready for operating
+2026-05-21 21:26:47 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 15:30:20 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 15:30:23 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 15:30:23 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 15:30:35 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 15:37:35 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 15:37:35 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 15:37:36 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 15:37:38 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 15:37:38 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 15:37:50 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 15:39:10 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 15:39:13 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 15:39:13 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 15:39:25 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 16:10:01 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 16:10:04 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 16:10:04 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 16:10:16 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 16:10:58 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 16:12:07 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 16:12:10 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 16:12:10 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 16:12:12 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 17:12:48 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 17:12:49 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 17:12:51 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 17:12:51 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 17:12:56 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 17:13:09 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 17:19:39 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 17:19:42 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 17:19:42 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 17:19:46 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 17:40:50 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 17:40:53 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 17:40:53 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 17:40:57 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 17:45:29 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 17:45:31 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 17:45:31 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 17:45:36 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 17:50:53 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 17:51:05 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 17:55:30 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 17:55:50 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:06:07 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:06:32 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:07:01 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:10:51 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:10:59 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 18:11:05 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 18:17:35 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 18:17:35 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 18:17:36 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 18:17:38 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 18:17:38 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 18:18:53 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 18:52:23 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 18:52:26 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 18:52:26 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 18:52:31 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 19:11:28 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 19:11:28 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 19:11:29 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 19:11:31 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 19:11:31 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 19:11:37 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 19:47:21 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 19:47:23 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 19:47:23 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 19:47:28 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-23 19:47:28 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 20:06:56 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 20:06:56 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 20:06:57 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 20:06:59 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 20:06:59 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 20:07:04 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-23 20:14:51 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-23 20:14:54 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-23 20:14:54 [ADITYA][adity][INF] The application is ready for operating
+2026-05-23 20:14:58 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-26 09:24:09 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-26 09:24:12 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-26 09:24:12 [ADITYA][adity][INF] The application is ready for operating
+2026-05-26 09:24:15 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+2026-05-26 12:38:52 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-26 12:40:07 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-26 12:40:10 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-26 12:40:10 [ADITYA][adity][INF] The application is ready for operating
+2026-05-26 12:40:15 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-26 12:51:34 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-26 12:51:37 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-26 12:51:37 [ADITYA][adity][INF] The application is ready for operating
+2026-05-26 12:51:42 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-31 17:42:41 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-31 17:42:42 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-31 17:42:42 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-31 17:42:42 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-31 17:42:42 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-31 17:42:42 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-31 17:42:44 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-31 17:42:44 [ADITYA][adity][INF] The application is ready for operating
+2026-05-31 17:42:49 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1
+--------------------------------------------------------------------------------
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Webstation 6.2.3.0 started
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Storage FileStorage 6.4.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\FileStorage.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgChart 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgChart.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgMain 6.1.2.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMain.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgMimic 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimic.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgMimicEditor 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimicEditor.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgMimBasicComp 6.0.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgMimBasicComp.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgScheme 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgScheme.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgSchBasicComp 6.1.0.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgSchBasicComp.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgStore 6.1.0.1 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgStore.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgWebPage 6.1.1.0 loaded from file D:\Mtech Main project\smartgrid-audit-base-\rapidscada_local_web\PlgWebPage.dll
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgMimic: Add components from the PlgMimBasicComp plugin
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgScheme: Retrieve scheme components from the installed plugins
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Plugin PlgScheme: Added components from the PlgSchBasicComp plugin
+2026-05-31 18:08:43 [ADITYA][adity][ACT] Receive the configuration database
+2026-05-31 18:08:45 [ADITYA][adity][ACT] The configuration database has been received successfully
+2026-05-31 18:08:45 [ADITYA][adity][INF] The application is ready for operating
+2026-05-31 18:08:50 [ADITYA][adity][ACT] User admin is logged in, role 1, IP 127.0.0.1

@@ -71,9 +71,9 @@ export default function AttacksPage() {
   const attackPieData = attackTypeDistribution.length
     ? attackTypeDistribution.map((item, index) => ({
         ...item,
-        color: ['#ff3860', '#ffb700', '#bd00ff', '#00d4ff', '#10b981'][index % 5],
+        color: ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981'][index % 5],
       }))
-    : [{ name: 'EVENT', value: 1, color: '#00d4ff' }]
+    : [{ name: 'EVENT', value: 1, color: '#3b82f6' }]
 
   const selectedAttack = selected ?? visibleAttacks[0] ?? null
 

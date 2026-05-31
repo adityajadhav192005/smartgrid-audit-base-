@@ -105,7 +105,7 @@ class UnifiedAnomalyDetector:
             try:
                 # Prepare input window
                 lstm_input = np.concatenate([X_window, Y_window], axis=-1)
-                lstm_input = np.expand_dims(lstm_input, axis=0)  # Add batch dim
+                # predict_proba expects 2D (window, features), not 3D batched
                 
                 # Get anomaly probability (use last timestep)
                 lstm_probs = self.lstm_inferencer.predict_proba(lstm_input)

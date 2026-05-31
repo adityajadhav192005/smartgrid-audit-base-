@@ -1,68 +1,55 @@
 <#
 .SYNOPSIS
-    Polls Rapid SCADA's REST API (port 10008) and forwards channel values
+    Polls Rapid SCADA's REST API and forwards all 100 agent channel values
     to the SmartGrid FastAPI audit endpoint as normalised SCADA tags.
 
 .DESCRIPTION
-    Rapid SCADA (web app on IIS, port 10008) exposes current channel data at:
-        GET http://localhost:10008/Api/Main/GetCurData?cnlNums=<comma-list>
+    Rapid SCADA exposes current channel data at:
+        GET http://localhost:10109/Api/Main/GetCurData?cnlNums=<comma-list>
 
     This bridge:
-        1. Fetches current channel values from Rapid SCADA
-        2. Maps channel numbers to the SmartGrid tag schema
-        3. POSTs the normalised tags to  POST http://localhost:8000/v1/scada/ingest/tags
-        4. Optionally loops on an interval
+        1. Authenticates with Rapid SCADA (cookie-based or bearer)
+        2. Fetches current channel values for ALL 100 agents in one API call
+        3. Maps channel numbers to per-agent SmartGrid tag schema
+        4. POSTs the batch payload to the SmartGrid FastAPI ingest endpoint
+        5. Optionally loops on an interval
+
+    Channel layout (670 channels across Cnl.xml + Cnl_Cyber_Addon.xml):
+        GEN  G01-G20  : phys 101-160 (Voltage,Current,AnomalyScore)  cyber 501-580 (4/agent: Lat,Pkt,Int,Com)
+        SUB  S21-S50  : phys 201-290 (Load,Latency,AnomalyScore)     cyber 601-690 (3/agent: Pkt,Int,Com)
+        PMU  P51-P75  : phys 301-375 (Voltage,Frequency,AnomalyScore) cyber 701-800 (4/agent: Lat,Pkt,Int,Com)
+        BRK  B76-B100 : phys 401-475 (Status,FaultCount,AnomalyScore) cyber 801-900 (4/agent: Lat,Pkt,Int,Com)
 
 .PARAMETER RapidScadaUrl
-    Base URL of your Rapid SCADA web app. Default: http://localhost:10008
+    Base URL of your Rapid SCADA web app. Default: http://127.0.0.1:10109
 
 .PARAMETER SmartGridApiUrl
-    SmartGrid FastAPI ingest endpoint. Default: http://127.0.0.1:8000/v1/scada/ingest/tags
-
-.PARAMETER AgentId
-    Agent ID to tag the reading with (matches an agent in the simulation). Default: "1"
-
-.PARAMETER CriticalityWeight
-    Criticality weight for this agent (1.0 = generator, 0.7 = substation, 0.3 = PMU).
-
-.PARAMETER NominalVoltage
-    Nominal voltage in Volts used to normalise the raw channel reading. Default: 230.0
+    SmartGrid FastAPI ingest endpoint. Default: http://127.0.0.1:8000/v1/scada/ingest/tags/batch
 
 .PARAMETER PollIntervalSeconds
-    Seconds between polls. Set 0 to run once and exit. Default: 10
+    Seconds between polls. Default: 10
 
 .PARAMETER RunOnce
     Run a single poll and exit immediately.
 
-.PARAMETER RapidScadaBearerToken
-    Optional bearer token for Rapid SCADA API auth (Authorization: Bearer <token>).
-
-.PARAMETER RapidScadaUsername
-    Optional username for Rapid SCADA Basic auth.
-
-.PARAMETER RapidScadaPassword
-    Optional password for Rapid SCADA Basic auth.
-
 .EXAMPLE
-    # One-shot with explicit channel mapping
     $env:SMARTGRID_API_KEY = "smartgrid-dev-key"
     .\scripts\pull_rapidscada_to_api.ps1 -RunOnce
 
 .EXAMPLE
-    # Continuous polling every 5 seconds
     $env:SMARTGRID_API_KEY = "smartgrid-dev-key"
     .\scripts\pull_rapidscada_to_api.ps1 -PollIntervalSeconds 5
 #>
 
 param(
     [string]$RapidScadaUrl       = "http://127.0.0.1:10109",
-    [string]$SmartGridApiUrl     = "http://127.0.0.1:8000/v1/scada/ingest/tags",
-    [string]$AgentId             = "1",
+    [string]$SmartGridApiUrl     = "http://127.0.0.1:8000/v1/scada/ingest/tags/batch",
+    [string]$AgentId             = "GEN-01",
     [double]$CriticalityWeight   = 1.0,
     [double]$NominalVoltage      = 230.0,
     [double]$NominalFrequency    = 50.0,
     [double]$NominalCurrent      = 100.0,
-    [double]$NominalPower        = 23000.0,   # W  (V * I at nominal)
+    [double]$NominalPower        = 23000.0,
     [int]   $PollIntervalSeconds = 10,
     [switch]$RunOnce,
     [string]$RapidScadaBearerToken = "",
@@ -74,116 +61,203 @@ $ErrorActionPreference = "Stop"
 
 $script:RapidScadaApiTokenCached = $null
 $script:RapidScadaWebSession = $null
+$script:_scadaRetried = $false
 
 if (-not $env:SMARTGRID_API_KEY) {
     throw 'Set SMARTGRID_API_KEY before running.  e.g.  $env:SMARTGRID_API_KEY = "smartgrid-dev-key"'
 }
 
 # ---------------------------------------------------------------------------
-#  Channel map: Rapid SCADA channel number -> SmartGrid tag name
-#  Edit these numbers to match channels you created in Rapid SCADA's Cnl table.
-#  Default numbers are the Rapid SCADA demo project channel IDs.
+#  100-agent channel map
+#  Physical channels from Cnl.xml, Cyber channels from Cnl_Cyber_Addon.xml
 # ---------------------------------------------------------------------------
-$ChannelMap = [ordered]@{
-    101 = "voltage"        # Phase voltage (V)
-    102 = "frequency"      # Grid frequency (Hz)
-    103 = "current"        # Line current (A)
-    104 = "power"          # Active power (W)
-    105 = "response_time"  # Agent response time (ms)
-    201 = "latency"        # Comm latency (ms)
-    202 = "packet_loss"    # Packet loss ratio (0-1)
-    203 = "integrity"      # Comm integrity (0-1)
-    204 = "comm_freq"      # Communication frequency (Hz)
+
+# Build the full agent table: agent_id, type, criticality, physical channels, cyber channels
+$AllAgents = @()
+
+# GEN-01 to GEN-20: phys channels 101-160 (3 per agent), cyber 501-580 (4 per agent)
+for ($i = 1; $i -le 20; $i++) {
+    $agentId = "GEN-{0:D2}" -f $i
+    $physBase = 101 + ($i - 1) * 3   # 101,104,107,...,158
+    $cyberBase = 501 + ($i - 1) * 4  # 501,505,509,...,577
+    $AllAgents += @{
+        id          = $agentId
+        type        = "GEN"
+        weight      = 1.0
+        physChannels = @(
+            @{ cnl = $physBase;     tag = "voltage" }
+            @{ cnl = $physBase + 1; tag = "current" }
+            @{ cnl = $physBase + 2; tag = "anomaly_raw" }
+        )
+        cyberChannels = @(
+            @{ cnl = $cyberBase;     tag = "latency" }
+            @{ cnl = $cyberBase + 1; tag = "packet_loss" }
+            @{ cnl = $cyberBase + 2; tag = "integrity" }
+            @{ cnl = $cyberBase + 3; tag = "comm_freq" }
+        )
+    }
 }
 
-# Nominal values for normalisation (observed / nominal = normalised score)
+# SUB-21 to SUB-50: phys channels 201-290 (3 per agent)
+# SUB cyber: 601-690 (3 per agent: PacketLoss, Integrity, CommFreq -- NO Latency)
+for ($i = 1; $i -le 30; $i++) {
+    $agentNum = 20 + $i
+    $agentId = "SUB-{0:D2}" -f $agentNum
+    $physBase = 201 + ($i - 1) * 3   # 201,204,207,...,288
+    $cyberBase = 601 + ($i - 1) * 3  # 601,604,607,...,688
+    $AllAgents += @{
+        id          = $agentId
+        type        = "SUB"
+        weight      = 0.8
+        physChannels = @(
+            @{ cnl = $physBase;     tag = "voltage" }
+            @{ cnl = $physBase + 1; tag = "current" }
+            @{ cnl = $physBase + 2; tag = "anomaly_raw" }
+        )
+        cyberChannels = @(
+            @{ cnl = $cyberBase;     tag = "packet_loss" }
+            @{ cnl = $cyberBase + 1; tag = "integrity" }
+            @{ cnl = $cyberBase + 2; tag = "comm_freq" }
+        )
+    }
+}
+
+# PMU-51 to PMU-75: phys channels 301-375 (3 per agent), cyber 701-800 (4 per agent)
+for ($i = 1; $i -le 25; $i++) {
+    $agentNum = 50 + $i
+    $agentId = "PMU-{0:D2}" -f $agentNum
+    $physBase = 301 + ($i - 1) * 3   # 301,304,307,...,373
+    $cyberBase = 701 + ($i - 1) * 4  # 701,705,709,...,797
+    $AllAgents += @{
+        id          = $agentId
+        type        = "PMU"
+        weight      = 0.6
+        physChannels = @(
+            @{ cnl = $physBase;     tag = "voltage" }
+            @{ cnl = $physBase + 1; tag = "frequency" }
+            @{ cnl = $physBase + 2; tag = "anomaly_raw" }
+        )
+        cyberChannels = @(
+            @{ cnl = $cyberBase;     tag = "latency" }
+            @{ cnl = $cyberBase + 1; tag = "packet_loss" }
+            @{ cnl = $cyberBase + 2; tag = "integrity" }
+            @{ cnl = $cyberBase + 3; tag = "comm_freq" }
+        )
+    }
+}
+
+# BRK-76 to BRK-100: phys channels 401-475 (3 per agent), cyber 801-900 (4 per agent)
+for ($i = 1; $i -le 25; $i++) {
+    $agentNum = 75 + $i
+    $agentId = "BRK-{0:D2}" -f $agentNum
+    $physBase = 401 + ($i - 1) * 3   # 401,404,407,...,473
+    $cyberBase = 801 + ($i - 1) * 4  # 801,805,809,...,897
+    $AllAgents += @{
+        id          = $agentId
+        type        = "BRK"
+        weight      = 0.7
+        physChannels = @(
+            @{ cnl = $physBase;     tag = "voltage" }
+            @{ cnl = $physBase + 1; tag = "current" }
+            @{ cnl = $physBase + 2; tag = "anomaly_raw" }
+        )
+        cyberChannels = @(
+            @{ cnl = $cyberBase;     tag = "latency" }
+            @{ cnl = $cyberBase + 1; tag = "packet_loss" }
+            @{ cnl = $cyberBase + 2; tag = "integrity" }
+            @{ cnl = $cyberBase + 3; tag = "comm_freq" }
+        )
+    }
+}
+
+# Collect ALL channel numbers for a single SCADA API call
+$allCnlNums = @()
+foreach ($agent in $AllAgents) {
+    foreach ($ch in $agent.physChannels) { $allCnlNums += $ch.cnl }
+    foreach ($ch in $agent.cyberChannels) { $allCnlNums += $ch.cnl }
+}
+$allCnlNums = $allCnlNums | Sort-Object -Unique
+
+# Nominal values for normalisation (raw / nominal = normalised ratio)
 $Nominals = @{
     voltage       = $NominalVoltage
-    frequency     = $NominalFrequency
     current       = $NominalCurrent
+    frequency     = $NominalFrequency
     power         = $NominalPower
-    response_time = 50.0     # ms
-    latency       = 20.0     # ms
-    packet_loss   = 0.02     # ratio
-    integrity     = 1.0      # ratio (higher = better, so we invert below)
-    comm_freq     = 60.0     # Hz
+    response_time = 50.0
+    latency       = 20.0
+    packet_loss   = 0.02
+    integrity     = 1.0
+    comm_freq     = 60.0
+    anomaly_raw   = 1.0
 }
 
-function Get-RapidScadaChannels {
-    $cnlList = ($ChannelMap.Keys -join ",")
-    $uri     = "$RapidScadaUrl/Api/Main/GetCurData?cnlNums=$cnlList"
+# ---------------------------------------------------------------------------
+#  SCADA Authentication & Data Fetch
+# ---------------------------------------------------------------------------
 
-    $headers = @{}
-    $useWebSession = $false
-
-    if ($RapidScadaBearerToken) {
-        $headers["Authorization"] = "Bearer $RapidScadaBearerToken"
-    } elseif ($script:RapidScadaApiTokenCached) {
-        $headers["Authorization"] = "Bearer $script:RapidScadaApiTokenCached"
-    } elseif ($script:RapidScadaWebSession) {
-        $useWebSession = $true
-    } elseif ($RapidScadaUsername -and $RapidScadaPassword) {
-        $loginUri = "$RapidScadaUrl/Api/Auth/Login"
-        $loginBody = @{
-            username = $RapidScadaUsername
-            password = $RapidScadaPassword
-        } | ConvertTo-Json
-
-        try {
-            $loginSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-            $loginRaw = Invoke-WebRequest -Uri $loginUri -Method Post -ContentType "application/json" -Body $loginBody -WebSession $loginSession -TimeoutSec 8 -UseBasicParsing
-            $loginResp = $loginRaw.Content | ConvertFrom-Json
-            $loginOk = $false
-            if ($null -ne $loginResp.ok) { $loginOk = [bool]$loginResp.ok }
-
-            if ($loginOk) {
-                $candidateToken = $null
-                if ($loginResp.token) { $candidateToken = [string]$loginResp.token }
-                elseif ($loginResp.access_token) { $candidateToken = [string]$loginResp.access_token }
-                elseif ($loginResp.accessToken) { $candidateToken = [string]$loginResp.accessToken }
-                elseif ($loginResp.data -and $loginResp.data.token) { $candidateToken = [string]$loginResp.data.token }
-                elseif ($loginResp.data -and $loginResp.data.access_token) { $candidateToken = [string]$loginResp.data.access_token }
-                elseif ($loginResp.data -and $loginResp.data.accessToken) { $candidateToken = [string]$loginResp.data.accessToken }
-
-                if ($candidateToken) {
-                    $script:RapidScadaApiTokenCached = $candidateToken
-                    $headers["Authorization"] = "Bearer $script:RapidScadaApiTokenCached"
-                } else {
-                    # Some Rapid SCADA builds authenticate via auth cookie instead of bearer token.
-                    $script:RapidScadaWebSession = $loginSession
-                    $useWebSession = $true
-                }
-            } elseif ($loginResp.msg) {
-                Write-Warning "Rapid SCADA API login failed: $($loginResp.msg)"
-            }
-        }
-        catch {
-            Write-Warning "Rapid SCADA API login request failed: $($_.Exception.Message)"
-        }
-
-        if ($headers.Count -eq 0) {
-            $pair = "{0}:{1}" -f $RapidScadaUsername, $RapidScadaPassword
-            $bytes = [System.Text.Encoding]::UTF8.GetBytes($pair)
-            $basic = [Convert]::ToBase64String($bytes)
-            $headers["Authorization"] = "Basic $basic"
-        }
+function Ensure-ScadaAuth {
+    if ($script:RapidScadaWebSession -or $script:RapidScadaApiTokenCached) {
+        return
     }
 
+    if ($RapidScadaBearerToken) {
+        $script:RapidScadaApiTokenCached = $RapidScadaBearerToken
+        return
+    }
+
+    if (-not $RapidScadaUsername -or -not $RapidScadaPassword) { return }
+
+    $loginUri = "$RapidScadaUrl/Api/Auth/Login"
+    $loginBody = @{ username = $RapidScadaUsername; password = $RapidScadaPassword } | ConvertTo-Json
+
     try {
-        if ($useWebSession -and $script:RapidScadaWebSession) {
-            $resp = Invoke-RestMethod -Uri $uri -Method Get -WebSession $script:RapidScadaWebSession -TimeoutSec 5
-        } elseif ($headers.Count -gt 0) {
-            $resp = Invoke-RestMethod -Uri $uri -Method Get -Headers $headers -TimeoutSec 5
+        $loginSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+        $loginRaw = Invoke-WebRequest -Uri $loginUri -Method Post -ContentType "application/json" -Body $loginBody -WebSession $loginSession -TimeoutSec 8 -UseBasicParsing
+        $loginResp = $loginRaw.Content | ConvertFrom-Json
+        $loginOk = $false
+        if ($null -ne $loginResp.ok) { $loginOk = [bool]$loginResp.ok }
+
+        if ($loginOk) {
+            $candidateToken = $null
+            if ($loginResp.token) { $candidateToken = [string]$loginResp.token }
+            elseif ($loginResp.access_token) { $candidateToken = [string]$loginResp.access_token }
+            elseif ($loginResp.data -and $loginResp.data.token) { $candidateToken = [string]$loginResp.data.token }
+
+            if ($candidateToken) {
+                $script:RapidScadaApiTokenCached = $candidateToken
+            } else {
+                $script:RapidScadaWebSession = $loginSession
+            }
         } else {
-            $resp = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 5
+            Write-Warning "Rapid SCADA login failed: $($loginResp.msg)"
+        }
+    }
+    catch {
+        Write-Warning "Rapid SCADA login error: $($_.Exception.Message)"
+    }
+}
+
+function Get-AllScadaChannels {
+    Ensure-ScadaAuth
+
+    $cnlList = ($allCnlNums -join ",")
+    $uri = "$RapidScadaUrl/Api/Main/GetCurData?cnlNums=$cnlList"
+
+    try {
+        if ($script:RapidScadaWebSession) {
+            $resp = Invoke-RestMethod -Uri $uri -Method Get -WebSession $script:RapidScadaWebSession -TimeoutSec 10
+        } elseif ($script:RapidScadaApiTokenCached) {
+            $headers = @{ "Authorization" = "Bearer $script:RapidScadaApiTokenCached" }
+            $resp = Invoke-RestMethod -Uri $uri -Method Get -Headers $headers -TimeoutSec 10
+        } else {
+            $resp = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 10
         }
         return $resp
     }
     catch {
-        if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 401 -and $script:RapidScadaApiTokenCached) {
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 401) {
             $script:RapidScadaApiTokenCached = $null
-        }
-        if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 401 -and $script:RapidScadaWebSession) {
             $script:RapidScadaWebSession = $null
         }
         Write-Warning "Could not reach Rapid SCADA at $uri - $($_.Exception.Message)"
@@ -191,38 +265,20 @@ function Get-RapidScadaChannels {
     }
 }
 
-function Convert-ChannelsToTags ($rapidResp) {
-    # Rapid SCADA v6 response shape:
-    # { Ok: true, Msg: "", Data: { CurData: [ { D: { Val: 230.5, Stat: 1 }, Stamp: "..." }, ... ] } }
-    # Channel order in CurData matches the order of cnlNums we sent.
-
-    $tags = @{}
+function Parse-ScadaResponse ($rapidResp) {
+    # Returns hashtable: cnlNum -> raw value
+    $rawByChannel = @{}
 
     $respOk = $false
     if ($rapidResp) {
-        if ($null -ne $rapidResp.Ok) { $respOk = [bool]$rapidResp.Ok }
-        elseif ($null -ne $rapidResp.ok) { $respOk = [bool]$rapidResp.ok }
+        if ($null -ne $rapidResp.ok) { $respOk = [bool]$rapidResp.ok }
+        elseif ($null -ne $rapidResp.Ok) { $respOk = [bool]$rapidResp.Ok }
     }
-
-    if (-not $rapidResp -or -not $respOk) {
-        Write-Warning "Rapid SCADA returned an error or empty response; using fallback nominal values."
-        foreach ($tagName in $Nominals.Keys) {
-            $tags[$tagName] = 1.0   # normalised nominal
-        }
-        return $tags
-    }
-
-    $entries = @($ChannelMap.GetEnumerator())
-    $keys = @($entries | ForEach-Object { [int]$_.Key })
-
-    # Build channel -> raw value map from supported response shapes:
-    # 1) { Ok/ok, Data/data: { CurData/curData: [ { D: { Val } } ... ] } } (ordered by request)
-    # 2) { ok, data: [ { cnlNum, val, stat } ... ] }
-    $rawByChannel = @{}
+    if (-not $respOk) { return $rawByChannel }
 
     $container = $null
-    if ($null -ne $rapidResp.Data) { $container = $rapidResp.Data }
-    elseif ($null -ne $rapidResp.data) { $container = $rapidResp.data }
+    if ($null -ne $rapidResp.data) { $container = $rapidResp.data }
+    elseif ($null -ne $rapidResp.Data) { $container = $rapidResp.Data }
 
     if ($container -is [System.Array]) {
         foreach ($row in $container) {
@@ -230,61 +286,101 @@ function Convert-ChannelsToTags ($rapidResp) {
                 $rawByChannel[[int]$row.cnlNum] = [double]$row.val
             }
         }
-    } else {
-        $curData = $null
-        if ($container -and $null -ne $container.CurData) { $curData = $container.CurData }
-        elseif ($container -and $null -ne $container.curData) { $curData = $container.curData }
-
-        if ($curData) {
-            for ($idx = 0; $idx -lt $keys.Count; $idx++) {
-                if ($idx -ge $curData.Count) { break }
-                $rawVal = $curData[$idx].D.Val
-                if ($null -ne $rawVal) {
-                    $rawByChannel[[int]$keys[$idx]] = [double]$rawVal
-                }
-            }
-        }
     }
 
-    for ($i = 0; $i -lt $entries.Count; $i++) {
-        $cnl     = [int]$entries[$i].Key
-        $tagName = [string]$entries[$i].Value
-        $val     = 1.0   # default normalised
+    return $rawByChannel
+}
 
-        if (-not $tagName) {
+function Build-AgentRecords ($rawByChannel) {
+    $records = @()
+    $statsNormal = 0
+    $statsAnomaly = 0
+    $statsSkipped = 0
+
+    foreach ($agent in $AllAgents) {
+        $tags = @{}
+        $hasData = $false
+
+        # Physical channels
+        foreach ($ch in $agent.physChannels) {
+            $tagName = $ch.tag
+            if ($tagName -eq "anomaly_raw") { continue }  # skip raw anomaly score channel
+            if ($rawByChannel.ContainsKey($ch.cnl)) {
+                $rawVal = $rawByChannel[$ch.cnl]
+                $nominal = $Nominals[$tagName]
+                if ($nominal -and $nominal -ne 0) {
+                    $tags[$tagName] = [math]::Round($rawVal / $nominal, 4)
+                } else {
+                    $tags[$tagName] = [math]::Round($rawVal, 4)
+                }
+                $hasData = $true
+            }
+        }
+
+        # Cyber channels
+        foreach ($ch in $agent.cyberChannels) {
+            $tagName = $ch.tag
+            if ($rawByChannel.ContainsKey($ch.cnl)) {
+                $rawVal = $rawByChannel[$ch.cnl]
+                $nominal = $Nominals[$tagName]
+                if ($nominal -and $nominal -ne 0) {
+                    if ($tagName -eq "packet_loss") {
+                        $tags[$tagName] = [math]::Round($rawVal, 4)
+                    } else {
+                        $tags[$tagName] = [math]::Round($rawVal / $nominal, 4)
+                    }
+                } else {
+                    $tags[$tagName] = [math]::Round($rawVal, 4)
+                }
+                $hasData = $true
+            }
+        }
+
+        if (-not $hasData) {
+            $statsSkipped++
             continue
         }
 
-        if ($rawByChannel.ContainsKey($cnl)) {
-            $rawVal  = $rawByChannel[$cnl]
-            $nominal = $Nominals[$tagName]
-
-            if ($nominal -and $nominal -ne 0) {
-                if ($tagName -eq "integrity") {
-                    # integrity close to 1 is good; invert so deviation shows risk
-                    $val = [math]::Round($rawVal / $nominal, 4)
-                } elseif ($tagName -eq "packet_loss") {
-                    # treat as direct ratio already in [0,1]
-                    $val = [math]::Round($rawVal, 4)
-                } else {
-                    $val = [math]::Round($rawVal / $nominal, 4)
-                }
+        # Fill missing tags with sensible defaults
+        # SUB agents have no latency SCADA channel; filling with 1.0 (full nominal = 20ms)
+        # caused the LSTM network branch to interpret the constant high value as DoS.
+        # Fix: fill latency with a realistic ratio (~0.15 = 3ms) plus small jitter.
+        $defaultFills = @{
+            voltage   = 1.0
+            current   = 1.0
+            frequency = 1.0
+            latency   = 0.15 + (Get-Random -Minimum -20 -Maximum 20) / 1000.0   # 0.13–0.17
+            packet_loss = 0.003
+            integrity = 1.0
+            comm_freq = 1.0
+        }
+        foreach ($tagName in @("voltage","current","frequency","latency","packet_loss","integrity","comm_freq")) {
+            if (-not $tags.ContainsKey($tagName)) {
+                $tags[$tagName] = $defaultFills[$tagName]
             }
         }
 
-        $tags[$tagName] = $val
+        $scoreThreshold = 3.0
+        if ($env:SMARTGRID_SCADA_SCORE_THRESHOLD) {
+            $scoreThreshold = [double]$env:SMARTGRID_SCADA_SCORE_THRESHOLD
+        }
+
+        $records += @{
+            agent_id           = $agent.id
+            tags               = $tags
+            criticality_weight = $agent.weight
+            score_threshold    = $scoreThreshold
+        }
     }
 
-    return $tags
+    return @{
+        records = $records
+        skipped = $statsSkipped
+    }
 }
 
-function Send-TagsToSmartGrid ($tags) {
-    $payload = @{
-        agent_id           = $AgentId
-        tags               = $tags
-        criticality_weight = $CriticalityWeight
-        score_threshold    = 1.0
-    } | ConvertTo-Json -Depth 6
+function Send-BatchToSmartGrid ($records) {
+    $payload = @{ records = $records } | ConvertTo-Json -Depth 6
 
     $headers = @{
         "X-API-Key"    = $env:SMARTGRID_API_KEY
@@ -292,7 +388,7 @@ function Send-TagsToSmartGrid ($tags) {
     }
 
     try {
-        $result = Invoke-RestMethod -Method Post -Uri $SmartGridApiUrl -Headers $headers -Body $payload -TimeoutSec 10
+        $result = Invoke-RestMethod -Method Post -Uri $SmartGridApiUrl -Headers $headers -Body $payload -TimeoutSec 30
         return $result
     }
     catch {
@@ -301,70 +397,104 @@ function Send-TagsToSmartGrid ($tags) {
     }
 }
 
+# ---------------------------------------------------------------------------
+#  Single poll cycle
+# ---------------------------------------------------------------------------
+
 function Invoke-SinglePoll {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "[$timestamp] Polling Rapid SCADA at $RapidScadaUrl ..." -ForegroundColor Cyan
+    Write-Host "[$timestamp] Polling Rapid SCADA for $($AllAgents.Count) agents ..." -ForegroundColor Cyan
 
-    $rapidResp = Get-RapidScadaChannels
-    $tags      = Convert-ChannelsToTags $rapidResp
+    $rapidResp = Get-AllScadaChannels
 
-    Write-Host "  Tags -> " -NoNewline
-    $tags.GetEnumerator() | ForEach-Object { Write-Host "$($_.Key)=$($_.Value)  " -NoNewline }
-    Write-Host ""
+    # Retry once after 3s if first attempt fails (startup race condition)
+    if (-not $rapidResp) {
+        if (-not $script:_scadaRetried) {
+            Write-Host "  Retrying SCADA connection in 3s..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 3
+            $script:RapidScadaApiTokenCached = $null
+            $script:RapidScadaWebSession = $null
+            $rapidResp = Get-AllScadaChannels
+            $script:_scadaRetried = $true
+        }
+    }
 
-    $result = Send-TagsToSmartGrid $tags
+    $rawByChannel = Parse-ScadaResponse $rapidResp
+    if ($rawByChannel.Count -eq 0) {
+        Write-Warning "No channel data received from SCADA."
+        return
+    }
+
+    $buildResult = Build-AgentRecords $rawByChannel
+    $records = $buildResult.records
+    $skipped = $buildResult.skipped
+
+    Write-Host "  Channels read: $($rawByChannel.Count)  |  Agent records: $($records.Count)  |  Skipped: $skipped" -ForegroundColor Gray
+
+    if ($records.Count -eq 0) {
+        Write-Warning "No agent records to send."
+        return
+    }
+
+    $result = Send-BatchToSmartGrid $records
 
     if ($result) {
-        # Current API shape for /v1/scada/ingest/tags:
-        # {
-        #   normalized_request: {...},
-        #   result: {
-        #     deviation_score, anomaly_flag, risk_score, decision, severity,
-        #     xai: { physical, cyber, decision },
-        #     ledger: { anchored, event_id, tx_id, chain_hash, ... }
-        #   }
-        # }
-        # Backward compatibility: if direct score endpoint is used, fields may be top-level.
-        $scored = if ($result.result) { $result.result } else { $result }
+        $resultList = @()
+        if ($result.results) { $resultList = @($result.results) }
 
-        $flagVal = 0
-        if ($null -ne $scored.anomaly_flag) {
-            $flagVal = [int]$scored.anomaly_flag
+        $normalCount = 0
+        $anomalyCount = 0
+        $anomalyAgents = @()
+
+        foreach ($r in $resultList) {
+            $scored = if ($r.result) { $r.result } else { $r }
+            $flag = 0
+            if ($null -ne $scored.anomaly_flag) { $flag = [int]$scored.anomaly_flag }
+            if ($flag -eq 1) {
+                $anomalyCount++
+                $aid = if ($scored.agent_id) { $scored.agent_id } else { "?" }
+                $sc = 0.0
+                if ($null -ne $scored.deviation_score) { $sc = [math]::Round([double]$scored.deviation_score, 3) }
+                $dec = if ($scored.decision) { $scored.decision } else { "N/A" }
+                $anomalyAgents += "$aid($sc,$dec)"
+            } else {
+                $normalCount++
+            }
         }
 
-        $scoreVal = 0.0
-        if ($null -ne $scored.deviation_score) {
-            $scoreVal = [double]$scored.deviation_score
-        } elseif ($null -ne $scored.risk_score) {
-            $scoreVal = [double]$scored.risk_score
+        Write-Host "  Results: $($resultList.Count) agents  |  " -NoNewline
+        Write-Host "NORMAL=$normalCount" -ForegroundColor Green -NoNewline
+        Write-Host "  ANOMALY=$anomalyCount" -ForegroundColor $(if ($anomalyCount -gt 0) { "Red" } else { "Green" }) -NoNewline
+        Write-Host ""
+
+        if ($anomalyAgents.Count -gt 0) {
+            $showMax = [math]::Min(10, $anomalyAgents.Count)
+            $display = ($anomalyAgents[0..($showMax-1)] -join ", ")
+            if ($anomalyAgents.Count -gt $showMax) { $display += " +$($anomalyAgents.Count - $showMax) more" }
+            Write-Host "  Anomalies: $display" -ForegroundColor Red
         }
 
-        $anomaly = if ($flagVal -eq 1) { "ANOMALY DETECTED" } else { "normal" }
-        $score   = [math]::Round($scoreVal, 4)
-        $color   = if ($flagVal -eq 1) { "Red" } else { "Green" }
-        $decision = if ($scored.decision) { $scored.decision } else { "N/A" }
-        $severity = if ($scored.severity) { $scored.severity } else { "N/A" }
-
-        Write-Host "  -> Agent $AgentId  score=$score  status=$anomaly  decision=$decision  severity=$severity" -ForegroundColor $color
-
-        if ($scored.ledger -and $scored.ledger.anchored) {
-            Write-Host "  -> On-chain anchor: event_id=$($scored.ledger.event_id) tx_id=$($scored.ledger.tx_id)" -ForegroundColor Yellow
-        }
-
-        if ($scored.xai -and $scored.xai.decision) {
-            Write-Host "  -> XAI: $($scored.xai.decision)" -ForegroundColor DarkYellow
+        # Show one sample agent for quick verification
+        if ($resultList.Count -gt 0) {
+            $sample = if ($resultList[0].result) { $resultList[0].result } else { $resultList[0] }
+            $sAid = if ($sample.agent_id) { $sample.agent_id } else { $records[0].agent_id }
+            $sScore = 0.0
+            if ($null -ne $sample.deviation_score) { $sScore = [math]::Round([double]$sample.deviation_score, 4) }
+            $sDec = if ($sample.decision) { $sample.decision } else { "N/A" }
+            $sSev = if ($sample.severity) { $sample.severity } else { "N/A" }
+            Write-Host "  Sample: $sAid  score=$sScore  decision=$sDec  severity=$sSev" -ForegroundColor DarkGray
         }
     }
 }
 
 # ---------------------------------------------------------------------------
-#  Main loop
+#  Main
 # ---------------------------------------------------------------------------
-Write-Host "=== Rapid SCADA -> SmartGrid Audit Bridge ===" -ForegroundColor White
+Write-Host "=== Rapid SCADA -> SmartGrid Audit Bridge (100 Agents) ===" -ForegroundColor White
 Write-Host "  Rapid SCADA : $RapidScadaUrl" -ForegroundColor Gray
 Write-Host "  SmartGrid   : $SmartGridApiUrl" -ForegroundColor Gray
-Write-Host "  Agent ID    : $AgentId" -ForegroundColor Gray
-Write-Host "  Channel map : $($ChannelMap.Count) channels" -ForegroundColor Gray
+Write-Host "  Agents      : $($AllAgents.Count) (GEN:20, SUB:30, PMU:25, BRK:25)" -ForegroundColor Gray
+Write-Host "  Channels    : $($allCnlNums.Count) total" -ForegroundColor Gray
 Write-Host ""
 
 if ($RunOnce -or $PollIntervalSeconds -le 0) {

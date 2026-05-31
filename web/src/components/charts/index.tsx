@@ -13,7 +13,7 @@ const AXIS_COLOR  = 'rgba(255,255,255,0.2)'
 const LABEL_STYLE = { fill: '#94a3b8', fontSize: 11 }
 const TIP_STYLE   = {
   backgroundColor: '#0a1628',
-  border: '1px solid rgba(0,212,255,0.2)',
+  border: '1px solid rgba(59,130,246,0.2)',
   borderRadius: 8,
   color: '#e2e8f0',
   fontSize: 12,
@@ -29,8 +29,8 @@ export function AnomalyTrendChart({ data }: { data: any[] }) {
         <YAxis tick={LABEL_STYLE} tickLine={false} axisLine={false} domain={[0, 1.2]} />
         <Tooltip contentStyle={TIP_STYLE} />
         <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-        <Line type="monotone" dataKey="anomalyScore" stroke="#00d4ff" strokeWidth={2} dot={false} name="Anomaly Score" />
-        <Line type="monotone" dataKey="riskScore"    stroke="#ffb700" strokeWidth={2} dot={false} name="Risk Score"    />
+        <Line type="monotone" dataKey="anomalyScore" stroke="#3b82f6" strokeWidth={2} dot={false} name="Anomaly Score" />
+        <Line type="monotone" dataKey="riskScore"    stroke="#f59e0b" strokeWidth={2} dot={false} name="Risk Score"    />
       </LineChart>
     </ResponsiveContainer>
   )
@@ -45,8 +45,8 @@ export function AttackBarChart({ data }: { data: any[] }) {
         <XAxis dataKey="time" tick={LABEL_STYLE} tickLine={false} axisLine={{ stroke: AXIS_COLOR }} interval={3} />
         <YAxis tick={LABEL_STYLE} tickLine={false} axisLine={false} allowDecimals={false} />
         <Tooltip contentStyle={TIP_STYLE} />
-        <Bar dataKey="attackCount" fill="#ff3860" radius={[3, 3, 0, 0]} name="Attacks" maxBarSize={20} />
-        <Bar dataKey="auditCount"  fill="#00d4ff" radius={[3, 3, 0, 0]} name="Audits"  maxBarSize={20} />
+        <Bar dataKey="attackCount" fill="#ef4444" radius={[3, 3, 0, 0]} name="Attacks" maxBarSize={20} />
+        <Bar dataKey="auditCount"  fill="#3b82f6" radius={[3, 3, 0, 0]} name="Audits"  maxBarSize={20} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -95,7 +95,7 @@ export function AgentRadarChart({ data }: { data: { metric: string; score: numbe
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
         <PolarGrid stroke={GRID_COLOR} />
         <PolarAngleAxis dataKey="metric" tick={{ ...LABEL_STYLE, fontSize: 10 }} />
-        <Radar dataKey="score" stroke="#00d4ff" fill="#00d4ff" fillOpacity={0.15} strokeWidth={2} />
+        <Radar dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={2} />
         <Tooltip contentStyle={TIP_STYLE} />
       </RadarChart>
     </ResponsiveContainer>
@@ -116,7 +116,7 @@ export function FeatureImportanceChart({ data }: { data: { feature: string; impo
         <Tooltip contentStyle={TIP_STYLE} formatter={(v: any) => [`${v}%`, 'Importance']} />
         <Bar dataKey="pct" radius={[0, 4, 4, 0]} maxBarSize={14}>
           {formatted.map((d, i) => (
-            <Cell key={i} fill={d.direction === 'positive' ? '#ff3860' : '#00d4ff'} />
+            <Cell key={i} fill={d.direction === 'positive' ? '#ef4444' : '#3b82f6'} />
           ))}
         </Bar>
       </BarChart>
@@ -135,8 +135,8 @@ export function SystemHealthAreaChart({ data }: { data: any[] }) {
             <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
           </linearGradient>
           <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#ff3860" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#ff3860" stopOpacity={0.0} />
+            <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
@@ -144,8 +144,8 @@ export function SystemHealthAreaChart({ data }: { data: any[] }) {
         <YAxis tick={LABEL_STYLE} tickLine={false} axisLine={false} domain={[0, 1.5]} />
         <Tooltip contentStyle={TIP_STYLE} />
         <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-        <Area type="monotone" dataKey="auditCount" stroke="#00d4ff" fill="url(#healthGrad)" strokeWidth={2} name="Audit Count" />
-        <Area type="monotone" dataKey="attackCount" stroke="#ff3860" fill="url(#riskGrad)" strokeWidth={2} name="Attack Count" />
+        <Area type="monotone" dataKey="auditCount" stroke="#3b82f6" fill="url(#healthGrad)" strokeWidth={2} name="Audit Count" />
+        <Area type="monotone" dataKey="attackCount" stroke="#ef4444" fill="url(#riskGrad)" strokeWidth={2} name="Attack Count" />
       </AreaChart>
     </ResponsiveContainer>
   )
@@ -180,7 +180,7 @@ export function AttackFamilyChart({ data }: { data: { name: string; support: num
         <YAxis stroke={AXIS_COLOR} tick={LABEL_STYLE} />
         <Tooltip contentStyle={TIP_STYLE} />
         <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-        <Bar dataKey="support" name="Ground Truth" fill="#00d4ff" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="support" name="Ground Truth" fill="#3b82f6" radius={[2, 2, 0, 0]} />
         <Bar dataKey="detected" name="Detected" fill="#a855f7" radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -244,7 +244,7 @@ export function AuditFrequencyByTypeChart({
         <YAxis stroke={AXIS_COLOR} tick={LABEL_STYLE} />
         <Tooltip contentStyle={TIP_STYLE} formatter={(value: any) => Number(value).toFixed(3)} />
         <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-        <Bar dataKey="meanAuditCount" name="Mean Audit Count" fill="#00d4ff" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="meanAuditCount" name="Mean Audit Count" fill="#3b82f6" radius={[2, 2, 0, 0]} />
         <Bar dataKey="meanRisk" name="Mean Risk" fill="#ef4444" radius={[2, 2, 0, 0]} />
         <Bar dataKey="meanCriticality" name="Mean Criticality" fill="#10b981" radius={[2, 2, 0, 0]} />
       </BarChart>
@@ -274,7 +274,7 @@ export function LSTMTrainingCurveChart({
   )
 }
 
-export function GaugeChart({ value, label, color = '#00d4ff' }: { value: number; label: string; color?: string }) {
+export function GaugeChart({ value, label, color = '#3b82f6' }: { value: number; label: string; color?: string }) {
   const pct = Math.round(value * 100)
   const data = [{ value: pct }, { value: 100 - pct }]
   return (

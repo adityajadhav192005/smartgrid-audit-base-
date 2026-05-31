@@ -14,11 +14,11 @@ interface KPIStatCardProps {
 }
 
 const styleMap = {
-  blue:   { border: 'border-cyber-blue/30',   text: 'text-cyber-blue',   glow: 'group-hover:shadow-[0_0_20px_rgba(0,212,255,0.15)]' },
-  green:  { border: 'border-cyber-green/30',  text: 'text-cyber-green',  glow: 'group-hover:shadow-[0_0_20px_rgba(57,255,20,0.15)]'  },
-  amber:  { border: 'border-cyber-amber/30',  text: 'text-cyber-amber',  glow: 'group-hover:shadow-[0_0_20px_rgba(255,183,0,0.15)]'  },
-  red:    { border: 'border-cyber-red/30',    text: 'text-cyber-red',    glow: 'group-hover:shadow-[0_0_20px_rgba(255,56,96,0.15)]'   },
-  teal:   { border: 'border-cyber-teal/30',   text: 'text-cyber-teal',   glow: 'group-hover:shadow-[0_0_20px_rgba(0,245,212,0.15)]'  },
+  blue:   { border: 'border-cyber-blue/30',   text: 'text-cyber-blue',   glow: 'group-hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]' },
+  green:  { border: 'border-cyber-green/30',  text: 'text-cyber-green',  glow: 'group-hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]'  },
+  amber:  { border: 'border-cyber-amber/30',  text: 'text-cyber-amber',  glow: 'group-hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]'  },
+  red:    { border: 'border-cyber-red/30',    text: 'text-cyber-red',    glow: 'group-hover:shadow-[0_0_20px_rgba(239,68,68,0.15)]'   },
+  teal:   { border: 'border-cyber-teal/30',   text: 'text-cyber-teal',   glow: 'group-hover:shadow-[0_0_20px_rgba(20,184,166,0.15)]'  },
   purple: { border: 'border-purple-500/30',   text: 'text-purple-400',   glow: 'group-hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]' },
 }
 

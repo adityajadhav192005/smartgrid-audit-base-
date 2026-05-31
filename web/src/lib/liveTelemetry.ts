@@ -377,7 +377,7 @@ export function useLiveTelemetry(pollMs = 5000) {
   const topAgents = useMemo(() => rankedAgents.slice(0, 8), [rankedAgents])
 
   const liveAgents = useMemo<LiveAgentRow[]>(() => {
-    const totalAgents = 100
+    const totalAgents = gridStatus?.rapid_scada?.experiment_pipeline?.agent_count ?? (rankedAgents.length || 100)
     const rows: LiveAgentRow[] = Array.from({ length: totalAgents }, (_, index) => {
       const fallbackMeta = buildAgentId(index)
       return {
@@ -431,7 +431,7 @@ export function useLiveTelemetry(pollMs = 5000) {
       const key = event.type || 'EVENT'
       buckets.set(key, (buckets.get(key) ?? 0) + 1)
     }
-    const palette = ['#ff3860', '#ffb700', '#00d4ff', '#10b981', '#a855f7', '#f97316']
+    const palette = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#f97316']
     return Array.from(buckets.entries()).map(([name, value], index) => ({
       name,
       value,

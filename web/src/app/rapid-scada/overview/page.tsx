@@ -23,16 +23,16 @@ export default function RapidScadaOverviewPage() {
   const activeIncidents = topAgents.filter(agent => agent.anomalyScore >= threshold).length
 
   const attackTypeDistribution = [
-    { name: 'Critical', value: events.filter(event => event.severity === 'critical').length, color: '#ff3860' },
-    { name: 'High', value: events.filter(event => event.severity === 'high').length, color: '#ffb700' },
-    { name: 'Medium', value: events.filter(event => event.severity === 'medium').length, color: '#bd00ff' },
-    { name: 'Low/Info', value: events.filter(event => !['critical', 'high', 'medium'].includes(event.severity)).length, color: '#00d4ff' },
+    { name: 'Critical', value: events.filter(event => event.severity === 'critical').length, color: '#ef4444' },
+    { name: 'High', value: events.filter(event => event.severity === 'high').length, color: '#f59e0b' },
+    { name: 'Medium', value: events.filter(event => event.severity === 'medium').length, color: '#8b5cf6' },
+    { name: 'Low/Info', value: events.filter(event => !['critical', 'high', 'medium'].includes(event.severity)).length, color: '#3b82f6' },
   ]
 
   const agentStatusDistribution = [
     { name: 'Healthy', value: Number(statusCounts.healthy ?? 0), color: '#10b981' },
     { name: 'Anomalous', value: Number(statusCounts.anomalous ?? 0), color: '#f59e0b' },
-    { name: 'Under Audit', value: Number(statusCounts.underAudit ?? 0), color: '#00d4ff' },
+    { name: 'Under Audit', value: Number(statusCounts.underAudit ?? 0), color: '#3b82f6' },
     { name: 'Attacked', value: Number(statusCounts.attacked ?? 0), color: '#ef4444' },
   ]
 
@@ -90,9 +90,9 @@ export default function RapidScadaOverviewPage() {
         </div>
         <div className="glass-card p-4 grid grid-cols-2 gap-3">
           <div className="col-span-2 text-sm font-semibold text-slate-800">Live Health Gauges</div>
-          <GaugeChart value={Number(health.crossLayerStability ?? 0)} label="Cross-Layer Stability" color="#00d4ff" />
+          <GaugeChart value={Number(health.crossLayerStability ?? 0)} label="Cross-Layer Stability" color="#3b82f6" />
           <GaugeChart value={Number(health.attackResistance ?? 0)} label="Attack Resistance" color="#10b981" />
-          <GaugeChart value={Math.min(1, activeIncidents / 10)} label="Anomaly Pressure" color="#ffb700" />
+          <GaugeChart value={Math.min(1, activeIncidents / 10)} label="Anomaly Pressure" color="#f59e0b" />
           <GaugeChart value={Math.min(1, Number(statusCounts.attacked ?? 0) / 10)} label="Attack Load" color="#ef4444" />
         </div>
       </div>

@@ -57,7 +57,7 @@ export default function RapidScadaThreatsPage() {
         </div>
         <div className="glass-card p-4">
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Event Type Distribution</h3>
-          <div className="h-44"><AttackTypePie data={attackTypeDistribution.length ? attackTypeDistribution : [{ name: 'EVENT', value: 1, color: '#00d4ff' }]} /></div>
+          <div className="h-44"><AttackTypePie data={attackTypeDistribution.length ? attackTypeDistribution : [{ name: 'EVENT', value: 1, color: '#3b82f6' }]} /></div>
         </div>
       </div>
 

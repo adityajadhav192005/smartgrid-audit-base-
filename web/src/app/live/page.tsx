@@ -126,7 +126,7 @@ export default function LivePage() {
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-1.5 rounded-full bg-slate-700/60">
                       <div className="h-full rounded-full transition-all"
-                        style={{ width: `${a.riskScore * 100}%`, background: a.riskScore > 0.8 ? '#ff3860' : a.riskScore > 0.5 ? '#ffb700' : '#10b981' }} />
+                        style={{ width: `${a.riskScore * 100}%`, background: a.riskScore > 0.8 ? '#ef4444' : a.riskScore > 0.5 ? '#f59e0b' : '#10b981' }} />
                     </div>
                     <span className="text-slate-500">{a.riskScore.toFixed(2)}</span>
                   </div>
