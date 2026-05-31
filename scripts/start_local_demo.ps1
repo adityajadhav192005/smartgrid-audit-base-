@@ -101,9 +101,11 @@ function Wait-HttpReachable {
 
 Write-Host "Starting local demo stack from: $repoRoot" -ForegroundColor Cyan
 Write-Host "API Port: $ApiPort | SCADA Port: $ScadaPort | Bridge Poll: $BridgePollSeconds s" -ForegroundColor Gray
+Write-Host "Mode: development | API key: $ApiKey" -ForegroundColor Gray
+Write-Host "(In production, set SMARTGRID_ENV=production and SMARTGRID_API_KEY to a real secret.)" -ForegroundColor DarkGray
 
 if (-not $NoApi) {
-    $cmd = "Set-Location '$repoRoot'; `$env:SMARTGRID_API_KEY='$ApiKey'; `$env:SMARTGRID_API_HOST='127.0.0.1'; `$env:SMARTGRID_API_PORT='$ApiPort'; & '$pythonCmd' -m smartgrid_mas.api_server"
+    $cmd = "Set-Location '$repoRoot'; `$env:SMARTGRID_ENV='development'; `$env:SMARTGRID_API_KEY='$ApiKey'; `$env:SMARTGRID_API_HOST='127.0.0.1'; `$env:SMARTGRID_API_PORT='$ApiPort'; & '$pythonCmd' -m smartgrid_mas.api_server"
     Start-ComponentWindow -Title "SmartGrid API" -Command $cmd
     Write-Host "Launched SmartGrid API on 127.0.0.1:$ApiPort" -ForegroundColor Green
 
@@ -169,7 +171,9 @@ if (-not $NoDashboard) {
         Write-Warning "web directory not found. Skipping dashboard start."
     }
     else {
-        $cmd = "Set-Location '$webDir'; cmd /c npm run dev"
+        # Pass SMARTGRID_API_KEY explicitly so the dashboard works even if
+        # web/.env.local is missing or out of date.
+        $cmd = "Set-Location '$webDir'; `$env:SMARTGRID_API_KEY='$ApiKey'; `$env:SMARTGRID_API_URL='http://127.0.0.1:$ApiPort'; `$env:SMARTGRID_LOCAL_API='http://127.0.0.1:$ApiPort'; cmd /c npm run dev"
         Start-ComponentWindow -Title "Dashboard (Next.js)" -Command $cmd
         Write-Host "Launched dashboard on http://localhost:3000" -ForegroundColor Green
     }

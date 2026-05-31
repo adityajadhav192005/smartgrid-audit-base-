@@ -8,11 +8,12 @@ import threading
 import uuid
 import subprocess
 import shlex
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from collections import defaultdict, deque
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncIterator, Dict, List, Optional
 from urllib import error as urlerror
 from urllib import parse as urlparse
 from urllib import request as urlrequest
@@ -41,10 +42,26 @@ from smartgrid_mas.integration.scada_live_scenario import ScadaLiveScenario
 # Organic attack simulation for SCADA live pipeline (toggle: SMARTGRID_LIVE_SCENARIO=0 to disable)
 _scada_live_scenario = ScadaLiveScenario()
 
+@asynccontextmanager
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Start and stop the live Rapid SCADA poller alongside the API process.
+
+    `rapid_scada_live` is defined later in this module — that's intentional.
+    A lifespan handler is a function, so the global is resolved at startup
+    time, by which point the full module has been imported.
+    """
+    rapid_scada_live.start()
+    try:
+        yield
+    finally:
+        rapid_scada_live.stop()
+
+
 app = FastAPI(
     title="SmartGrid MAS API",
     version="0.1.0",
     description="Basic REST API for SCADA integration, XAI, and federated aggregation.",
+    lifespan=_lifespan,
 )
 
 
@@ -1397,16 +1414,6 @@ def _process_scada_tags_payload_legacy(payload: ScadaTagsRequest) -> Dict[str, A
         "normalized_tags": normalized_tags,
         "result": result,
     }
-
-
-@app.on_event("startup")
-def startup_event() -> None:
-    rapid_scada_live.start()
-
-
-@app.on_event("shutdown")
-def shutdown_event() -> None:
-    rapid_scada_live.stop()
 
 
 @app.get("/health")
