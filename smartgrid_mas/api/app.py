@@ -21,8 +21,11 @@ import json
 
 import numpy as np
 import pandas as pd
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score, anomaly_flag_from_score
 from smartgrid_mas.xai.explain import explain_deviation, explain_audit_decision
@@ -62,6 +65,58 @@ app = FastAPI(
     version="0.1.0",
     description="Basic REST API for SCADA integration, XAI, and federated aggregation.",
     lifespan=_lifespan,
+)
+
+
+# ---------------------------------------------------------------------------
+# Middleware: request body size cap + CORS allowlist
+# ---------------------------------------------------------------------------
+_MAX_BODY_BYTES = int(os.environ.get("SMARTGRID_MAX_BODY_BYTES", str(5 * 1024 * 1024)))
+
+
+class _BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject requests whose Content-Length exceeds SMARTGRID_MAX_BODY_BYTES.
+
+    Streaming bodies without a Content-Length header are not capped here —
+    uvicorn's own h11 limits apply. Default cap: 5 MB.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        cl = request.headers.get("content-length")
+        if cl is not None:
+            try:
+                if int(cl) > _MAX_BODY_BYTES:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "detail": f"Request body exceeds limit of {_MAX_BODY_BYTES} bytes",
+                        },
+                    )
+            except ValueError:
+                return JSONResponse(status_code=400, content={"detail": "Invalid Content-Length header"})
+        return await call_next(request)
+
+
+app.add_middleware(_BodySizeLimitMiddleware)
+
+# CORS — explicit allowlist. Add prod dashboard origin via SMARTGRID_CORS_ORIGINS
+# (comma-separated). Local dev origins are included by default.
+_default_cors_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+_extra_cors = [
+    o.strip()
+    for o in os.environ.get("SMARTGRID_CORS_ORIGINS", "").split(",")
+    if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_default_cors_origins + _extra_cors,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["content-type", "x-api-key", "x-timestamp", "x-nonce"],
+    max_age=600,
 )
 
 
