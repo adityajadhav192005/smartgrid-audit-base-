@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   Wifi, WifiOff, Activity, AlertTriangle, Zap, Radio,
   Gauge, ArrowUpDown, ShieldAlert, Cpu, Flame, RotateCcw,
+  Square, Play,
 } from 'lucide-react'
 import { useDashboard } from '@/lib/dashboardContext'
 import { useLiveTelemetry } from '@/lib/liveTelemetry'
@@ -47,57 +48,60 @@ export default function ScadaLivePage() {
   const { setScadaConnected } = useDashboard()
   const { gridStatus, liveAgents, events, agentSnapshots, error } = useLiveTelemetry(2000)
 
-  // Attack injection state
-  const [attackType, setAttackType] = useState<string>('FDI')
-  const [attackCount, setAttackCount] = useState<number>(60)
-  const [attackSeverity, setAttackSeverity] = useState<number>(0.8)
-  const [attackLoading, setAttackLoading] = useState(false)
-  const [attackResult, setAttackResult] = useState<{ anomaly: number; total: number; type: string } | null>(null)
+  // Attack scenario state
   const [showAttackPanel, setShowAttackPanel] = useState(false)
+  const [scenarios, setScenarios] = useState<any[]>([])
+  const [scenarioStatus, setScenarioStatus] = useState<any>(null)
+  const [scenarioLoading, setScenarioLoading] = useState<string | null>(null)
 
-  const injectAttack = useCallback(async () => {
-    setAttackLoading(true)
-    setAttackResult(null)
+  useEffect(() => {
+    if (!showAttackPanel) return
+    fetch('/api/proxy/scada/attack-scenario/list')
+      .then(r => r.ok ? r.json() : fetch('http://127.0.0.1:8000/v1/scada/attack-scenario/list', { headers: { 'X-API-Key': 'smartgrid-dev-key' } }).then(r2 => r2.json()))
+      .then(d => setScenarios(d?.scenarios ?? []))
+      .catch(() => {})
+  }, [showAttackPanel])
+
+  useEffect(() => {
+    if (!showAttackPanel) return
+    const poll = () => {
+      fetch('/api/proxy/scada/attack-scenario/status')
+        .then(r => r.ok ? r.json() : fetch('http://127.0.0.1:8000/v1/scada/attack-scenario/status', { headers: { 'X-API-Key': 'smartgrid-dev-key' } }).then(r2 => r2.json()))
+        .then(d => setScenarioStatus(d))
+        .catch(() => {})
+    }
+    poll()
+    const iv = setInterval(poll, 2000)
+    return () => clearInterval(iv)
+  }, [showAttackPanel])
+
+  const startScenario = useCallback(async (scenarioId: string) => {
+    setScenarioLoading(scenarioId)
     try {
-      const res = await fetch('/api/proxy/scada/inject-attack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          attack_type: attackType,
-          target_count: attackCount,
-          severity: attackSeverity,
-          target_types: ['GEN', 'SUB', 'PMU', 'BRK'],
-        }),
+      const res = await fetch('/api/proxy/scada/attack-scenario/start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario_id: scenarioId }),
       })
       if (!res.ok) {
-        // Try direct backend
-        const direct = await fetch('http://127.0.0.1:8000/v1/scada/inject-attack', {
+        await fetch('http://127.0.0.1:8000/v1/scada/attack-scenario/start', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': 'smartgrid-dev-key',
-          },
-          body: JSON.stringify({
-            attack_type: attackType,
-            target_count: attackCount,
-            severity: attackSeverity,
-            target_types: ['GEN', 'SUB', 'PMU', 'BRK'],
-          }),
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': 'smartgrid-dev-key' },
+          body: JSON.stringify({ scenario_id: scenarioId }),
         })
-        if (direct.ok) {
-          const data = await direct.json()
-          setAttackResult({ anomaly: data.agents_anomaly, total: data.agents_targeted, type: data.attack_type })
-        }
-      } else {
-        const data = await res.json()
-        setAttackResult({ anomaly: data.agents_anomaly, total: data.agents_targeted, type: data.attack_type })
       }
-    } catch (e) {
-      console.error('Attack injection failed:', e)
-    } finally {
-      setAttackLoading(false)
-    }
-  }, [attackType, attackCount, attackSeverity])
+    } catch {} finally { setScenarioLoading(null) }
+  }, [])
+
+  const stopScenario = useCallback(async () => {
+    try {
+      const res = await fetch('/api/proxy/scada/attack-scenario/stop', { method: 'POST' })
+      if (!res.ok) {
+        await fetch('http://127.0.0.1:8000/v1/scada/attack-scenario/stop', {
+          method: 'POST', headers: { 'X-API-Key': 'smartgrid-dev-key' },
+        })
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     setScadaConnected(Boolean(gridStatus?.rapid_scada?.connection?.connected))
@@ -328,84 +332,109 @@ export default function ScadaLivePage() {
             </div>
           </div>
 
-          {/* Attack Injection Panel */}
+          {/* Red Team Scenarios */}
           <div className="glass-card p-3 flex-shrink-0 border-red-500/20">
             <button
               onClick={() => setShowAttackPanel(!showAttackPanel)}
               className="flex items-center gap-2 w-full text-left"
             >
-              <Flame size={12} className="text-red-400" />
-              <span className="text-xs font-semibold text-slate-700">Attack Injection</span>
+              <ShieldAlert size={12} className="text-red-400" />
+              <span className="text-xs font-semibold text-slate-700">Red Team Scenarios</span>
+              {scenarioStatus?.running && <span className="ml-1 text-[9px] text-red-400 font-mono animate-pulse">ACTIVE</span>}
               <span className="ml-auto text-[9px] text-slate-500">{showAttackPanel ? '▲' : '▼'}</span>
             </button>
 
             {showAttackPanel && (
               <div className="mt-3 space-y-2">
-                <div className="flex gap-1 flex-wrap">
-                  {['FDI', 'DoS', 'MITM', 'COORDINATED'].map(t => (
+                {scenarioStatus?.running ? (
+                  <div className="space-y-2">
+                    <div className="rounded-lg px-3 py-2 bg-red-50 border border-red-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-red-700">{scenarioStatus.scenario_name}</span>
+                        <span className="text-[9px] font-mono text-red-500">Phase {scenarioStatus.phase}/{scenarioStatus.total_phases}</span>
+                      </div>
+                      <div className="w-full bg-red-100 rounded-full h-1.5 mb-1.5">
+                        <div
+                          className="bg-red-500 h-1.5 rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, (scenarioStatus.elapsed_sec / Math.max(1, scenarioStatus.total_duration_sec)) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[9px] text-red-600 font-mono">
+                        <span>{scenarioStatus.phase_agents} agents under attack</span>
+                        <span>{Math.round(scenarioStatus.elapsed_sec)}s / {scenarioStatus.total_duration_sec}s</span>
+                      </div>
+                      <div className="flex justify-between text-[9px] text-slate-600 mt-1">
+                        <span>Injections: <span className="font-mono text-red-600">{scenarioStatus.injections}</span></span>
+                        <span>Detected: <span className="font-mono text-emerald-600">{scenarioStatus.detections}</span></span>
+                      </div>
+                    </div>
+
+                    {(scenarioStatus.log ?? []).length > 0 && (
+                      <div className="max-h-20 overflow-y-auto rounded border border-slate-200 bg-slate-50">
+                        {(scenarioStatus.log as any[]).slice(-6).map((entry: any, i: number) => (
+                          <div key={i} className="flex gap-2 px-2 py-0.5 text-[9px] font-mono border-b border-slate-100 last:border-0">
+                            <span className="text-slate-400 w-8 shrink-0">{entry.time}s</span>
+                            <span className={cn(
+                              entry.event === 'detected' ? 'text-emerald-600' :
+                              entry.event === 'phase_start' ? 'text-amber-600' :
+                              entry.event === 'completed' ? 'text-blue-600' : 'text-slate-500'
+                            )}>
+                              {entry.event === 'phase_start' && `Phase ${entry.phase}: ${entry.agents} agents @ ${entry.severity}`}
+                              {entry.event === 'detected' && `Audit caught ${entry.detected}/${entry.total} (sev ${entry.severity})`}
+                              {entry.event === 'completed' && 'Scenario complete'}
+                              {entry.event === 'stopped' && 'Stopped by operator'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <button
-                      key={t}
-                      onClick={() => setAttackType(t)}
-                      className={cn(
-                        'px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors',
-                        attackType === t
-                          ? 'bg-red-500/20 border-red-500/50 text-red-300'
-                          : 'bg-slate-800/50 border-slate-600/30 text-slate-500 hover:border-red-500/30'
-                      )}
+                      onClick={stopScenario}
+                      className="w-full py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300 flex items-center justify-center gap-2 transition-colors"
                     >
-                      {t}
+                      <Square size={10} /> Stop Scenario
                     </button>
-                  ))}
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Agents to attack</span>
-                    <span className="font-mono text-red-300">{attackCount}</span>
                   </div>
-                  <input
-                    type="range" min={10} max={100} step={5} value={attackCount}
-                    onChange={e => setAttackCount(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Severity</span>
-                    <span className="font-mono text-red-300">{(attackSeverity * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range" min={0.1} max={1.0} step={0.1} value={attackSeverity}
-                    onChange={e => setAttackSeverity(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                  />
-                </div>
-
-                <button
-                  onClick={injectAttack}
-                  disabled={attackLoading || !isConnected}
-                  className={cn(
-                    'w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all',
-                    attackLoading
-                      ? 'bg-slate-700 text-slate-500 cursor-wait'
-                      : 'bg-red-600/80 hover:bg-red-500 text-white border border-red-500/50 shadow-lg shadow-red-500/10'
-                  )}
-                >
-                  {attackLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <RotateCcw size={11} className="animate-spin" /> Injecting...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <Flame size={11} /> Launch {attackType} Attack ({attackCount} agents)
-                    </span>
-                  )}
-                </button>
-
-                {attackResult && (
-                  <div className="rounded-lg px-2 py-1.5 text-[10px] bg-red-950/40 border border-red-500/30 text-red-300">
-                    <span className="font-bold">{attackResult.type}</span> injected → {attackResult.anomaly}/{attackResult.total} detected as anomaly
+                ) : (
+                  <div className="space-y-2">
+                    {scenarios.map(sc => (
+                      <div key={sc.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 hover:border-red-300 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-800">{sc.name}</span>
+                              <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-red-100 text-red-600 border border-red-200">{sc.attack_type}</span>
+                            </div>
+                            <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed">{sc.description}</p>
+                            <div className="flex gap-3 mt-1 text-[8px] text-slate-400 font-mono">
+                              <span>{sc.phases} phases</span>
+                              <span>{sc.duration_sec}s</span>
+                              <span>up to {sc.max_agents} agents</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => startScenario(sc.id)}
+                            disabled={!!scenarioLoading || !isConnected}
+                            className={cn(
+                              'shrink-0 px-2.5 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all',
+                              scenarioLoading === sc.id
+                                ? 'bg-slate-200 text-slate-400 cursor-wait'
+                                : 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                            )}
+                          >
+                            {scenarioLoading === sc.id ? (
+                              <RotateCcw size={10} className="animate-spin" />
+                            ) : (
+                              <Play size={10} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {scenarios.length === 0 && (
+                      <div className="text-[10px] text-slate-400 text-center py-2">Loading scenarios...</div>
+                    )}
                   </div>
                 )}
               </div>

@@ -104,6 +104,8 @@ app.add_middleware(_BodySizeLimitMiddleware)
 _default_cors_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3030",
+    "http://127.0.0.1:3030",
 ]
 _extra_cors = [
     o.strip()
@@ -1857,6 +1859,287 @@ def scada_inject_attack(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Attack injection failed: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Sustained attack scenarios — realistic multi-phase attack simulation
+# ---------------------------------------------------------------------------
+
+ATTACK_SCENARIOS: Dict[str, Dict[str, Any]] = {
+    "apt_fdi": {
+        "name": "APT False Data Injection",
+        "description": "Nation-state actor slowly compromises PMU sensors over 3 minutes. Starts with 2 nodes, spreads to 8. Severity escalates from subtle to aggressive.",
+        "attack_type": "FDI",
+        "phases": [
+            {"duration_sec": 30, "agents": 2, "severity_range": [0.15, 0.25], "types": ["PMU"]},
+            {"duration_sec": 40, "agents": 4, "severity_range": [0.30, 0.50], "types": ["PMU", "GEN"]},
+            {"duration_sec": 50, "agents": 8, "severity_range": [0.55, 0.80], "types": ["PMU", "GEN"]},
+        ],
+    },
+    "dos_campaign": {
+        "name": "DDoS on Substations",
+        "description": "Botnet floods substation communication channels. Starts targeting 3 nodes, escalates to saturate the network segment within 2 minutes.",
+        "attack_type": "DOS",
+        "phases": [
+            {"duration_sec": 25, "agents": 3, "severity_range": [0.30, 0.45], "types": ["SUB"]},
+            {"duration_sec": 35, "agents": 6, "severity_range": [0.50, 0.70], "types": ["SUB", "BRK"]},
+            {"duration_sec": 40, "agents": 10, "severity_range": [0.75, 0.95], "types": ["SUB", "BRK"]},
+        ],
+    },
+    "mitm_stealth": {
+        "name": "Stealthy MITM Interception",
+        "description": "Attacker intercepts and modifies messages between 2 generators and the control center. Low and slow to evade detection.",
+        "attack_type": "MITM",
+        "phases": [
+            {"duration_sec": 40, "agents": 2, "severity_range": [0.10, 0.20], "types": ["GEN"]},
+            {"duration_sec": 50, "agents": 3, "severity_range": [0.25, 0.40], "types": ["GEN", "SUB"]},
+            {"duration_sec": 30, "agents": 5, "severity_range": [0.45, 0.65], "types": ["GEN", "SUB"]},
+        ],
+    },
+    "insider_coordinated": {
+        "name": "Insider Coordinated Attack",
+        "description": "Disgruntled operator with access launches a multi-vector attack: FDI on sensors + DoS on breakers simultaneously. Fast and destructive.",
+        "attack_type": "COORDINATED",
+        "phases": [
+            {"duration_sec": 20, "agents": 5, "severity_range": [0.40, 0.60], "types": ["GEN", "PMU", "BRK"]},
+            {"duration_sec": 30, "agents": 12, "severity_range": [0.65, 0.85], "types": ["GEN", "PMU", "SUB", "BRK"]},
+            {"duration_sec": 25, "agents": 15, "severity_range": [0.80, 1.00], "types": ["GEN", "PMU", "SUB", "BRK"]},
+        ],
+    },
+}
+
+_AGENT_POOL: Dict[str, List[Dict[str, Any]]] = {
+    "GEN": [{"agent_id": f"GEN-{i:02d}", "type": "GEN", "cw": 1.0} for i in range(1, 21)],
+    "SUB": [{"agent_id": f"SUB-{i}", "type": "SUB", "cw": 0.8} for i in range(21, 51)],
+    "PMU": [{"agent_id": f"PMU-{i}", "type": "PMU", "cw": 0.9} for i in range(51, 76)],
+    "BRK": [{"agent_id": f"BRK-{i}", "type": "BRK", "cw": 0.7} for i in range(76, 101)],
+}
+
+
+class _SustainedScenarioRunner:
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
+        self.active_scenario: str | None = None
+        self.phase_index: int = 0
+        self.phase_elapsed_sec: float = 0
+        self.total_elapsed_sec: float = 0
+        self.injections_count: int = 0
+        self.detections_count: int = 0
+        self.target_ids: List[str] = []
+        self.started_at: str | None = None
+        self.log: List[Dict[str, Any]] = []
+
+    @property
+    def running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self, scenario_id: str) -> Dict[str, Any]:
+        if scenario_id not in ATTACK_SCENARIOS:
+            raise ValueError(f"Unknown scenario: {scenario_id}")
+        if self.running:
+            raise ValueError("A scenario is already running. Stop it first.")
+        self._stop.clear()
+        self.active_scenario = scenario_id
+        self.phase_index = 0
+        self.phase_elapsed_sec = 0
+        self.total_elapsed_sec = 0
+        self.injections_count = 0
+        self.detections_count = 0
+        self.target_ids = []
+        self.started_at = datetime.now(tz=timezone.utc).isoformat()
+        self.log = []
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
+        sc = ATTACK_SCENARIOS[scenario_id]
+        return {"status": "started", "scenario": scenario_id, "name": sc["name"]}
+
+    def stop(self) -> Dict[str, Any]:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=10)
+        result = self.status()
+        self.active_scenario = None
+        self.target_ids = []
+        return result
+
+    def status(self) -> Dict[str, Any]:
+        sc = ATTACK_SCENARIOS.get(self.active_scenario or "", {})
+        phases = sc.get("phases", [])
+        total_duration = sum(p["duration_sec"] for p in phases)
+        return {
+            "running": self.running,
+            "scenario_id": self.active_scenario,
+            "scenario_name": sc.get("name", ""),
+            "phase": self.phase_index + 1 if self.running else 0,
+            "total_phases": len(phases),
+            "phase_agents": phases[self.phase_index]["agents"] if self.running and self.phase_index < len(phases) else 0,
+            "elapsed_sec": round(self.total_elapsed_sec, 1),
+            "total_duration_sec": total_duration,
+            "injections": self.injections_count,
+            "detections": self.detections_count,
+            "target_ids": list(self.target_ids),
+            "started_at": self.started_at,
+            "log": list(self.log[-15:]),
+        }
+
+    def _run_loop(self) -> None:
+        import random as _rng
+        sc = ATTACK_SCENARIOS[self.active_scenario or ""]
+        phases = sc["phases"]
+        attack_type = sc["attack_type"]
+        poll_interval = rapid_scada_live.poll_sec
+
+        for pi, phase in enumerate(phases):
+            self.phase_index = pi
+            self.phase_elapsed_sec = 0
+            duration = phase["duration_sec"]
+            sev_lo, sev_hi = phase["severity_range"]
+            target_count = phase["agents"]
+            target_types = phase["types"]
+
+            pool = []
+            for t in target_types:
+                pool.extend(_AGENT_POOL.get(t, []))
+            _rng.shuffle(pool)
+            targets = pool[:target_count]
+            self.target_ids = [a["agent_id"] for a in targets]
+
+            self.log.append({
+                "time": round(self.total_elapsed_sec, 1),
+                "event": "phase_start",
+                "phase": pi + 1,
+                "agents": target_count,
+                "severity": f"{sev_lo:.0%}-{sev_hi:.0%}",
+                "types": target_types,
+            })
+
+            while self.phase_elapsed_sec < duration:
+                if self._stop.is_set():
+                    self.log.append({"time": round(self.total_elapsed_sec, 1), "event": "stopped"})
+                    return
+
+                progress = self.phase_elapsed_sec / max(1, duration)
+                severity = sev_lo + (sev_hi - sev_lo) * progress
+
+                records: List[ScadaTagsRequest] = []
+                for agent in targets:
+                    tags = self._build_attack_tags(attack_type, severity, agent["type"], _rng)
+                    records.append(ScadaTagsRequest(
+                        agent_id=agent["agent_id"],
+                        tags=tags,
+                        criticality_weight=agent["cw"],
+                        score_threshold=float(os.environ.get("SMARTGRID_SCADA_SCORE_THRESHOLD", "3.0")),
+                    ))
+
+                try:
+                    batch = BatchScadaTagsRequest(records=records)
+                    results = _process_scada_tags_batch_payload(batch)
+                    rapid_scada_live.hold_agents(self.target_ids, polls=3)
+
+                    anomalies = sum(1 for r in results if int(r.get("result", {}).get("anomaly_flag", 0)) >= 1)
+                    self.injections_count += len(records)
+                    self.detections_count += anomalies
+
+                    if anomalies > 0:
+                        self.log.append({
+                            "time": round(self.total_elapsed_sec, 1),
+                            "event": "detected",
+                            "detected": anomalies,
+                            "total": len(records),
+                            "severity": round(severity, 2),
+                        })
+                except Exception:
+                    pass
+
+                self._stop.wait(poll_interval)
+                self.phase_elapsed_sec += poll_interval
+                self.total_elapsed_sec += poll_interval
+
+        self.log.append({"time": round(self.total_elapsed_sec, 1), "event": "completed"})
+
+    @staticmethod
+    def _build_attack_tags(attack_type: str, severity: float, agent_type: str, rng: Any) -> Dict[str, float]:
+        noise = lambda: rng.uniform(-0.02, 0.02)
+        tags: Dict[str, float] = {
+            "voltage": 1.0, "frequency": 1.0, "current": 1.0,
+            "latency": 0.1, "packet_loss": 0.01, "integrity": 1.0,
+            "comm_freq": 0.8, "breaker_status": 1.0,
+        }
+        if attack_type == "FDI":
+            tags["voltage"] = 1.0 + severity * rng.uniform(0.5, 1.5) + noise()
+            tags["current"] = 1.0 + severity * rng.uniform(0.3, 1.0) + noise()
+            tags["frequency"] = 1.0 + severity * rng.uniform(0.2, 0.6) + noise()
+        elif attack_type == "DOS":
+            tags["latency"] = 0.1 + severity * rng.uniform(3.0, 8.0)
+            tags["packet_loss"] = min(1.0, 0.01 + severity * rng.uniform(0.15, 0.5))
+            tags["comm_freq"] = max(0.0, 0.8 - severity * rng.uniform(0.4, 0.7))
+            if agent_type == "BRK":
+                tags["breaker_status"] = 0.0
+        elif attack_type == "MITM":
+            tags["integrity"] = max(0.0, 1.0 - severity * rng.uniform(0.35, 0.7))
+            tags["voltage"] = 1.0 + severity * rng.uniform(0.8, 2.0) + noise()
+            tags["latency"] = 0.1 + severity * rng.uniform(1.0, 3.0)
+            if agent_type == "BRK" and severity > 0.5:
+                tags["breaker_status"] = 0.0
+        elif attack_type == "COORDINATED":
+            tags["voltage"] = 1.0 + severity * rng.uniform(0.4, 1.2) + noise()
+            tags["current"] = 1.0 + severity * rng.uniform(0.3, 0.8) + noise()
+            tags["latency"] = 0.1 + severity * rng.uniform(2.0, 6.0)
+            tags["packet_loss"] = min(1.0, 0.01 + severity * rng.uniform(0.1, 0.3))
+            tags["integrity"] = max(0.0, 1.0 - severity * rng.uniform(0.2, 0.5))
+            tags["comm_freq"] = max(0.0, 0.8 - severity * rng.uniform(0.2, 0.5))
+            if agent_type == "BRK":
+                tags["breaker_status"] = 0.0
+        return tags
+
+
+_scenario_runner = _SustainedScenarioRunner()
+
+
+class ScenarioStartRequest(BaseModel):
+    scenario_id: str
+
+
+@app.get("/v1/scada/attack-scenario/list")
+def list_attack_scenarios(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    scenarios = []
+    for sid, sc in ATTACK_SCENARIOS.items():
+        phases = sc["phases"]
+        total_dur = sum(p["duration_sec"] for p in phases)
+        max_agents = max(p["agents"] for p in phases)
+        scenarios.append({
+            "id": sid,
+            "name": sc["name"],
+            "description": sc["description"],
+            "attack_type": sc["attack_type"],
+            "duration_sec": total_dur,
+            "phases": len(phases),
+            "max_agents": max_agents,
+        })
+    return {"scenarios": scenarios}
+
+
+@app.post("/v1/scada/attack-scenario/start")
+def start_attack_scenario(
+    payload: ScenarioStartRequest,
+    _: str = Depends(_security_guard),
+) -> Dict[str, Any]:
+    try:
+        return _scenario_runner.start(payload.scenario_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/v1/scada/attack-scenario/stop")
+def stop_attack_scenario(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return _scenario_runner.stop()
+
+
+@app.get("/v1/scada/attack-scenario/status")
+def attack_scenario_status(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    return _scenario_runner.status()
 
 
 @app.post("/v1/federated/aggregate/vector")

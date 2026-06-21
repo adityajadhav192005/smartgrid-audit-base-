@@ -21,119 +21,75 @@ function toRatio(value: unknown, fallback: number): number {
   return Math.max(0, Math.min(1, normalized))
 }
 
-function setNested(obj: Record<string, any>, pathParts: string[], value: any) {
-  let cursor: Record<string, any> = obj
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    const key = pathParts[index]
-    if (!cursor[key] || typeof cursor[key] !== 'object') {
-      cursor[key] = {}
-    }
-    cursor = cursor[key]
-  }
-  cursor[pathParts[pathParts.length - 1]] = value
-}
-
 function buildRuntimeOverrides(payload: SettingsPayload): Record<string, any> {
-  const overrides: Record<string, any> = {}
-
-  const mappings: Array<{ key: string; path: string[]; fallback?: number }> = [
-    { key: 'audit_budget_ratio', path: ['audit', 'audit_budget_ratio'], fallback: 0.07 },
-    { key: 'risk_threshold', path: ['audit', 'risk_threshold'], fallback: 0.5 },
-    { key: 'f_min', path: ['audit', 'f_min'], fallback: 1 },
-    { key: 'f_max', path: ['audit', 'f_max'], fallback: 5 },
-    { key: 'max_audits_cycle', path: ['audit', 'max_audits_per_cycle'], fallback: 100 },
-    { key: 'k_scale', path: ['thresholds', 'k_sigma'], fallback: 4.0 },
-    { key: 'anomaly_th', path: ['thresholds', 'score_threshold'], fallback: 3.0 },
-    { key: 'prob_threshold', path: ['thresholds', 'prob_threshold'], fallback: 0.97 },
-    { key: 'hybrid_w_dev', path: ['thresholds', 'hybrid_w_dev'], fallback: 0.55 },
-    { key: 'hybrid_w_prob', path: ['thresholds', 'hybrid_w_prob'], fallback: 0.45 },
-    { key: 'sigma_window', path: ['thresholds', 'sigma_window'], fallback: 24 },
-    { key: 'learning_rate', path: ['gradient', 'lr'], fallback: 0.01 },
-    { key: 'rl_gamma', path: ['rl', 'gamma'], fallback: 0.95 },
-    { key: 'lstm_window', path: ['anomaly_model', 'lstm', 'window'], fallback: 24 },
-    { key: 'lstm_hidden_size', path: ['anomaly_model', 'lstm', 'hidden_size'], fallback: 64 },
-    { key: 'lstm_num_layers', path: ['anomaly_model', 'lstm', 'num_layers'], fallback: 2 },
-    { key: 'lstm_dropout', path: ['anomaly_model', 'lstm', 'dropout'], fallback: 0.2 },
-  ]
-
-  for (const item of mappings) {
-    if (!(item.key in payload)) continue
-    const fallback = item.fallback ?? 0
-    setNested(overrides, item.path, toNumber(payload[item.key], fallback))
+  return {
+    audit: {
+      audit_budget_ratio: toNumber(payload.audit_budget_ratio, 0.07),
+      risk_threshold: toNumber(payload.risk_threshold, 0.5),
+      f_min: 1,
+      f_max: 5,
+      max_audits_per_cycle: 100,
+    },
+    thresholds: {
+      k_sigma: 4.0,
+      score_threshold: toNumber(payload.anomaly_th, 0.25),
+      prob_threshold: toNumber(payload.prob_threshold, 0.43),
+      hybrid_w_dev: 0.55,
+      hybrid_w_prob: 0.45,
+      sigma_window: 24,
+    },
+    gradient: { lr: 0.01 },
+    rl: { gamma: 0.95 },
+    anomaly_model: {
+      lstm: { window: 24, hidden_size: 64, num_layers: 2, dropout: 0.2 },
+    },
   }
-
-  return overrides
 }
 
 function buildRuntimeEnv(payload: SettingsPayload): Record<string, string> {
-  const env: Record<string, string> = {}
-
-  const setEnv = (envKey: string, value: unknown, fallback: number | string) => {
-    if (typeof fallback === 'number') {
-      env[envKey] = String(toNumber(value, fallback))
-    } else {
-      const finalValue = typeof value === 'string' && value.trim().length > 0 ? value : fallback
-      env[envKey] = String(finalValue)
-    }
+  return {
+    SMARTGRID_SEEDS: String(payload.seeds ?? '42,43,44'),
+    SMARTGRID_TRAIN_EPISODES: String(toNumber(payload.episodes, 200)),
+    SMARTGRID_FDI_RATE: String(toRatio(payload.fdi_rate, 0.10)),
+    SMARTGRID_DOS_RATE: String(toRatio(payload.dos_rate, 0.05)),
+    SMARTGRID_CHAIN_RATE: String(toRatio(payload.chain_rate, 0.20)),
+    SMARTGRID_FAULT_RATE: String(toRatio(payload.fault_rate, 0.20)),
+    SMARTGRID_SCORE_THRESHOLD: String(toNumber(payload.anomaly_th, 0.25)),
+    SMARTGRID_ANOMALY_PROB_THRESHOLD: String(toNumber(payload.prob_threshold, 0.43)),
+    SMARTGRID_RISK_THRESHOLD: String(toNumber(payload.risk_threshold, 0.5)),
+    SMARTGRID_AUDIT_BUDGET_RATIO: String(toNumber(payload.audit_budget_ratio, 0.07)),
+    // Hardcoded defaults for parameters removed from UI
+    SMARTGRID_F_MAX: '5',
+    SMARTGRID_MAX_AUDITS_PER_CYCLE: '100',
+    SMARTGRID_RL_ALPHA: '0.4',
+    SMARTGRID_RL_GAMMA: '0.95',
+    SMARTGRID_RL_EPSILON_START: '1.0',
+    SMARTGRID_RL_EPSILON_MIN: '0.05',
+    SMARTGRID_RL_EPSILON_DECAY: '0.995',
+    SMARTGRID_ALPHA_LOW: '0.05',
+    SMARTGRID_ALPHA_HIGH: '0.8',
+    SMARTGRID_BETA: '0.3',
+    SMARTGRID_HYBRID_W_DEV: '0.55',
+    SMARTGRID_HYBRID_W_PROB: '0.45',
+    SMARTGRID_THRESHOLD_WINDOW: '24',
+    SMARTGRID_LSTM_WINDOW: '24',
+    SMARTGRID_RW_AUDIT: '0.05',
+    SMARTGRID_RW_ATTACK: '10.0',
+    SMARTGRID_CONSTRAINT_LOG_LEVEL: 'WARNING',
+    SMARTGRID_MITIGATION_DELAY: '1',
+    SMARTGRID_AUDIT_SUCCESS_PROB: '0.95',
+    SMARTGRID_API_HOST: '127.0.0.1',
+    SMARTGRID_API_PORT: '8000',
+    SMARTGRID_SCADA_POLL_SEC: '2',
+    SMARTGRID_SCADA_DEMO_ANOMALY_PHASE: 'Independent',
+    SMARTGRID_SCADA_INDEPENDENT_RATE_PRESET: 'Realistic',
+    SMARTGRID_SCADA_ANOMALY_CYCLE_SECONDS: '150',
+    SMARTGRID_SCADA_ANOMALY_INTENSITY: '1.0',
   }
-
-  setEnv('SMARTGRID_AUDIT_BUDGET_RATIO', payload.audit_budget_ratio, 0.07)
-  setEnv('SMARTGRID_RISK_THRESHOLD', payload.risk_threshold, 0.5)
-  setEnv('SMARTGRID_F_MAX', payload.f_max, 5)
-  setEnv('SMARTGRID_MAX_AUDITS_PER_CYCLE', payload.max_audits_cycle, 100)
-  if ('num_agents' in payload) {
-    setEnv('SMARTGRID_NUM_AGENTS', payload.num_agents, 100)
-  }
-  setEnv('SMARTGRID_TRAIN_EPISODES', payload.episodes, 200)
-
-  setEnv('SMARTGRID_RL_ALPHA', payload.rl_alpha, 0.4)
-  setEnv('SMARTGRID_RL_GAMMA', payload.rl_gamma, 0.95)
-  setEnv('SMARTGRID_RL_EPSILON_START', payload.rl_epsilon_start, 1.0)
-  setEnv('SMARTGRID_RL_EPSILON_MIN', payload.rl_epsilon_min, 0.05)
-  setEnv('SMARTGRID_RL_EPSILON_DECAY', payload.rl_epsilon_decay, 0.995)
-
-  setEnv('SMARTGRID_ALPHA_LOW', payload.alpha_low, 0.05)
-  setEnv('SMARTGRID_ALPHA_HIGH', payload.alpha_high, 0.5)
-  setEnv('SMARTGRID_BETA', payload.beta, 0.1)
-
-  setEnv('SMARTGRID_SCORE_THRESHOLD', payload.anomaly_th, 3.0)
-  setEnv('SMARTGRID_ANOMALY_PROB_THRESHOLD', payload.prob_threshold, 0.97)
-  setEnv('SMARTGRID_HYBRID_W_DEV', payload.hybrid_w_dev, 0.55)
-  setEnv('SMARTGRID_HYBRID_W_PROB', payload.hybrid_w_prob, 0.45)
-  setEnv('SMARTGRID_THRESHOLD_WINDOW', payload.sigma_window, 24)
-  setEnv('SMARTGRID_LSTM_WINDOW', payload.lstm_window, 24)
-  setEnv('SMARTGRID_SEEDS', payload.seeds, '42,43,44')
-
-  env.SMARTGRID_FDI_RATE = String(toRatio(payload.fdi_rate, 0.10))
-  env.SMARTGRID_DOS_RATE = String(toRatio(payload.dos_rate, 0.05))
-  env.SMARTGRID_CHAIN_RATE = String(toRatio(payload.chain_rate, 0.20))
-  env.SMARTGRID_FAULT_RATE = String(toRatio(payload.fault_rate, 0.20))
-
-  setEnv('SMARTGRID_RW_AUDIT', payload.lambda_audit ?? payload.reward_audit_penalty, 0.05)
-  setEnv('SMARTGRID_RW_ATTACK', payload.reward_missed_attack_penalty ?? payload.lambda_attack, 10.0)
-  setEnv('SMARTGRID_CONSTRAINT_LOG_LEVEL', payload.constraint_log_level, 'WARNING')
-
-  setEnv('SMARTGRID_MITIGATION_DELAY', payload.mitigation_delay, 1)
-
-  const explicitSuccess = typeof payload.audit_success_prob === 'number' ? payload.audit_success_prob : undefined
-  const explicitMissing = typeof payload.missing_audit_prob === 'number' ? payload.missing_audit_prob : undefined
-  const successFromMissing = explicitMissing !== undefined ? 1 - explicitMissing : undefined
-  const success = explicitSuccess ?? successFromMissing ?? 0.95
-  env.SMARTGRID_AUDIT_SUCCESS_PROB = String(Math.max(0, Math.min(1, success)))
-
-  setEnv('SMARTGRID_API_HOST', payload.api_host, '127.0.0.1')
-  setEnv('SMARTGRID_API_PORT', payload.api_port, 8000)
-  setEnv('SMARTGRID_SCADA_POLL_SEC', payload.scada_poll, 2)
-  setEnv('SMARTGRID_SCADA_DEMO_ANOMALY_PHASE', payload.scada_demo_phase, 'Independent')
-  setEnv('SMARTGRID_SCADA_INDEPENDENT_RATE_PRESET', payload.scada_rate_preset, 'Realistic')
-  setEnv('SMARTGRID_SCADA_ANOMALY_CYCLE_SECONDS', payload.scada_anomaly_cycle_seconds, 150)
-  setEnv('SMARTGRID_SCADA_ANOMALY_INTENSITY', payload.scada_anomaly_intensity, 1.0)
-
-  return env
 }
 
 export async function GET() {
-  const { status, data, backend } = await proxyFetch({
+  const { status, data } = await proxyFetch({
     path: '/v1/settings/runtime',
     timeoutMs: 8000,
   })
