@@ -677,14 +677,26 @@ def build_agent_pool(n_agents: int = 100, seed: int = SEED) -> List[BaseAgent]:
         nonlocal agent_id
         aid = f"{agent_id}"
         agent_id += 1
+        _by = np.array([
+            ENV_CFG.base_latency_ms,
+            ENV_CFG.base_packet_loss,
+            ENV_CFG.base_integrity,
+            ENV_CFG.base_comm_freq_hz,
+        ][:ENV_CFG.cyber_dim])
+        _thy = np.array([
+            ENV_CFG.base_latency_ms * 0.15,
+            max(0.005, ENV_CFG.base_packet_loss * 3.0),
+            0.02,
+            ENV_CFG.base_comm_freq_hz * 0.10,
+        ][:ENV_CFG.cyber_dim])
         return BaseAgent(
             agent_id=aid,
             agent_type=agent_type,
             criticality=AgentCriticality(weight=criticality),
             bx=np.ones(ENV_CFG.phys_dim),
-            by=np.ones(ENV_CFG.cyber_dim),
-            thx=np.ones(ENV_CFG.phys_dim) * 0.1,
-            thy=np.ones(ENV_CFG.cyber_dim) * 0.1,
+            by=_by,
+            thx=np.ones(ENV_CFG.phys_dim) * 0.15,
+            thy=_thy,
         )
     
     # Generators

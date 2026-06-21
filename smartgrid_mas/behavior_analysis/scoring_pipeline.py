@@ -6,6 +6,7 @@ import numpy as np
 
 from smartgrid_mas.agents.base_agent import BaseAgent
 from smartgrid_mas.agents.state import AgentState
+from smartgrid_mas.agents.types import AgentType
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score
 from smartgrid_mas.detection.network_attack_evidence import infer_network_attack_evidence
 from smartgrid_mas.detection.multilayer_detection import (
@@ -15,6 +16,26 @@ from smartgrid_mas.detection.multilayer_detection import (
     network_dos_detector,
     sustained_suspicion,
 )
+
+
+# ---- Approach 3: Per-agent-type threshold multipliers ----
+# Substations have higher natural variance → raise thresholds to avoid noise.
+# Breakers are binary-ish (on/off) → raise thresholds since deviations are rare
+# but large when real.  Generators and PMUs have tight baselines → keep default.
+_AGENT_TYPE_SCORE_MULT: dict[str, float] = {
+    AgentType.GENERATOR: 1.00,
+    AgentType.PMU: 1.00,
+    AgentType.SUBSTATION: 1.25,
+    AgentType.BREAKER: 1.20,
+    AgentType.SECURITY: 1.00,
+}
+_AGENT_TYPE_PROB_MULT: dict[str, float] = {
+    AgentType.GENERATOR: 1.00,
+    AgentType.PMU: 1.00,
+    AgentType.SUBSTATION: 1.10,
+    AgentType.BREAKER: 1.08,
+    AgentType.SECURITY: 1.00,
+}
 
 
 def _env_float(key: str, default: float) -> float:
@@ -417,8 +438,12 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     # Tightened defaults (Apr 2026, round 3): aim for accuracy ~93-95%.
     # We now also raise min_strong_features to 3 in ROBUST and require the
     # severe_deviation gate to be at the new score_threshold floor.
-    score_threshold = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 3.60, 3.85, 4.10)
-    prob_threshold = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.80, 0.85, 0.90)
+    score_threshold_base = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 0.25, 0.35, 0.50)
+    prob_threshold_base = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.43, 0.45, 0.48)
+    # Approach 3: adjust thresholds per agent type
+    atype = getattr(agent, "agent_type", None)
+    score_threshold = score_threshold_base * _AGENT_TYPE_SCORE_MULT.get(atype, 1.0)
+    prob_threshold = min(0.98, prob_threshold_base * _AGENT_TYPE_PROB_MULT.get(atype, 1.0))
 
     prior_risk_component = float(getattr(st, "risk_score", agent.risk_score))
     detector_sensitivity = _profile_default_float("SMARTGRID_DETECTION_SENSITIVITY", 1.00, 1.00, 1.00)
@@ -558,32 +583,51 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
         )
     )
 
+    _trigger = "none"
     if risk_context <= 0.3:
-        a = 1 if (
-            severe_deviation
-            or signature_rescue_low
-            or (direct_confirmed and s >= low_risk_score_mult * relaxed_score_threshold and prob_conf >= max(low_risk_prob_floor, relaxed_prob_threshold))
-            or (hybrid_conf >= max(1.10, low_risk_hybrid_min) and direct_confirmed and hybrid_ready)
-            or (prev_flag == 1 and direct_confirmed and s >= (0.98 - persistence_bonus) * relaxed_score_threshold)
-            or (persistent_ready and s >= (0.95 - persistence_bonus) * relaxed_score_threshold and avg_recent_hybrid >= 1.05)
-        ) else 0
+        if severe_deviation:
+            a, _trigger = 1, "severe_dev"
+        elif signature_rescue_low:
+            a, _trigger = 1, "rescue_low"
+        elif direct_confirmed and s >= low_risk_score_mult * relaxed_score_threshold and prob_conf >= max(low_risk_prob_floor, relaxed_prob_threshold):
+            a, _trigger = 1, "direct_low"
+        elif hybrid_conf >= max(1.10, low_risk_hybrid_min) and direct_confirmed and hybrid_ready:
+            a, _trigger = 1, "hybrid_low"
+        elif prev_flag == 1 and direct_confirmed and s >= (0.98 - persistence_bonus) * relaxed_score_threshold:
+            a, _trigger = 1, "persist_low"
+        elif persistent_ready and s >= (0.95 - persistence_bonus) * relaxed_score_threshold and avg_recent_hybrid >= 1.05:
+            a, _trigger = 1, "persready_low"
+        else:
+            a = 0
     elif risk_context >= 0.7:
-        a = 1 if (
-            severe_deviation
-            or signature_rescue_high
-            or (direct_confirmed and s >= 0.98 * relaxed_score_threshold)
-            or (hybrid_conf >= max(1.10, 1.15 - suspicion_credit) and direct_confirmed and hybrid_ready)
-            or (persistent_ready and s >= (0.92 - persistence_bonus) * relaxed_score_threshold)
-        ) else 0
+        if severe_deviation:
+            a, _trigger = 1, "severe_dev"
+        elif signature_rescue_high:
+            a, _trigger = 1, "rescue_high"
+        elif direct_confirmed and s >= 0.98 * relaxed_score_threshold:
+            a, _trigger = 1, "direct_high"
+        elif hybrid_conf >= max(1.10, 1.15 - suspicion_credit) and direct_confirmed and hybrid_ready:
+            a, _trigger = 1, "hybrid_high"
+        elif persistent_ready and s >= (0.92 - persistence_bonus) * relaxed_score_threshold:
+            a, _trigger = 1, "persready_high"
+        else:
+            a = 0
     else:
-        a = 1 if (
-            severe_deviation
-            or signature_rescue_mid
-            or (direct_confirmed and s >= 1.00 * relaxed_score_threshold)
-            or (hybrid_conf >= max(1.12, 1.20 - suspicion_credit) and direct_confirmed and hybrid_ready)
-            or (prev_flag == 1 and direct_confirmed and s >= (0.95 - persistence_bonus) * relaxed_score_threshold)
-            or (persistent_ready and s >= (0.92 - persistence_bonus) * relaxed_score_threshold)
-        ) else 0
+        if severe_deviation:
+            a, _trigger = 1, "severe_dev"
+        elif signature_rescue_mid:
+            a, _trigger = 1, "rescue_mid"
+        elif direct_confirmed and s >= 1.00 * relaxed_score_threshold:
+            a, _trigger = 1, "direct_mid"
+        elif hybrid_conf >= max(1.12, 1.20 - suspicion_credit) and direct_confirmed and hybrid_ready:
+            a, _trigger = 1, "hybrid_mid"
+        elif prev_flag == 1 and direct_confirmed and s >= (0.95 - persistence_bonus) * relaxed_score_threshold:
+            a, _trigger = 1, "persist_mid"
+        elif persistent_ready and s >= (0.92 - persistence_bonus) * relaxed_score_threshold:
+            a, _trigger = 1, "persready_mid"
+        else:
+            a = 0
+    st.trigger_path = _trigger
 
     st.deviation_score = s
     st.anomaly_flag = a
@@ -637,29 +681,64 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
         or explicit_dos_signature or explicit_mitm_signature
     )
     if a == 1:
-        # Tier-A suppression: marginal score + no signature + weak ML
-        marginal_score = score_ratio < 3.50
-        weak_lstm = float(getattr(st, "anomaly_prob_lstm", 0.0) or 0.0) < 0.60
-        weak_network = float(getattr(st, "network_intrusion_prob", 0.0) or 0.0) < 0.55
-        no_hybrid = float(hybrid_conf) < 1.05
-        if marginal_score and no_signature and weak_lstm and weak_network and no_hybrid:
+        # Tier-A suppression: marginal score with weak supporting evidence.
+        # Suppress if score is marginal AND at least 3 of 4 weakness indicators hold.
+        marginal_score = score_ratio < 4.50
+        weak_lstm = float(getattr(st, "anomaly_prob_lstm", 0.0) or 0.0) < 0.75
+        weak_network = float(getattr(st, "network_intrusion_prob", 0.0) or 0.0) < 0.65
+        no_hybrid = float(hybrid_conf) < 1.18
+        weakness_count = int(no_signature) + int(weak_lstm) + int(weak_network) + int(no_hybrid)
+        if marginal_score and weakness_count >= 3:
             a = 0
             st.anomaly_flag = a
             st.risk_score = agent.update_risk_score_from_flag(a)
             st.fp_suppressed = 1
 
-    # Tier-B intentionally omitted. Multiple variants tested (criticality-weighted,
-    # spike-based, percentile-based) all sacrificed recall to reduce FPs further.
-    # The 94.3% accuracy with 100% recall is the defensible operating point.
-    # Going lower (e.g. 96-98% accuracy) would require accepting recall < 100%,
-    # which is the wrong tradeoff for security-critical infrastructure.
+    # Tier-B suppression: isolated spike detector
+    # If the agent was clean for most of the recent window and the current
+    # score is not overwhelmingly strong, this is noise not an attack.
+    if a == 1 and not severe_deviation and not physical_signature_confirmed and not network_signature_confirmed:
+        dev_hist = list(getattr(agent, "deviation_history", []))
+        if len(dev_hist) >= 3:
+            below_threshold_count = sum(1 for d in dev_hist[-4:] if d < relaxed_score_threshold)
+            if below_threshold_count >= 3 and score_ratio < 2.0 and float(hybrid_conf) < 1.20:
+                a = 0
+                st.anomaly_flag = a
+                st.risk_score = agent.update_risk_score_from_flag(a)
+                st.fp_suppressed = getattr(st, "fp_suppressed", 0) or 0
+                st.fp_suppressed = max(int(st.fp_suppressed), 3)
+
+    # ---- Approach 2: Confirmation window (marginal detections only) ----
+    # Only require confirmation for WEAK signals — strong detections pass
+    # immediately.  This prevents the window from killing real attacks that
+    # start mid-cycle with a strong first signal.
+    confirm_enabled = _env_int("SMARTGRID_CONFIRM_WINDOW_ENABLED", 1) == 1
+    confirm_need = max(1, _env_int("SMARTGRID_CONFIRM_WINDOW_NEED", 2))
+    confirm_span = max(confirm_need, _env_int("SMARTGRID_CONFIRM_WINDOW_SPAN", 3))
+    confirm_hybrid_floor = _env_float("SMARTGRID_CONFIRM_HYBRID_FLOOR", 1.15)
+    is_strong_signal = (
+        hybrid_conf >= confirm_hybrid_floor
+        or severe_deviation
+        or physical_signature_confirmed
+        or network_signature_confirmed
+    )
+    if confirm_enabled and a == 1 and prev_flag == 0 and not is_strong_signal:
+        recent_for_confirm = list(agent.anomaly_flag_history)[-confirm_span:]
+        prior_positives = sum(int(f) for f in recent_for_confirm)
+        if prior_positives < (confirm_need - 1):
+            a = 0
+            st.anomaly_flag = a
+            st.risk_score = agent.update_risk_score_from_flag(a)
+            st.fp_suppressed = getattr(st, "fp_suppressed", 0) or 0
+            st.fp_suppressed = max(int(st.fp_suppressed), 2)
 
     # ---- Multi-layer detection (Options B + C) ----
     multilayer_enabled = _env_int("SMARTGRID_MULTILAYER_ENABLED", 1) == 1
     multilayer_label = "NONE"
     multilayer_conf = 0.0
     multilayer_reason = ""
-    if multilayer_enabled and a == 0:
+    was_suppressed = int(getattr(st, "fp_suppressed", 0) or 0) > 0
+    if multilayer_enabled and a == 0 and not was_suppressed:
         layer_b = sustained_suspicion(agent.anomaly_prob_history)
         layer_c1 = cusum_fdi_detector(agent.x_history, agent.bx, scale=agent.thx)
         layer_c2 = network_dos_detector(st.y_cyber, agent.by)
@@ -693,4 +772,5 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     agent.anomaly_flag_history.append(int(a))
     agent.anomaly_prob_history.append(float(prob_conf))
     agent.hybrid_conf_history.append(float(hybrid_conf))
+
     return st

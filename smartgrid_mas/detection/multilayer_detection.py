@@ -326,12 +326,16 @@ def integrity_mitm_detector(
 # ---------------------------------------------------------------------------
 def combine_layers(*results: DetectionLayerResult) -> DetectionLayerResult:
     """
-    OR-with-precedence: an agent is flagged if any layer fires. The label
-    chosen is the firing layer with the highest confidence; the temporal
-    accumulator (label SUSTAINED) defers to any specific-type detector that
-    also fires, since type-specific results carry domain meaning.
+    OR-with-precedence: an agent is flagged if any layer fires above the
+    minimum confidence floor.  The label chosen is the firing layer with
+    the highest confidence; the temporal accumulator (label SUSTAINED)
+    defers to any specific-type detector that also fires.
+
+    The confidence floor prevents marginal multilayer evidence from
+    re-promoting flags that Tier-A suppression already killed.
     """
-    fired = [r for r in results if r.fired]
+    min_conf = _env_float("SMARTGRID_MULTILAYER_MIN_CONFIDENCE", 0.82)
+    fired = [r for r in results if r.fired and r.confidence >= min_conf]
     if not fired:
         return _NULL_RESULT
     typed = [r for r in fired if r.label not in ("SUSTAINED", "NONE")]
