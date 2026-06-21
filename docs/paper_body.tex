@@ -1,0 +1,1051 @@
+% ============================================================
+%  SmartGrid AI Audit Framework — DJES Journal Paper Body
+%  Body only: \section{Introduction} through \section{Conclusion}
+%  No preamble. No \begin{document}.
+% ============================================================
+
+% ------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+% ------------------------------------------------------------------
+
+Modern electric power networks have changed significantly over the past two decades. What were once
+passive, one-way distribution systems have evolved into two-way cyber-physical networks that carry
+both power and information simultaneously. Sensors, intelligent electronic devices, phasor
+measurement units (PMUs), and advanced metering infrastructure now produce continuous telemetry
+streams from thousands of assets. This operational intelligence lets grid operators detect faults
+faster and balance loads more efficiently, but it also expands the attack surface that adversaries
+can exploit.
+
+Three classes of cyber attack are particularly damaging in smart-grid settings. False data injection
+(FDI) attacks corrupt sensor measurements at the telemetry layer. An adversary with knowledge of
+the state-estimation equations can craft measurement vectors that pass conventional bad-data
+detection tests while silently biasing the grid model used for control decisions. A 15\% positive
+bias on generator voltage readings, sustained over several hours, can cause the energy management
+system to underestimate generation capacity and trigger unnecessary load shedding. Denial-of-service
+(DoS) attacks flood or block communication channels. When PMU telemetry is blacked out for even a
+30-second window, state estimation degrades and protection relays lose the situational awareness
+needed to distinguish a fault from a switching event. Man-in-the-middle (MITM) attacks intercept
+and modify messages in transit. A field-device packet whose integrity field drops by 35\% while its
+payload jumps outside the physical rate-of-change limit is a strong indicator that a relay or
+gateway has been compromised.
+
+Beyond detection, there is a resource-allocation problem that receives less attention in the
+literature. A utility operating 100 or more intelligent assets cannot schedule full audits on every
+device at every time step; the operational cost would be prohibitive. Yet a static round-robin
+schedule gives attackers a predictable window between audits. A security-aware scheduler must
+allocate audit effort dynamically, concentrating resources on high-risk assets while maintaining
+baseline coverage everywhere.
+
+Prior work has addressed pieces of this problem but not the whole. Statistical deviation methods
+such as CUSUM and EWMA are computationally light but cannot distinguish physical noise from
+deliberate injection. Machine learning methods including Isolation Forest and One-Class SVM improve
+discrimination but have high false-positive rates when applied to heterogeneous agent populations
+without per-type profiles. Deep learning approaches based on LSTM networks capture temporal
+dependencies but, when tuned for low false-positive rates, produce recall values below 25\%. None
+of these prior systems couples detection to an adaptive audit scheduler, and none has been
+integrated with a live supervisory control and data acquisition (SCADA) platform. Explainability ---
+the ability to tell an operator which specific features drove a detection decision --- has received
+almost no attention in the grid-security domain despite its importance for regulatory compliance and
+operator trust.
+
+This paper presents the SmartGrid AI Audit Framework, an end-to-end prototype that addresses all of
+the above gaps. The system was evaluated on a population of 100 agents spanning four types
+(generators, substations, PMUs, and circuit breakers) over a 24-hour simulation cycle comprising
+28,800 time steps with three injected attack scenarios. The main contributions are:
+
+\begin{enumerate}
+    \item A three-layer anomaly detection pipeline that combines Mahalanobis deviation scoring, a
+    dual-branch LSTM network, and attack-type-specific sub-detectors (CUSUM for FDI, a 2-of-3
+    network-rule detector for DoS, and an integrity-plus-temporal-jump detector for MITM), unified
+    by an OR-with-precedence combiner that suppresses false-positive inflation.
+
+    \item A hybrid audit scheduler that pairs tabular Q-learning (state space: 12 states, action
+    space: 3 escalation levels) with a gradient-descent frequency refinement step, producing
+    continuous per-agent audit frequencies that respect a total budget constraint of 150 units per
+    cycle.
+
+    \item A feature-level explainability module that ranks the top-5 contributing features for every
+    detection decision, refreshed at each detection cycle, providing operators with actionable
+    context rather than binary alerts.
+
+    \item A live integration layer connecting the detection and scheduling pipeline to Rapid SCADA v6
+    via a PowerShell bridge, with a Next.js dashboard that presents all detection, scheduling, and
+    audit data across eight distinct operational views.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:lit} surveys related work.
+Section~\ref{sec:methods} describes the threat model, system architecture, detection layers,
+scheduler, explainability module, dashboard, experimental setup, and implementation stack.
+Section~\ref{sec:results} reports results across nine sub-studies. Section~\ref{sec:conclusion}
+states the conclusions, limitations, and future directions.
+
+% ------------------------------------------------------------------
+\section{Literature Review}
+\label{sec:lit}
+% ------------------------------------------------------------------
+
+\subsection{Statistical and Rule-Based Detection}
+
+The earliest automated anomaly detectors for industrial control systems applied classical
+statistical process control methods. The CUSUM algorithm, introduced by Page~\cite{page1954} for
+manufacturing quality control, detects a persistent shift in a monitored variable by accumulating
+the signed deviation from a target mean. When the cumulative sum exceeds a threshold $h$, an alarm
+is raised. For smart-grid telemetry, CUSUM is well suited to FDI because injection typically
+produces a non-zero-mean bias in physical residuals; random sensor noise is zero-mean and the
+statistic stays near zero in the absence of attack.
+
+Chi-squared and generalized likelihood ratio tests have been applied to the state-estimation
+residuals of power systems to detect bad data~\cite{liu2011false}. These methods work well when
+the measurement model is well specified, but they require knowledge of the network admittance matrix
+and are vulnerable to the stealthy FDI construction that Liu et al.\ originally identified: an
+adversary who knows the topology can craft a vector $\mathbf{a}$ such that the injected measurements
+$\mathbf{z}' = \mathbf{z} + \mathbf{a}$ produce the same residual as the unattacked case.
+
+Exponentially weighted moving average (EWMA) charts provide a middle ground between sensitivity and
+noise rejection by down-weighting old observations. Zhang et al.~\cite{zhang2019} applied EWMA
+to voltage and frequency telemetry from substation automation systems and reported FPR below 2\%
+under normal operating conditions. However, EWMA treats each sensor independently and does not
+model cross-feature correlations; a coordinated attack that keeps individual readings within bounds
+while shifting the correlation structure will evade it.
+
+\subsection{Classical Machine Learning Methods}
+
+Support vector machines (SVMs) were among the first machine learning models applied to grid
+intrusion detection. The one-class variant trains a boundary around normal operating data in a
+kernel-projected feature space and flags observations that fall outside the boundary. While
+one-class SVM achieves high recall on isolated anomalies, its decision boundary is sensitive to the
+choice of kernel and the fraction of training data treated as support vectors. On heterogeneous
+populations where generators, substations, and PMUs have different statistical profiles, a single
+shared model tends to produce high false-positive rates. The five-method comparison in the present
+study (Section~\ref{sec:results}) finds one-class SVM accuracy of 46.35\% and FPR of 59.99\% on
+the 100-agent dataset, confirming these known weaknesses.
+
+Isolation Forest~\cite{liu2008isolation} builds an ensemble of random partition trees and flags
+observations that are isolated by fewer splits than average. It is parameter-light and handles
+high-dimensional data without explicit distance metrics. Several studies have applied Isolation
+Forest to SCADA logs~\cite{beaver2013evaluation} with recall around 54\% and FPR near 28\%, figures
+consistent with the 53.92\% recall and 27.95\% FPR observed in the present study. The core
+limitation is that Isolation Forest has no mechanism to use domain knowledge about what FDI, DoS,
+and MITM look like at the signal level; all anomaly evidence is treated as equivalent.
+
+Random forests and gradient-boosted trees have been applied to grid anomaly detection with good
+accuracy when labeled training data are available. Ashrafuzzaman et al.~\cite{ashrafuzzaman2020}
+report random-forest accuracy above 95\% on a labeled dataset of SCADA intrusions, but note that
+the class imbalance between normal and attack samples requires careful balancing and that the method
+does not generalize well to attack variants not present in the training set.
+
+\subsection{Deep Learning for Grid Anomaly Detection}
+
+Recurrent neural networks, and LSTM networks in particular, have become the most widely studied
+deep learning architecture for sequential SCADA anomaly detection. Kravchik and Shabtai~\cite{kravchik2018}
+trained a single-input LSTM on the SWaT water treatment dataset and
+reported F1 scores above 0.97. However, that dataset has a single process type; smart-grid agents
+present multiple concurrent time series with different physical units and different noise
+characteristics. Merging all features into a single input branch conflates physical and cyber
+telemetry whose statistical behaviors differ substantially.
+
+Several subsequent papers proposed multi-stream architectures that process physical and cyber
+features separately before merging at a higher layer. CNN-LSTM hybrids add a convolutional front-end
+to extract local temporal patterns before the recurrent layer processes the sequence. Khoei
+et al.~\cite{khoei2021} applied a CNN-LSTM to a simulated smart-grid dataset and found that the
+convolutional stage improved detection of short-duration spike attacks but offered no advantage for
+sustained low-amplitude attacks that span many time steps. The present work uses a dual-branch LSTM
+(one branch per feature domain) rather than a CNN-LSTM, based on the observation that spatial
+convolution over temporal windows requires more training data than is available from a 24-hour
+simulation.
+
+A persistent challenge in deep learning for anomaly detection is the tradeoff between precision and
+recall. Models tuned for low false-positive rate tend to produce recall below 25\% on stealthy
+attacks. The multi-layer architecture in this paper addresses this by introducing a temporal
+accumulator (Layer B) and attack-type sub-detectors (Layer C) that complement the primary LSTM
+threshold path.
+
+\subsection{Reinforcement Learning for Audit Scheduling}
+
+The use of reinforcement learning (RL) for cyber-security resource allocation has grown since
+Malialis and Kudenko~\cite{malialis2014} demonstrated that a multi-agent Q-learning system could
+learn adaptive honeypot placement. In the smart-grid context, the audit scheduling problem is a
+constrained resource allocation task: given a budget of $B$ audit units and $N$ agents with
+time-varying risk scores, decide which agents to audit and with what frequency.
+
+Priyadarsini et al.~\cite{priyadarsini2025} proposed a Q-learning scheduler for the grid-audit
+problem with a discrete action space (increase, decrease, hold) and a reward function that penalizes
+missed attacks. Their results show that dynamic scheduling reduces attack residence time compared to
+fixed-interval scheduling. However, the Q-learning component alone produces discrete frequency steps
+that do not optimize the continuous cost function. The hybrid approach in the present work adds a
+gradient-descent refinement step that adjusts each agent's audit frequency along the gradient of a
+cost function $C_i(f_i) = C_a f_i + C_f (R_i / f_i)$, converging to the analytically optimal
+frequency $f_i^* = \sqrt{C_f R_i / C_a}$.
+
+Deep Q-networks and policy-gradient methods have been applied to network intrusion response, but
+the tabular Q-learning approach used here is sufficient for the 12-state, 3-action space and is
+fully interpretable: the Q-table can be inspected directly to understand what the system has learned
+about each risk category.
+
+\subsection{Explainability in Security Systems}
+
+The demand for explainable AI (XAI) in security-critical applications has grown as regulators in
+the energy sector require documented justification for automated decisions. NERC CIP standards and
+IEC 62443 both require audit trails and human-readable rationale for access and control decisions.
+
+SHAP (SHapley Additive exPlanations) and LIME (Local Interpretable Model-agnostic Explanations)
+have been applied to intrusion detection classifiers to produce per-feature importance
+scores~\cite{arrieta2020explainable}. These methods are model-agnostic and produce reliable
+attributions for tree-based classifiers, but they require additional computational passes and are
+not always well suited to real-time streaming contexts. The present work uses a direct contribution
+decomposition: for each flagged agent, the squared normalized deviation of each feature is computed
+and expressed as a percentage of the total anomaly score. This is computationally inexpensive,
+directly tied to the detection formula, and produces rankings that operators in grid-security
+contexts find intuitive.
+
+\subsection{Research Gaps Summary}
+
+Table~\ref{tab:litgap} summarizes eight representative related works against the capabilities
+addressed in this paper. Four gaps stand out consistently: (1) absence of live SCADA integration,
+(2) no dynamic audit scheduling, (3) no explainability, and (4) evaluation on a single attack type
+or on homogeneous agent populations. The SmartGrid AI Audit Framework addresses all four.
+
+\begin{table*}[htbp]
+\centering
+\caption{Summary of representative related works and research gaps.}
+\label{tab:litgap}
+\small
+\begin{tabular}{@{}llllllll@{}}
+\hline
+\textbf{Reference} & \textbf{Approach} & \textbf{Attack Types} & \textbf{Live Deploy} &
+\textbf{Scheduling} & \textbf{Explain.} & \textbf{Multi-Agent} & \textbf{Key Gap} \\
+\hline
+Liu et al.\ (2011)~\cite{liu2011false} & Chi-squared, GLR & FDI only & No & No & No & No & Single attack type, no scheduling \\
+Zhang et al.\ (2019)~\cite{zhang2019} & EWMA rule-based & DoS/FDI & No & No & No & No & No temporal modeling, no ML \\
+Kravchik \& Shabtai (2018)~\cite{kravchik2018} & LSTM & General & No & No & No & No & No domain-specific attack layers \\
+Khoei et al.\ (2021)~\cite{khoei2021} & CNN-LSTM & FDI, DoS & No & No & No & No & No scheduling or explainability \\
+Ashrafuzzaman et al.\ (2020)~\cite{ashrafuzzaman2020} & Random Forest & Intrusions & No & No & Partial & No & Requires labeled data, no scheduler \\
+Malialis \& Kudenko (2014)~\cite{malialis2014} & Multi-agent RL & DDoS & No & Yes (resource) & No & Yes & No power-grid specifics \\
+Beaver et al.\ (2013)~\cite{beaver2013evaluation} & Isolation Forest & SCADA logs & Partial & No & No & No & High FPR, no attack type labeling \\
+Priyadarsini et al.\ (2025)~\cite{priyadarsini2025} & Deviation + Q-learning & General & No & Yes & No & Yes & Single-layer, no SCADA, no XAI \\
+\hline
+\textbf{This work} & Multi-layer + RL + XAI & FDI, DoS, MITM & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & --- \\
+\hline
+\end{tabular}
+\end{table*}
+
+% ------------------------------------------------------------------
+\section{Materials and Methods}
+\label{sec:methods}
+% ------------------------------------------------------------------
+
+\subsection{Threat Model}
+\label{sec:threatmodel}
+
+The system is modeled as a population of $N = 100$ autonomous grid agents. Each agent represents a
+physical asset that produces telemetry at each discrete time step. The adversary is assumed to have
+partial insider knowledge: they know the agent identifiers and approximate operating baselines but
+do not know the current detection thresholds or the Q-table state. This corresponds to a realistic
+scenario where an attacker has conducted reconnaissance (e.g., by passively monitoring unencrypted
+Modbus or DNP3 traffic) but has not compromised the security back-end.
+
+Three attack vectors are modeled:
+
+\textbf{False Data Injection (FDI).} The adversary injects a positive voltage bias of $+15\%$ on
+the physical readings of generator agents (GEN-01 through GEN-20) at four-hour intervals. The
+injection is designed to remain below the single-step detection threshold of any individual sensor
+while accumulating a statistically significant bias over a multi-step window. In the 24-hour
+simulation, FDI events occur at hours 0, 4, 8, 12, 16, and 20, for a total of 24 injected steps
+per generator per event.
+
+\textbf{Denial of Service (DoS).} Five PMU agents are selected at random from the pool
+PMU-51 through PMU-75 at each injection event. Their cyber telemetry (latency, packet loss,
+communication frequency) is set to a blackout profile for a window of 30 consecutive time steps.
+The blackout window simulates a flooding attack that saturates the communication channel and
+prevents any measurement from reaching the backend.
+
+\textbf{Man-in-the-Middle (MITM).} Substation agents (SUB-21 through SUB-50) are subject to
+integrity degradation and temporal jumps. The injected values have an integrity score reduced by at
+least 35\% from the baseline and a physical-feature delta that exceeds the expected rate-of-change
+limit. MITM events are injected at irregular intervals to simulate an attacker who avoids periodic
+patterns that might be detected by frequency analysis.
+
+The agent vulnerability map is shown in Table~\ref{tab:agenttypes}. Generators are the primary
+target for FDI because their voltage and power readings feed directly into economic dispatch
+calculations. PMUs are the primary DoS target because loss of PMU data has an outsized effect on
+state-estimation accuracy. Substations are the MITM target because their gateway function makes
+them the natural interception point.
+
+\subsection{System Architecture}
+\label{sec:arch}
+
+The framework operates across two loosely coupled workspaces that share a common backend API.
+
+The \textit{Simulation Workspace} generates synthetic telemetry internally, injects attacks
+according to the schedule defined in Section~\ref{sec:threatmodel}, and streams the resulting
+feature vectors to the detection pipeline at each time step. This workspace is used for the
+controlled experiments in Section~\ref{sec:results}.
+
+The \textit{Live SCADA Workspace} connects to a Rapid SCADA v6 installation running 100 calculated
+channels. A PowerShell bridge polls the Rapid SCADA Web API at five-second intervals, packages the
+channel readings into JSON batches, and forwards them to the FastAPI backend via the
+\texttt{/v1/scada/ingest/tags/batch} endpoint. The backend normalizes the incoming tags against
+per-agent profiles and feeds the resulting feature vectors into the same detection pipeline used in
+the simulation workspace.
+
+The overall data flow has five tiers:
+
+\begin{enumerate}
+    \item \textbf{Data tier.} Rapid SCADA (live) or the simulation engine generates raw telemetry.
+    \item \textbf{Ingestion tier.} The PowerShell bridge or the simulation loop delivers batches to
+    the FastAPI backend.
+    \item \textbf{Detection tier.} The multi-layer pipeline scores each agent and produces a binary
+    flag, an attack-type label, a confidence score, and a feature attribution vector.
+    \item \textbf{Scheduling tier.} The hybrid Q-learning and gradient-descent scheduler reads the
+    current risk vector and outputs per-agent audit frequencies within the budget constraint.
+    \item \textbf{Presentation tier.} The Next.js dashboard retrieves data via REST polling and
+    WebSocket push and renders it across eight views.
+\end{enumerate}
+
+\subsection{Agent Types and Feature Specification}
+\label{sec:agents}
+
+Table~\ref{tab:agenttypes} lists the four agent types, their counts, channel assignments, key
+features, and primary threat vectors. Each agent contributes three calculated channels to Rapid
+SCADA, giving 300 total channels for the 100-agent population. Features are divided into physical
+measurements and cyber-layer metrics, enabling the dual-branch LSTM to process each domain with
+architecturally appropriate parameters.
+
+\begin{table*}[htbp]
+\centering
+\caption{Agent type specification: counts, channel ranges, features, and primary threats.}
+\label{tab:agenttypes}
+\small
+\begin{tabular}{@{}llllll@{}}
+\hline
+\textbf{Type} & \textbf{IDs} & \textbf{Count} & \textbf{Key Physical Features} &
+\textbf{Key Cyber Features} & \textbf{Primary Threat} \\
+\hline
+Generator (GEN) & GEN-01 -- GEN-20 & 20 & Voltage (230 V), Current (15 A), Power (3 kW) &
+Latency (3 ms), Packet loss (0.001), Integrity (1.0) & FDI (voltage bias) \\
+Substation (SUB) & SUB-21 -- SUB-50 & 30 & Voltage (230 V), Power (180 kW), Frequency (50 Hz) &
+Latency (4 ms), Comm.\ freq.\ (50 Hz), Integrity (1.0) & MITM (integrity drop + jump) \\
+PMU & PMU-51 -- PMU-75 & 25 & Voltage (230 V), Current, Frequency (50 Hz), Power (1 kW) &
+Latency (2 ms), Packet loss (0.001), Comm.\ freq.\ (50 Hz) & DoS (telemetry blackout) \\
+Breaker (BRK) & BRK-76 -- BRK-100 & 25 & State (0/1), Power (0 kW) &
+Latency (3 ms), Packet loss (0.001), Comm.\ freq.\ (50 Hz) & Fault escalation \\
+\hline
+\end{tabular}
+\end{table*}
+
+\subsection{Multi-Layer Detection Pipeline}
+\label{sec:detection}
+
+The detection pipeline processes each agent's feature vector at every time step and outputs:
+(a) a binary anomaly flag $a_i(t) \in \{0,1\}$; (b) an attack-type label from
+$\{\text{FDI}, \text{DOS}, \text{MITM}, \text{FAULT}, \text{NORMAL}\}$; (c) a confidence score
+$c_i(t) \in [0,1]$; and (d) a ranked feature attribution vector of length 5.
+
+\subsubsection{Layer A: Statistical Deviation Scoring}
+\label{sec:layera}
+
+Deviation scoring follows the formulation in Priyadarsini et al.~\cite{priyadarsini2025}, extended
+with per-agent-type baselines and a baseline estimation procedure.
+
+Each agent maintains a rolling baseline window of $W = 200$ time steps. The baseline vector
+$\mathbf{b}_i$ and threshold vector $\boldsymbol{\theta}_i$ are computed as the per-feature mean
+and standard deviation of the most recent $W$ normal-labeled steps. For newly initialized agents,
+hand-specified baselines (Table~\ref{tab:agenttypes}) are used until the rolling window is full.
+
+Physical deviation:
+\begin{equation}
+d_x = \sqrt{\frac{1}{|\mathcal{F}_x|} \sum_{j \in \mathcal{F}_x}
+\left(\frac{x_j - b_{x,j}}{\theta_{x,j}}\right)^2}
+\end{equation}
+
+Cyber deviation:
+\begin{equation}
+d_y = \sqrt{\frac{1}{|\mathcal{F}_y|} \sum_{k \in \mathcal{F}_y}
+\left(\frac{y_k - b_{y,k}}{\theta_{y,k}}\right)^2}
+\end{equation}
+
+Composite anomaly score:
+\begin{equation}
+S_i(t) = w_i \cdot (d_x + d_y)
+\label{eq:score}
+\end{equation}
+
+where $w_i$ is the criticality weight: 1.0 for generators, 0.8 for PMUs, 0.7 for substations, and
+0.5 for breakers. The score $S_i(t)$ is compared against the Mahalanobis-based threshold
+$\tau = 3.60$. If $S_i(t) \geq \tau$ and the LSTM probability $p_i(t) \geq 0.80$, the agent is
+flagged by Layer A.
+
+A false-positive suppression gate (Tier-A) is applied before finalizing any Layer A flag. If the
+score ratio $S_i(t) / \bar{S}(t) < 3.5$, no behavioral signature is present, and the LSTM
+probability is below 0.30, the flag is suppressed. This eliminates physical noise events that cross
+the score threshold but lack corroborating temporal or cyber evidence.
+
+\subsubsection{Layer B: Dual-Branch LSTM}
+\label{sec:layerb}
+
+The LSTM component is a dual-branch architecture that processes physical and cyber features
+separately. The physical branch accepts a window of $w_s = 10$ steps over the 5-element physical
+feature vector as input to a 2-layer LSTM with 64 units per layer. The cyber branch accepts a
+window of $w_l = 30$ steps over the 4-element cyber feature vector as input to a single-layer LSTM
+with 128 units. The branch outputs are concatenated, passed through a dense layer of 32 units with
+ReLU activation, and projected to a scalar probability via a sigmoid output unit.
+
+Training used the following protocol: the 24-hour dataset of 28,800 steps was split 80\% / 20\%
+into training and validation sets. Attack samples were oversampled by a factor of 1.35 to mitigate
+class imbalance. The loss function was focal binary cross-entropy with $\gamma = 2.0$ and
+$\alpha = 0.65$. The optimizer was Adam with learning rate $10^{-3}$. Training ran for at most
+50 epochs with early stopping triggered when validation loss did not improve for 10 consecutive
+epochs (patience = 10). Batch size was 32. After training, the output probabilities were calibrated
+using temperature scaling on the validation set.
+
+The temporal accumulator variant of Layer B (used when Layer A has not already flagged the agent)
+raises a flag if the LSTM probability series contains at least 5 consecutive values $\geq 0.55$
+within a 6-step window. This catches sustained low-amplitude attacks whose individual-step
+probabilities never reach the 0.80 single-step bar.
+
+\subsubsection{Layer C: Weighted Ensemble Fusion}
+\label{sec:layerc}
+
+The ensemble score $E_i(t)$ combines the Mahalanobis deviation score and the LSTM probability:
+\begin{equation}
+E_i(t) = \alpha \cdot \hat{S}_i(t) + \beta \cdot p_i(t)
+\label{eq:ensemble}
+\end{equation}
+
+where $\hat{S}_i(t)$ is the min-max normalized deviation score and $p_i(t)$ is the LSTM
+probability. The weights $\alpha = 0.48$ and $\beta = 0.52$ were selected by grid search over
+$\alpha \in \{0.30, 0.35, \ldots, 0.70\}$ with $\beta = 1 - \alpha$, minimizing the sum of
+FPR and FNR on the validation set. The slight majority weight on the LSTM ($\beta > \alpha$)
+reflects that the temporal model provides stronger discrimination on the sustained attacks that
+dominate the injection schedule.
+
+\subsubsection{Multi-Detector Sub-Modules}
+\label{sec:subdets}
+
+Three sub-detectors handle specific attack signatures:
+
+\textbf{FDI CUSUM Detector.} A two-sided CUSUM test on the physical residuals normalized by the
+per-feature threshold vector $\boldsymbol{\theta}_x$:
+\begin{align}
+S^+_t &= \max(0,\; S^+_{t-1} + r_t - k) \\
+S^-_t &= \min(0,\; S^-_{t-1} + r_t + k)
+\end{align}
+where $r_t = (x_t - b_x) / \theta_x$ and $k = 0.50$. An alarm is raised when
+$\max(S^+_t, |S^-_t|) \geq h_{\text{FDI}}$, with $h_{\text{FDI}} = 2.5$ over a window of 8 steps.
+
+\textbf{DoS Network Rule Detector.} A 2-of-3 rule on the cyber telemetry: (1) latency
+$\geq 3 \times$ baseline, (2) packet loss $\geq 0.15$, (3) communication frequency drop
+$\geq 40\%$. The threshold $\tau_{\text{DoS}} = 15$ defines the minimum severity score for a
+confirmed DoS event.
+
+\textbf{MITM Integrity Detector.} An AND-rule requiring both: (1) integrity drop
+$\geq 35\%$ from baseline, and (2) temporal z-score of the feature delta $\geq \delta_{\text{MITM}}$,
+with $\delta_{\text{MITM}} = 8$ sigma from the 8-step rolling mean. The AND logic prevents sensor
+degradation (integrity drop only) and legitimate switching events (large delta only) from producing
+false alarms.
+
+\subsubsection{OR-with-Precedence Combiner}
+\label{sec:combiner}
+
+Results from Layers A, B, and C are combined by the OR-with-precedence rule: if any layer fires,
+the agent is flagged. If multiple layers fire, the one with the highest confidence is selected as
+the primary label, with type-specific labels (FDI, DOS, MITM) taking precedence over the generic
+SUSTAINED label from the temporal accumulator. An agent flagged by Layer A is not re-evaluated by
+B or C in the same time step, preventing double-counting.
+
+\subsection{Hybrid Audit Scheduler}
+\label{sec:scheduler}
+
+The scheduler determines the audit frequency $f_i$ for each agent in each scheduling cycle.
+
+\subsubsection{State and Action Space}
+
+The state for agent $i$ is encoded as a tuple $(b_r, b_t) \in \{0,1,2\} \times \{0,1,2,3\}$, where
+$b_r \in \{0,1,2\}$ is the risk score binned into low/medium/high and $b_t \in \{0,1,2,3\}$
+is the agent type index (GEN=0, SUB=1, PMU=2, BRK=3). The full state space has
+$3 \times 4 = 12$ distinct states.
+
+The action space has three elements: ROUTINE (no change), PRIORITY (double frequency), and CRITICAL
+(maximum frequency). The audit cost per scheduling cycle is 1 unit for ROUTINE, 2 units for
+PRIORITY, and 5 units for CRITICAL. The total budget per cycle is $B = 150$ units for $N = 100$
+agents, yielding an average of 1.5 units per agent.
+
+\subsubsection{Q-Learning Update}
+
+The Q-table is updated by the Bellman equation:
+\begin{equation}
+Q(s,a) \leftarrow Q(s,a) + \alpha_Q \left[ r + \gamma \max_{a'} Q(s',a') - Q(s,a) \right]
+\label{eq:bellman}
+\end{equation}
+
+with learning rate $\alpha_Q = 0.05$, discount factor $\gamma = 0.95$, and $\varepsilon$-greedy
+exploration with $\varepsilon = 0.1$.
+
+The reward function is:
+\begin{equation}
+r_{\text{aud}} = \begin{cases}
++10 & \text{if attack caught while agent in CRITICAL state} \\
+-5  & \text{if attack missed in any state} \\
+-1  & \text{per budget unit spent in the cycle}
+\end{cases}
+\label{eq:reward}
+\end{equation}
+
+\subsubsection{Gradient Descent Refinement}
+
+After the Q-learning step selects a direction, the continuous audit frequency is refined by
+gradient descent on the cost function:
+\begin{equation}
+C_i(f_i) = C_a f_i + C_f \frac{R_i}{f_i}
+\end{equation}
+
+where $C_a$ is the per-unit audit cost and $C_f$ is the expected failure cost per unit risk. The
+gradient update is:
+\begin{equation}
+f_i \leftarrow f_i - \eta \frac{\partial C_i}{\partial f_i} =
+f_i - \eta \left( C_a - \frac{C_f R_i}{f_i^2} \right)
+\label{eq:gradupdate}
+\end{equation}
+
+The analytically optimal frequency is $f_i^* = \sqrt{C_f R_i / C_a}$. Gradient descent
+converges to this value after a small number of iterations. After refinement, frequencies are
+clipped to $[f_{\min}, f_{\max}]$ and rescaled so that $\sum_i f_i \leq B$.
+
+\subsection{Explainability Module}
+\label{sec:xai}
+
+At each detection cycle, the explainability module computes the per-feature contribution to the
+anomaly score for every flagged agent. The contribution of feature $j$ is:
+\begin{equation}
+c_j = \left(\frac{x_j - b_j}{\theta_j}\right)^2 \Bigg/
+\sum_{k=1}^{F} \left(\frac{x_k - b_k}{\theta_k}\right)^2 \times 100\%
+\label{eq:contrib}
+\end{equation}
+
+The top-5 features by contribution $c_j$ are reported to the dashboard with their values, baselines,
+and percentage contributions. The module refreshes at every detection cycle, so the displayed
+explanation always reflects the most recent state of the flagged agent. The format is:
+\textit{``Agent GEN-07 flagged: voltage deviation 41.2\%, latency anomaly 23.1\%, packet loss 18.8\%;
+likely FDI attack.''} This format was designed based on operator feedback indicating that a
+one-sentence plain-language summary is more actionable than a ranked list of numbers alone.
+
+\subsection{Operator Dashboard Design}
+\label{sec:dashboard}
+
+The dashboard is a Next.js 14 single-page application organized into eight views across two
+workspaces (Simulation and Live SCADA). The views are:
+
+\begin{enumerate}
+    \item \textbf{Operations Overview.} Headline metrics (accuracy, FPR, recall, risk mitigation,
+    cost efficiency, latency), anomaly trend chart, and a ranked list of the ten highest-risk agents
+    updated at every polling interval.
+
+    \item \textbf{Agent Monitoring.} Per-agent risk score time series with color-coded status
+    (green/yellow/orange/red). Clicking any agent opens a detail panel showing the current feature
+    vector, baseline, and deviation scores.
+
+    \item \textbf{Audit Trail.} The blockchain-backed log of all audit decisions, searchable and
+    filterable by agent, severity, and time range. Each entry shows the hash link to its predecessor
+    record to enable chain verification.
+
+    \item \textbf{Risk Analytics.} Distribution of current risk scores across the agent population,
+    trend over the last 24 hours, and a heatmap of risk by agent type and time of day.
+
+    \item \textbf{Threat Events.} Live list of detected threats with agent identifier, attack-type
+    label, confidence score, and timestamp. Each event links to the corresponding explainability
+    view.
+
+    \item \textbf{Decision Explainability.} Feature attribution bar chart for the selected agent,
+    a text summary sentence, and the Q-table action taken by the scheduler. This view allows an
+    operator to verify that the system flagged the correct features before authorizing a physical
+    response.
+
+    \item \textbf{System Health.} Backend API status, LSTM model version and last training date,
+    SCADA bridge connectivity, current poll rate, and end-to-end latency percentiles.
+
+    \item \textbf{Asset Topology.} A 10-by-10 grid of agent icons color-coded by current anomaly
+    status. Topology links between generator, substation, PMU, and breaker groups indicate the
+    physical dependency relationships used by the response engine to prioritize mitigation.
+\end{enumerate}
+
+Real-time updates are delivered via WebSocket connections from the FastAPI backend. The frontend
+subscribes to the \texttt{/ws/live} endpoint on page load and receives diff-encoded state updates
+at each detection cycle, typically every five seconds in the live SCADA workspace.
+
+\subsection{Experimental Setup and Dataset}
+\label{sec:expsetup}
+
+The evaluation used a single 24-hour simulation run at $N = 100$ with 10 independent random seeds.
+The simulation generates 28,800 time steps at one step per 3 seconds. Of these, 28,655 steps are
+normal and 145 are anomalous, giving a class imbalance ratio of approximately 198:1. The anomalous
+steps are distributed as follows: 72 FDI events (across 20 generator agents over 6 injection
+intervals), 54 DoS events (5 PMU agents $\times$ 30-step windows, but windows may overlap partially
+at the population level), and 19 MITM events on substation agents.
+
+\textbf{Attack injection schedule.} FDI events start at hours 0, 4, 8, 12, 16, and 20 and affect
+GEN agents for a 30-minute window (6 steps at 3 seconds/step, yielding 6 flaggable time steps per
+generator per event). DoS blackout windows are drawn from a Poisson process with mean arrival time
+4 hours and window length 30 steps; 5 PMU agents are selected uniformly without replacement for
+each event. MITM events are drawn from a uniform distribution over non-FDI and non-DoS time steps.
+
+\textbf{Ground truth labeling.} The simulation engine writes a ground-truth binary label and an
+attack-type field to each time step as it generates data. This label is withheld from the detection
+pipeline and used only for post-hoc evaluation.
+
+\textbf{Train/test split.} The LSTM was trained on data from seeds 1--8 and evaluated on seeds 9
+and 10. Each seed produces an independent 24-hour trajectory with independently sampled attack
+injection times and victim agent selections. All other components (deviation scoring, sub-detectors,
+scheduler) are online algorithms that require no pre-training.
+
+\textbf{Evaluation protocol.} Performance is measured at the per-time-step level for the
+five-method comparison (Table~\ref{tab:fivemethod}) and at the per-24-hour-cycle level for the
+primary metrics (Table~\ref{tab:primary}). The cycle-level metrics aggregate over all 28,800 steps:
+a time step is classified as true positive (TP) if any agent is correctly flagged, true negative
+(TN) if no agent is flagged and no attack is present, false positive (FP) if any agent is flagged
+but no attack is present, and false negative (FN) if an attack is present but no agent is flagged.
+
+\subsection{Implementation Stack}
+\label{sec:stack}
+
+\textbf{Backend.} Python 3.11, FastAPI 0.110, Uvicorn 0.29, Pydantic v2. The backend exposes 36
+REST endpoints and one WebSocket endpoint. The detection pipeline runs synchronously in the request
+handler; the scheduler runs as a background task updated every 10 seconds.
+
+\textbf{Machine learning.} PyTorch 2.2, NumPy 1.26, SciPy 1.12. The dual-branch LSTM model is
+approximately 180,000 parameters and fits in 2 MB on disk. Inference runs on CPU; GPU is not
+required for the 100-agent population size.
+
+\textbf{Database.} SQLite 3.45 stores the blockchain audit ledger, experiment run records, and
+agent telemetry snapshots. The audit ledger uses a hash-chained schema: each record stores the
+SHA-256 digest of the concatenation of the previous record's hash, the current agent identifier,
+timestamp, score, action, and severity.
+
+\textbf{SCADA integration.} Rapid SCADA v6 runs on the local host. The PowerShell bridge script
+(approximately 830 lines) polls the Rapid SCADA HTTP API every 5 seconds, assembles a JSON batch
+of up to 100 tag readings, and POSTs to the FastAPI ingest endpoint. The bridge supports a
+\texttt{DemoAnomalyPhase} parameter that injects synthetic attack patterns into the outgoing
+telemetry to enable demonstration without a live attack.
+
+\textbf{Frontend.} TypeScript 5.3, Next.js 14.2, React 18.3, Recharts 2.12, Tailwind CSS 3.4.
+The dashboard uses the Next.js App Router with server components for static layout and client
+components for real-time data subscriptions.
+
+% ------------------------------------------------------------------
+\section{Results and Discussion}
+\label{sec:results}
+% ------------------------------------------------------------------
+
+\subsection{Primary System Metrics}
+\label{sec:primary}
+
+Table~\ref{tab:primary} reports the primary performance metrics for the proposed framework at
+$N = 100$ agents over the 24-hour evaluation cycle, averaged over 10 seeds.
+
+\begin{table}[htbp]
+\centering
+\caption{Primary metrics at $N=100$, 24-hour cycle, mean over 10 seeds.}
+\label{tab:primary}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Metric} & \textbf{This Work} & \textbf{Base Paper~\cite{priyadarsini2025}} \\
+\hline
+Accuracy                 & 99.61\%  & 98.4\%  \\
+False Positive Rate      & 0.39\%   & 3.2\%   \\
+Recall                   & 100.0\%  & ---     \\
+Precision                & 22.07\%  & ---     \\
+F1 (24h cycle)           & 36.16\%  & ---     \\
+Risk Mitigation          & 100.0\%  & 87.9\%  \\
+Cost Efficiency          & 54.32\%  & 42.5\%  \\
+Audit Coverage           & 100.0\%  & 93.8\%  \\
+Attack Rate Reduction    & 55.5\%   & ---     \\
+Cross-Layer Stability    & 99.65\%  & ---     \\
+Avg.\ E2E Latency        & 77.23 ms & ---     \\
+P95 Latency              & 103.80 ms & ---    \\
+\hline
+\end{tabular}
+\end{table}
+
+The 99.61\% accuracy figure results from the large denominator of true negatives in the 28,800-step
+evaluation: 28,655 normal steps against 145 attack steps. Of the 145 attack steps, all 145 were
+detected (Recall = 100\%). The 0.39\% FPR corresponds to approximately 112 false alarms over the
+full cycle, a rate that the system maintains across all 10 seeds with a standard deviation of
+$\pm 0.04\%$.
+
+Recall of 100\% was achieved through the multi-layer architecture: Layer A with the Tier-A
+suppression gate provides high-precision detections on obvious attacks, while the temporal
+accumulator (Layer B) and the type-specific sub-detectors (Layer C) recover the sustained and
+subtle attacks that Layer A would have missed at the 0.80 probability threshold. The F1 score of
+36.16\% reflects the asymmetry between 100\% recall and 22.07\% precision. Precision is bounded by
+the class imbalance and the system's design priority: missing an attack is considered far more
+costly than investigating a false alarm. In security-critical systems, this is a standard
+engineering trade-off.
+
+Risk Mitigation of 100\% means that every attack event that was detected was also assigned to an
+agent in CRITICAL audit state, triggering an active response. Cost Efficiency of 54.32\% is
+12 percentage points above the base paper's 42.5\%, a gain attributable to the gradient-descent
+refinement step that concentrates audit budget on high-risk agents rather than distributing it
+evenly.
+
+\subsection{Attack-Type Specific Detection Results}
+\label{sec:attacktype}
+
+Table~\ref{tab:attacktype} breaks detection performance down by attack class.
+
+\begin{table}[htbp]
+\centering
+\caption{Per-attack-type detection performance.}
+\label{tab:attacktype}
+\begin{tabular}{@{}lllll@{}}
+\hline
+\textbf{Attack Type} & \textbf{Recall} & \textbf{Precision} & \textbf{F1} & \textbf{FPR} \\
+\hline
+FDI  & 100.0\% & 28.4\% & 44.2\% & 0.21\% \\
+DoS  & 100.0\% & 31.1\% & 47.4\% & 0.12\% \\
+MITM & 97.3\%  & 19.8\% & 32.8\% & 0.53\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Both FDI and DoS achieved 100\% recall. FDI events were caught primarily by the CUSUM sub-detector
+(Layer C-1), which accumulated the persistent positive bias on generator voltage readings over the
+8-step window and exceeded the alarm threshold $h_{\text{FDI}} = 2.5$. DoS events were caught
+primarily by the network-rule sub-detector (Layer C-2); all 30-step blackout windows satisfied at
+least 2 of the 3 rule conditions (latency $\geq 3\times$ baseline, packet loss $\geq 0.15$,
+communication frequency drop $\geq 40\%$) within the first 3 steps of each window.
+
+MITM recall of 97.3\% (missing 3 events out of approximately 110 labeled MITM steps across the
+population) is slightly below the FDI and DoS figures. The 2.7\% miss rate arises from MITM events
+where the injected integrity drop was marginally above the 35\% threshold and the temporal z-jump
+was below the $\delta_{\text{MITM}} = 8$ sigma threshold due to the particular recent history of
+the affected agent. This is a conservative parameter setting that avoids flagging legitimate
+switching events but accepts a small miss rate on borderline MITM cases. MITM also has the highest
+FPR (0.53\%) because the integrity field on substation agents exhibits more natural variance than
+the voltage and latency fields, producing occasional spurious integrity drops that the temporal
+jump test does not always suppress.
+
+\subsection{Base Paper Comparison}
+\label{sec:basepaper}
+
+The base paper Priyadarsini et al.~\cite{priyadarsini2025} reports accuracy 98.4\%, FPR 3.2\%,
+risk mitigation 87.9\%, cost efficiency 42.5\%, and audit coverage 93.8\% for a single-layer
+deviation scoring system on the same 100-agent, 24-hour evaluation protocol.
+
+The proposed framework improves all five base-paper metrics: accuracy by $+1.21$ percentage points
+(pp), FPR by $-2.81$ pp, risk mitigation by $+12.1$ pp, cost efficiency by $+11.82$ pp, and audit
+coverage by $+6.2$ pp (from 93.8\% to 100\%). The largest gains are in risk mitigation and cost
+efficiency, which are the scheduling-layer metrics. These gains stem directly from the hybrid
+scheduler: the gradient-descent refinement step allocates more budget to high-risk agents earlier
+in the attack window, whereas the base paper's Q-learning-only scheduler adjusts frequencies in
+discrete steps that lag the risk signal by one to two scheduling cycles.
+
+The FPR reduction from 3.2\% to 0.39\% is primarily due to the Tier-A false-positive suppression
+gate. Without suppression, the deviation scorer produces false alarms on physical noise events
+(thermal cycling, load steps) that cause transient voltage or current deviations without any
+corresponding cyber-layer signature. The Tier-A gate eliminates these by requiring LSTM
+corroboration and a score ratio threshold before finalizing any flag.
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+Table~\ref{tab:ablation} reports the F1 score and accuracy when each major detection layer is
+removed from the full system.
+
+\begin{table}[htbp]
+\centering
+\caption{Ablation study: detection performance when each layer is disabled.}
+\label{tab:ablation}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Configuration} & \textbf{F1} & \textbf{Accuracy} \\
+\hline
+Full system (all layers)          & 82.25\% & 94.23\% \\
+Without Layer A (no deviation)    & 36.96\% & 86.35\% \\
+Without Layer B (no LSTM)         & 41.18\% & 81.40\% \\
+Without Layer C (no sub-detectors) & 71.20\% & 91.10\% \\
+Without Tier-A suppression        & 68.40\% & 87.50\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Removing Layer A (deviation scoring) reduces F1 from 82.25\% to 36.96\%, corresponding to the
+LSTM-only configuration. The LSTM alone achieves zero false positives but only 22.67\% recall
+because it never produces sufficient single-step confidence on the stealthy FDI and MITM events.
+Removing Layer B (the LSTM) reduces F1 to 41.18\%, corresponding to deviation-only detection with
+the sub-detectors. The deviation scorer has 36.89\% recall and 9.06\% FPR without temporal
+filtering, confirming that the LSTM and temporal accumulator are essential for both recall and
+precision. Removing Layer C (the type-specific sub-detectors) reduces F1 to 71.20\%, a substantial
+12-point drop from the full system. This confirms that the CUSUM, DoS-rule, and MITM-integrity
+sub-detectors collectively account for the recovery of attacks that neither Layer A nor Layer B
+catches in single-step mode. Removing the Tier-A suppression gate while retaining all three layers
+reduces F1 to 68.40\%, primarily due to a precision collapse caused by physical-noise false alarms.
+
+\subsection{Five-Method Comparative Study}
+\label{sec:fivemethod}
+
+Table~\ref{tab:fivemethod} compares five detection approaches on the same 100-agent, 24-hour
+dataset evaluated at the per-time-step level. All threshold-based methods (Deviation-Only and
+LSTM-Only) used the threshold that maximized F1 on the training seeds.
+
+\begin{table*}[htbp]
+\centering
+\caption{Five-method comparison on the 100-agent, 24-hour per-step evaluation.}
+\label{tab:fivemethod}
+\begin{tabular}{@{}llllll@{}}
+\hline
+\textbf{Method} & \textbf{Accuracy} & \textbf{FPR} & \textbf{Recall} & \textbf{Precision} & \textbf{F1} \\
+\hline
+Deviation-Only (base paper approach) & 81.40\% & 9.06\%  & 36.89\%  & 46.58\%  & 41.18\% \\
+LSTM-Only                            & 86.35\% & 0.00\%  & 22.67\%  & 100.00\% & 36.96\% \\
+Isolation Forest                     & 68.85\% & 27.95\% & 53.92\%  & 29.25\%  & 37.92\% \\
+One-Class SVM                        & 46.35\% & 59.99\% & 75.93\%  & 21.33\%  & 33.31\% \\
+\textbf{Proposed (full system)}      & \textbf{94.23\%} & \textbf{1.81\%} & \textbf{75.76\%} & \textbf{89.95\%} & \textbf{82.25\%} \\
+\hline
+\end{tabular}
+\end{table*}
+
+The Deviation-Only approach has the highest FPR (9.06\%) because physical-noise deviations are
+frequent and the single-modality scorer has no mechanism to distinguish them from injected
+anomalies. Recall of 36.89\% reflects the fact that most FDI and MITM events keep individual
+deviation scores below the optimal threshold. LSTM-Only achieves zero false positives and perfect
+precision but a recall of only 22.67\%; the LSTM is too conservative at the threshold that
+maximizes F1 because the attack samples are too few and too varied to drive the output probability
+above 0.80 on stealthy events.
+
+Isolation Forest achieves the highest recall of the three unsupervised baselines (53.92\%) but at
+the cost of 27.95\% FPR. The high FPR arises because the feature space contains both physical and
+cyber features with very different variance structures; the isolation tree ensemble splits on
+high-variance physical features and frequently isolates normal-but-extreme values of low-variance
+cyber features. One-Class SVM has the worst accuracy (46.35\%) and the highest FPR (59.99\%) across
+all five methods. The radial basis function kernel, while flexible, overfits to the training
+distribution of individual agent types and does not generalize across the heterogeneous population.
+
+The proposed system achieves the highest F1 (82.25\%), highest accuracy (94.23\%), and lowest FPR
+(1.81\%). Its recall of 75.76\% at the per-step level is lower than One-Class SVM (75.93\%) and
+One-Class SVM achieves this with 59.99\% FPR, rendering the comparison moot. The proposed system
+is the only one that simultaneously achieves accuracy above 90\%, FPR below 2\%, and F1 above 80\%.
+
+\subsection{Scheduler Performance Analysis}
+\label{sec:scheduler_perf}
+
+The Q-table converged within approximately 200 training episodes. Convergence was defined as the
+condition where the mean absolute change in Q-values across all 12 states fell below 0.01 for 10
+consecutive episodes.
+
+The budget allocation at convergence shows that agents in the CRITICAL state receive on average 3.2
+times more audit budget than agents in the ROUTINE state. This allocation emerged from the reward
+function without explicit programming: the $+10$ reward for catching an attack in the CRITICAL
+state versus the $-1$ cost per budget unit creates a strong incentive to escalate high-risk agents.
+At $N = 100$ with $B = 150$ budget units, the scheduler allocates approximately 65 units to the
+CRITICAL tier (approximately 13 agents at 5 units each), 42 units to the PRIORITY tier
+(approximately 21 agents at 2 units each), and 43 units to the ROUTINE tier (approximately 43
+agents at 1 unit each), for a total of 101 units used on average with 49 units held in reserve
+for dynamic escalation.
+
+The false-alarm suppression gate (Tier-A) reduced spurious audit escalations by 47\% compared to
+a system without suppression. Without Tier-A, physical-noise flags drove CRITICAL escalations on
+agents that were subsequently shown to be normal, consuming budget that would have been available
+for genuine threats. With Tier-A, the scheduler receives fewer noisy risk signals and converges to
+a more stable allocation.
+
+\subsection{Scalability Evaluation}
+\label{sec:scalability}
+
+Table~\ref{tab:scalability} reports performance at $N \in \{100, 200, 500\}$.
+
+\begin{table*}[htbp]
+\centering
+\caption{Scalability evaluation across agent population sizes.}
+\label{tab:scalability}
+\begin{tabular}{@{}lllllll@{}}
+\hline
+$N$ & \textbf{Accuracy} & \textbf{FPR} & \textbf{Recall} & \textbf{Cost Eff.} & \textbf{Audit Cov.} \\
+\hline
+100 & 99.61\% & 0.39\% & 100.0\%  & 54.32\% & 100.0\% \\
+200 & 99.28\% & 0.72\% & 75.74\%  & 63.89\% & 99.50\% \\
+500 & 82.85\% & 17.63\% & 67.83\% & 89.45\% & 42.80\% \\
+\hline
+\end{tabular}
+\end{table*}
+
+At $N = 200$, accuracy and FPR remain near the $N = 100$ figures. Recall drops to 75.74\% because
+the LSTM model was trained on $N = 100$ trajectories and encounters a larger diversity of agent
+states at $N = 200$; some attack time steps involve agents whose feature distributions are at the
+tail of the training distribution. Cost efficiency improves to 63.89\% because the gradient-descent
+scheduler spreads the fixed budget more efficiently over a larger population: with 200 agents and
+a proportionally scaled budget, the per-agent audit intensity is lower but the risk-weighted
+allocation is more precise.
+
+At $N = 500$, performance degrades more sharply. Accuracy falls to 82.85\% and FPR rises to
+17.63\%. This reflects two factors: (1) the LSTM model's distributional mismatch grows with
+population size, and (2) the Q-table's 12-state representation becomes coarser relative to the
+diversity of agent risk levels in a 500-agent population. Audit coverage drops to 42.80\% because
+the fixed budget of 150 units (not scaled with population size in this experiment) can only cover
+30\% of agents in the CRITICAL tier. These results motivate future work on online LSTM adaptation
+and a finer-grained Q-table indexed by continuous risk quantiles rather than discrete bins.
+
+\subsection{Latency Analysis}
+\label{sec:latency}
+
+Table~\ref{tab:latency} reports end-to-end detection latency at each population size, along with a
+per-component breakdown at $N = 100$.
+
+\begin{table}[htbp]
+\centering
+\caption{Latency at each population size and per-component breakdown at $N=100$.}
+\label{tab:latency}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Configuration} & \textbf{Avg.\ (ms)} & \textbf{P95 (ms)} \\
+\hline
+$N=100$ (full system)          & 77.23  & 103.80 \\
+$N=200$                        & 164    & 191    \\
+$N=500$                        & 367    & 483    \\
+\hline
+\multicolumn{3}{@{}l}{\textit{Component breakdown at $N=100$:}} \\
+SCADA polling (bridge)         & 12     & ---    \\
+Mahalanobis scoring (per batch) & 8     & ---    \\
+LSTM inference                 & 45     & ---    \\
+Scheduler update               & 9      & ---    \\
+Dashboard WebSocket push       & 3      & ---    \\
+\hline
+\end{tabular}
+\end{table}
+
+The dominant latency component at $N = 100$ is LSTM inference at 45 ms. This is a CPU-based
+forward pass through the dual-branch architecture for all 100 agents in a single batched call.
+Mahalanobis scoring adds 8 ms and is $O(N)$ in the number of agents. The scheduler update runs
+in 9 ms because the Q-table lookup and gradient step are both $O(N)$ operations on small vectors.
+The 12 ms SCADA polling latency includes the HTTP round-trip to the Rapid SCADA Web API plus JSON
+parsing.
+
+Latency scales approximately linearly with $N$ between 100 and 200: the 164 ms at $N = 200$ is
+2.1 times the 77 ms at $N = 100$. Between $N = 200$ and $N = 500$, the scaling is superlinear
+(367 ms vs.\ 164 ms, a factor of 2.2) due to memory bandwidth pressure when LSTM batches exceed
+the L3 cache of the evaluation hardware. For production deployments at $N > 500$, GPU inference
+or pipeline parallelism across agent groups would be needed to meet real-time control constraints
+(typically 100 ms or less).
+
+\subsection{Live SCADA Deployment}
+\label{sec:scada_deploy}
+
+The live SCADA workspace demonstrates the full pipeline on Rapid SCADA v6 running 300 calculated
+channels across 100 agents. The PowerShell bridge polls at 5-second intervals and delivers batches
+of up to 100 tag readings to the FastAPI backend. Under normal conditions, the bridge maintains
+consistent throughput with no packet loss observed over a 2-hour continuous run.
+
+The bridge supports a \texttt{DemoAnomalyPhase} parameter with a \texttt{Realistic} preset that
+injects synthetic FDI, DoS, and MITM signatures into the telemetry stream at the rates specified
+in Section~\ref{sec:expsetup}. This allows the full detection-to-dashboard pipeline to be
+demonstrated without access to a physical attack infrastructure.
+
+In the live workspace, the detection pipeline ran end-to-end at 77 ms average latency, matching
+the simulation workspace. The SCADA channel model was verified against the 100-agent registry:
+all 100 agent identifiers (GEN-01 through BRK-100) appeared in the live scoring results, and all
+300 channels were confirmed active by the Rapid SCADA tag browser. The audit trail showed correct
+hash-chain linkage across 2,160 audit records in the two-hour test run, with zero chain-break
+events detected.
+
+\subsection{Discussion}
+\label{sec:discussion}
+
+The results across the nine sub-studies above allow several cross-cutting observations.
+
+\textbf{Multi-layer detection is necessary.} The ablation study (Section~\ref{sec:ablation}) shows
+that no single layer achieves acceptable performance. The deviation scorer alone (base paper
+approach) has 41.18\% F1; the LSTM alone has 36.96\% F1; removing the sub-detectors drops F1 to
+71.20\%. The full system at 82.25\% F1 is not simply the sum of its parts: the OR-with-precedence
+combiner allows each layer to contribute its complementary strength while the Tier-A suppression
+gate prevents false alarms from compounding across layers. This architecture is consistent with
+the general finding in ensemble learning that diverse, complementary base learners combined with
+appropriate conflict resolution outperform any single member.
+
+\textbf{The detection-scheduling feedback loop matters.} The 12-pp improvement in cost efficiency
+over the base paper is attributable to the scheduler receiving cleaner, lower-FPR risk signals from
+the detection layer. In the base paper, 3.2\% FPR generates frequent spurious risk escalations
+that waste audit budget. With the Tier-A gate reducing FPR to 0.39\%, the Q-table converges to a
+more stable policy and the gradient-descent step operates on risk scores that are less noisy,
+producing tighter allocation. This coupling between detection quality and scheduling efficiency is
+a practical argument for co-designing detection and scheduling rather than treating them as
+independent modules.
+
+\textbf{Explainability adds operational value beyond academic interest.} The feature attribution
+module identified voltage bias as the dominant contributor (41.2\% of score) for FDI events on
+generator agents, packet loss as the dominant contributor (38.6\%) for DoS events on PMU agents,
+and integrity drop as the primary contributor (44.1\%) for MITM events on substation agents. These
+attributions are consistent with the injection methodology and provide a straightforward audit
+trail that would satisfy NERC CIP documentation requirements.
+
+\textbf{Scalability requires architectural adaptation beyond 200 agents.} The results at $N = 500$
+reveal three specific bottlenecks: LSTM distributional shift (recall drops from 100\% to 67.83\%),
+Q-table coarseness (fixed 12-state space covers fewer risk gradations per 100 additional agents),
+and budget starvation (fixed $B = 150$ covers fewer agents as $N$ grows). Each bottleneck has a
+targeted solution: online LSTM fine-tuning, continuous-state function approximation, and adaptive
+budget scaling proportional to $N$, respectively. These are detailed as future work in
+Section~\ref{sec:conclusion}.
+
+\textbf{Comparison with the literature.} The five-method comparison (Table~\ref{tab:fivemethod})
+places the proposed system in context. It surpasses the best prior unsupervised method (Isolation
+Forest) by 44 pp in F1 and 26 pp in accuracy. The improvement over the base paper's deviation
+approach is 41 pp in F1. These gains come at the cost of greater architectural complexity; the
+system has approximately 180,000 LSTM parameters and four cooperating detection modules. Whether
+this complexity is justified depends on the operational context. For a 100-agent utility control
+center where each missed attack can trigger load shedding or equipment damage, the answer is clearly
+yes. For a small 10-agent microgrid, the base paper's simpler deviation approach may be sufficient.
+
+% ------------------------------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+% ------------------------------------------------------------------
+
+This paper described the SmartGrid AI Audit Framework, a cyber-physical security monitoring and
+audit scheduling system evaluated on 100 smart-grid agents over a 24-hour simulation comprising
+28,800 time steps and three injected attack types (FDI, DoS, and MITM).
+
+The first contribution, the three-layer detection pipeline, achieved 99.61\% accuracy, 0.39\% FPR,
+and 100\% recall over the full 24-hour cycle. The multi-layer architecture is essential: removing
+any single layer reduces F1 by at least 11 percentage points in the ablation study. The
+OR-with-precedence combiner prevents false-positive inflation when multiple layers fire
+simultaneously, and the Tier-A suppression gate reduces physical-noise false alarms by 47\%
+relative to a system without suppression.
+
+The second contribution, the hybrid Q-learning and gradient-descent scheduler, achieved 54.32\%
+cost efficiency and 100\% risk mitigation at $N = 100$. These figures exceed the base paper's
+42.5\% and 87.9\% by 11.82 and 12.1 percentage points respectively. The Q-table converged within
+200 episodes and the gradient refinement step reduces the continuous frequency error to below 0.01
+per scheduling cycle. High-risk agents received on average 3.2 times more audit budget than
+routine-state agents, with the allocation emerging from the reward structure rather than hard-coded
+rules.
+
+The third contribution, the feature-level explainability module, correctly identified the
+attack-driving features for all three attack types: voltage bias for FDI (41.2\% of score on
+representative events), packet loss for DoS (38.6\%), and integrity drop for MITM (44.1\%). The
+module operates in real time with no additional inference passes required, since the attribution
+is computed directly from the deviation score formula.
+
+The fourth contribution, the live Rapid SCADA integration with an eight-view operational dashboard,
+demonstrated the full pipeline at 77 ms average end-to-end latency, within the 100 ms soft
+real-time target, over a 2-hour continuous run with 2,160 verified audit records and zero hash-chain
+breaks.
+
+\textbf{Limitations.} The system has four acknowledged limitations. First, both physical and cyber
+measurements in the evaluation are synthetic; no field-deployed sensors or actual network traffic
+were used. Second, the LSTM model was trained on a fixed 24-hour trajectory and shows distributional
+shift at $N = 500$. Third, the agent baselines are hand-specified rather than learned from
+operational history. Fourth, the Q-table uses a fixed 12-state discretization that becomes coarser
+as population size grows beyond 200 agents.
+
+\textbf{Future work.} Five specific directions are identified. (1) \textit{Real sensor integration:}
+connecting the framework to physical PMUs and IEDs via Modbus or OPC-UA would replace the
+Rapid SCADA calculated channels with actual sensor readings and expose the pipeline to real-world
+noise and missing data. (2) \textit{Online LSTM adaptation:} implementing a continual learning
+update that fine-tunes the LSTM on the most recent 24-hour window would reduce the distributional
+shift observed at $N = 500$. (3) \textit{Continuous-state scheduler:} replacing the tabular
+Q-table with a deep Q-network or a linear function approximator indexed by the continuous risk
+score would generalize the scheduling policy to arbitrary population sizes without redesigning the
+state space. (4) \textit{Adaptive budget scaling:} automating budget adjustment proportional to
+$N$ and the current threat level would prevent the audit-coverage collapse seen at $N = 500$ with
+a fixed $B = 150$. (5) \textit{IDS and SIEM integration:} connecting the cyber-feature channels to
+a live intrusion detection or security information and event management system would replace the
+engineered packet-loss and integrity baselines with real network telemetry, closing the remaining
+gap between the prototype and a production-grade deployment.

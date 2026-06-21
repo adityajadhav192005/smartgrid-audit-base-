@@ -5,7 +5,7 @@ import {
   AttackBarChart,
 } from '@/components/charts'
 import { Badge } from '@/components/ui/Badge'
-import { formatCurrency, formatPct } from '@/lib/utils'
+import { formatPct } from '@/lib/utils'
 import { useExperimentTelemetry } from '@/lib/experimentTelemetry'
 
 /**
@@ -30,15 +30,12 @@ export default function RootPage() {
   const fpr = Number(summary?.fpr ?? 0)
   const f1 = Number(summary?.f1 ?? 0)
   const crossLayer = Number(summary?.crossLayerStability ?? 0)
-  const costAdjMit = Number(summary?.costAdjustedMitigation ?? 0)
-  const auditsPerMP = Number(summary?.auditsPerMitigationPoint ?? 0)
   const attackRateReduction = Number(summary?.attackRateReduction ?? 0)
   const threshold = Number(summary?.scoreThreshold ?? 0.5)
   const activeIncidents = Math.max(0, topAgents.filter(agent => agent.anomalyScore >= threshold).length)
   const attacksDetected = Number(statusCounts.attacked ?? activeIncidents)
   const runId = summary?.runId ?? '—'
   const runStatus = String(summary?.status ?? 'unknown').toLowerCase()
-  const operationalCost = totalAgents > 0 ? Math.round(totalAgents * (1 - costEfficiency) * 48) : 0
   const optimizationProfile = String(summary?.optimizationProfile ?? 'ROBUST')
   const ablationMode = String(summary?.ablationMode ?? 'HYBRID')
 
@@ -65,7 +62,7 @@ export default function RootPage() {
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Operations Overview</h1>
           <p className="text-sm text-slate-500 mt-1 max-w-2xl">
-            Smart grid multi-agent audit framework. Headline metrics, latest run summary, and live agent state.
+            LSTM-based anomaly detection with RL-optimised audit scheduling across {totalAgents || '—'} agents.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs">
@@ -83,8 +80,8 @@ export default function RootPage() {
       {/* ─── Headline comparison vs base paper ─────────────────────── */}
       <section className="space-y-2">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Headline Metrics — Ours vs. Base Paper (24h cycle, N=100)</h2>
-          <span className="text-[11px] text-slate-500">paper: ACM TOPS 2025, Priyadarsini et al.</span>
+          <h2 className="text-base font-semibold text-slate-900">Headline Metrics — Ours vs. Base Paper (24h cycle, N={totalAgents || '—'})</h2>
+          <span className="text-[11px] text-slate-500">paper: ACM Trans. Cyber-Phys. Syst. 2025, Priyadarsini et al.</span>
         </div>
         <div className="border border-slate-200 rounded-md overflow-hidden">
           <table className="report-table">
@@ -124,13 +121,13 @@ export default function RootPage() {
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-px bg-slate-100 border border-slate-200 rounded-md overflow-hidden">
         {[
           { label: 'Total agents', value: totalAgents.toString() },
-          { label: 'Active anomalies', value: activeIncidents.toString() },
-          { label: 'Attacks detected', value: attacksDetected.toString() },
-          { label: 'Precision / Recall', value: `${precision.toFixed(2)} / ${recall.toFixed(2)}` },
+          { label: 'False positives', value: Number(summary?.fp ?? 0).toString() },
+          { label: 'Attacked agents', value: attacksDetected.toString() },
+          { label: 'Precision / Recall', value: `${precision.toFixed(3)} / ${recall.toFixed(3)}` },
           { label: 'F1 score', value: f1.toFixed(3) },
           { label: 'Attack rate ↓', value: formatPct(attackRateReduction, 1) },
           { label: 'CLSI', value: formatPct(crossLayer, 2) },
-          { label: 'Operational cost', value: formatCurrency(operationalCost) },
+          { label: 'Cost efficiency', value: formatPct(costEfficiency, 1) },
         ].map(item => (
           <div key={item.label} className="bg-white px-3 py-2.5">
             <div className="text-[10px] uppercase tracking-wide text-slate-500">{item.label}</div>
@@ -139,22 +136,22 @@ export default function RootPage() {
         ))}
       </section>
 
-      {/* ─── Cost-aware metrics ────────────────────────────────────── */}
+      {/* ─── Budget & coverage summary ─────────────────────────────── */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-px bg-slate-100 border border-slate-200 rounded-md overflow-hidden">
-        <div className="bg-white px-4 py-3">
-          <div className="text-[11px] uppercase tracking-wide text-slate-500">Cost-Adjusted Mitigation</div>
-          <div className="font-mono text-base text-slate-900 mt-1">{costAdjMit.toFixed(3)}</div>
-          <div className="text-[10px] text-slate-500 mt-1">risk-points cleared per $1k audit spend (new metric, not in paper)</div>
-        </div>
-        <div className="bg-white px-4 py-3">
-          <div className="text-[11px] uppercase tracking-wide text-slate-500">Audits per Mitigation-Point</div>
-          <div className="font-mono text-base text-slate-900 mt-1">${auditsPerMP.toFixed(2)}</div>
-          <div className="text-[10px] text-slate-500 mt-1">audit dollars per 1 percentage-point of risk mitigated</div>
-        </div>
         <div className="bg-white px-4 py-3">
           <div className="text-[11px] uppercase tracking-wide text-slate-500">Cross-Layer Stability Index</div>
           <div className="font-mono text-base text-slate-900 mt-1">{formatPct(crossLayer, 2)}</div>
-          <div className="text-[10px] text-slate-500 mt-1">fraction of timesteps both layers stay within ±1σ of mean</div>
+          <div className="text-[10px] text-slate-500 mt-1">physical–cyber agreement across timesteps</div>
+        </div>
+        <div className="bg-white px-4 py-3">
+          <div className="text-[11px] uppercase tracking-wide text-slate-500">Risk Mitigation</div>
+          <div className="font-mono text-base text-slate-900 mt-1">{formatPct(riskMitigation, 2)}</div>
+          <div className="text-[10px] text-slate-500 mt-1">fraction of risk neutralised by audit actions</div>
+        </div>
+        <div className="bg-white px-4 py-3">
+          <div className="text-[11px] uppercase tracking-wide text-slate-500">Audit Coverage</div>
+          <div className="font-mono text-base text-slate-900 mt-1">{formatPct(auditCoverage, 2)}</div>
+          <div className="text-[10px] text-slate-500 mt-1">fraction of agents audited per cycle</div>
         </div>
       </section>
 
@@ -208,7 +205,7 @@ export default function RootPage() {
             <h3 className="text-sm font-medium text-slate-800">Recent events</h3>
             <span className="text-[11px] text-slate-500">{events.length} items</span>
           </div>
-          <div className="divide-y divide-slate-800/60 max-h-[22rem] overflow-auto">
+          <div className="divide-y divide-slate-200 max-h-[22rem] overflow-auto">
             {events.length === 0 && (
               <div className="text-center text-slate-500 py-6 text-xs">No events yet.</div>
             )}

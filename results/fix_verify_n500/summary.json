@@ -1,0 +1,165 @@
+{
+  "dynamic_mean_attack_rate": 0.03673611111111111,
+  "baseline_mean_attack_rate": 0.037020833333333336,
+  "attack_rate_reduction": 0.007690864753329734,
+  "dynamic_total_audit_cost": 54.0,
+  "baseline_total_audit_cost": 144000.0,
+  "dynamic_intended_audit_cost": 90.0,
+  "baseline_intended_audit_cost": 144000.0,
+  "executed_cost_dynamic": 54.0,
+  "executed_cost_baseline": 144000.0,
+  "cost_efficiency": 0.999625,
+  "mean_global_risk_dynamic": 0.015430783899999646,
+  "mean_global_risk_raw_dynamic": 25.17062325217073,
+  "mean_global_risk_baseline": 0.0,
+  "risk_mitigation": 0.9993869526493083,
+  "risk_mitigation_flag_based": 0.9993869526493083,
+  "risk_mitigation_truth_based": 0.9999726572399564,
+  "mean_truth_weighted_risk": 363.26131704774116,
+  "risk_reduced_per_cost": -0.00028575525740740085,
+  "cost_adjusted_mitigation": 18.507165789802006,
+  "audits_per_mitigation_point": 0.540331248640475,
+  "initial_risk": 0.0,
+  "final_risk": 0.0,
+  "coverage_cycle_dynamic": 0.006,
+  "coverage_cycle_baseline": 1.0,
+  "precision": 0.5118243243243243,
+  "recall": 0.03409389260486341,
+  "f1": 0.06392929565247969,
+  "tp": 2727.0,
+  "tn": 61414.0,
+  "fp": 2601.0,
+  "fn": 77258.0,
+  "tpr": 0.03409389260486341,
+  "tnr": 0.9593688979145513,
+  "fpr": 0.04063110208544872,
+  "fnr": 0.9659061073951366,
+  "accuracy": 0.4454236111111111,
+  "anomaly_detection_metrics": {
+    "precision": 0.5118243243243243,
+    "recall": 0.03409389260486341,
+    "f1": 0.06392929565247969,
+    "fpr": 0.04063110208544872,
+    "fn": 77258.0,
+    "fp": 2601.0
+  },
+  "per_attack_metrics": {
+    "FDI": {
+      "tpr": 0.0,
+      "tnr": 0.9999897658424759,
+      "fpr": 1.0234157524152612e-05,
+      "fnr": 1.0,
+      "accuracy": 0.6785486111111111,
+      "support": 46288,
+      "predicted_support": 1
+    },
+    "DOS": {
+      "tpr": 0.013154380341880342,
+      "tnr": 0.9616272941468254,
+      "fpr": 0.0383727058531746,
+      "fnr": 0.9868456196581197,
+      "accuracy": 0.8629861111111111,
+      "support": 14976,
+      "predicted_support": 5148
+    },
+    "MITM": {
+      "tpr": 0.0,
+      "tnr": 0.9997514619883041,
+      "fpr": 0.0002485380116959064,
+      "fnr": 1.0,
+      "accuracy": 0.9497638888888889,
+      "support": 7200,
+      "predicted_support": 34
+    },
+    "CHAIN": {
+      "tpr": 0.0,
+      "tnr": 1.0,
+      "fpr": 0.0,
+      "fnr": 0.0,
+      "accuracy": 1.0,
+      "support": 0,
+      "predicted_support": 0
+    },
+    "FAULT": {
+      "tpr": 0.002083152504122906,
+      "tnr": 0.9990866476951064,
+      "fpr": 0.0009133523048936058,
+      "fnr": 0.9979168474958771,
+      "accuracy": 0.9193194444444445,
+      "support": 11521,
+      "predicted_support": 145
+    },
+    "NONE": {
+      "tpr": 0.9593688979145513,
+      "tnr": 0.03409389260486341,
+      "fpr": 0.9659061073951366,
+      "fnr": 0.04063110208544872,
+      "accuracy": 0.4454236111111111,
+      "support": 64015,
+      "predicted_support": 138672
+    }
+  },
+  "attack_typing_metrics": {
+    "positive_support": 79985.0,
+    "typing_accuracy": 0.002763018065887354,
+    "macro_tpr": 0.003809383211500812,
+    "macro_fpr": 0.009886207581822066,
+    "classes_with_support": 4.0
+  },
+  "statistical_tests": {
+    "attack_rate_reduction": {
+      "p_value": 0.18016669521584114,
+      "test": "paired_t_test",
+      "significant": false
+    },
+    "cost_efficiency": {
+      "p_value": 1.1906404620192682e-88,
+      "test": "paired_t_test",
+      "significant": true
+    },
+    "f1_score": {
+      "p_value": 1.0,
+      "test": "not_enough_samples",
+      "significant": false,
+      "dynamic_f1": 0.06392929565247969,
+      "baseline_f1": 0.7141996115811328
+    }
+  },
+  "cross_layer_stability": {
+    "index": 0.6319444444444444,
+    "stable_steps": 182,
+    "total_steps": 288,
+    "corr": 0.0020167252998176265,
+    "z_limit": 1.0
+  },
+  "deviation_trend": {
+    "cumulative_deviation": 679.5400832264913,
+    "deviation_slope": -0.04832371201830025,
+    "clusters": {
+      "enabled": true,
+      "k": 3,
+      "counts": {
+        "0": 277,
+        "1": 10,
+        "2": 1
+      },
+      "centers": [
+        [
+          -0.061663960681396436,
+          0.007308923436358346,
+          -0.19272183891525324
+        ],
+        [
+          0.014283578993800937,
+          -0.2094141679484715,
+          4.78985420218241
+        ],
+        [
+          16.938081318808777,
+          0.0695698875857836,
+          5.485407357700997
+        ]
+      ]
+    }
+  }
+}

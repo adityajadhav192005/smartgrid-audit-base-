@@ -2304,6 +2304,36 @@ def runs_logs(run_id: str, tail: int = 40, _: str = Depends(_security_guard)) ->
     return {"run_id": run_id, "lines": lines[-n_tail:]}
 
 
+@app.get("/v1/scalability")
+def scalability_comparison(_: str = Depends(_security_guard)) -> Dict[str, Any]:
+    results = []
+    for n in [100, 200, 500]:
+        p = Path("logs") / f"N{n}" / "summary.json"
+        if not p.exists():
+            continue
+        s = json.loads(p.read_text(encoding="utf-8"))
+        results.append({
+            "n": n,
+            "precision": s.get("precision", 0),
+            "recall": s.get("recall", 0),
+            "f1": s.get("f1", 0),
+            "fp": s.get("fp", 0),
+            "fn": s.get("fn", 0),
+            "cost_efficiency": s.get("cost_efficiency", 0),
+            "audit_spend": s.get("actual_audit_spend", s.get("dynamic_total_audit_cost", 0)),
+            "budget_allowed": s.get("allowed_budget", 0),
+            "attack_typing_accuracy": s.get("attack_typing_metrics", {}).get("typing_accuracy", 0),
+            "avg_e2e_delay_ms": s.get("avg_end_to_end_delay_ms", 0),
+            "coverage_dynamic": s.get("coverage_cycle_dynamic", 0),
+            "cross_layer_stability": s.get("cross_layer_stability", {}).get("index", 0),
+            "attack_rate_reduction": s.get("attack_rate_reduction", 0),
+            "risk_mitigation": s.get("risk_mitigation", 0),
+            "detection_accuracy": s.get("accuracy", 0),
+            "total_runtime_sec": s.get("total_runtime_sec", 0),
+        })
+    return {"results": results}
+
+
 @app.post("/v1/screenshot/save")
 def screenshot_save(payload: Dict[str, Any], _: str = Depends(_security_guard)) -> Dict[str, Any]:
     """Save a base64-encoded PNG screenshot to knowledge/figures/."""
