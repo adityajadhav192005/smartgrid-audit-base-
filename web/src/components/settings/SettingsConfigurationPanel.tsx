@@ -9,18 +9,17 @@ type Param = { key: string; label: string; value: string | number; type: 'number
 const SECTIONS = ['Experiment Setup', 'Detection Tuning'] as const
 type Section = typeof SECTIONS[number]
 
-const REQUIRED_KEYS = ['episodes', 'fdi_rate', 'dos_rate', 'mitm_rate', 'chain_rate'] as const
+const REQUIRED_KEYS = ['fdi_rate', 'dos_rate', 'mitm_rate', 'chain_rate'] as const
 
 const PARAMS: Record<Section, Param[]> = {
   'Experiment Setup': [
     { key: 'seeds', label: 'Seeds (comma-separated)', value: '42,43,44', type: 'text', desc: 'Reproducible random seeds for multi-run experiments.' },
-    { key: 'episodes', label: 'Training Episodes', value: 200, type: 'number', min: 10, max: 2000, step: 10, desc: 'Number of RL training episodes per run.' },
     { key: 'fdi_rate', label: 'FDI Attack Rate', value: 0.10, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Probability of False Data Injection attacks per timestep.' },
     { key: 'dos_rate', label: 'DoS Attack Rate', value: 0.05, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Probability of Denial of Service attacks per timestep.' },
     { key: 'mitm_rate', label: 'MITM Attack Rate', value: 0.03, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Probability of Man-in-the-Middle attacks per timestep.' },
     { key: 'chain_rate', label: 'Chain Attack Rate', value: 0.20, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Probability of coordinated multi-agent attacks.' },
     { key: 'fault_rate', label: 'Physical Fault Rate', value: 0.20, type: 'number', min: 0.0, max: 1.0, step: 0.01, desc: 'Probability of physical faults (voltage sag, overcurrent, frequency deviation).' },
-    { key: 'audit_protection_window', label: 'Audit Protection Window', value: 0, type: 'number', min: 0, max: 288, step: 1, desc: 'Timesteps an agent is protected after audit. Set to 0 for evaluation mode (no protection, all attacks visible for detection metrics).' },
+    { key: 'audit_protection_window', label: 'Audit Protection Window', value: 0, type: 'number', min: 0, max: 288, step: 1, desc: 'Timesteps an agent is protected after audit. The Experiment Control Run Mode sets this per run (Protected = 24, Evaluation = 0); this saved value is the fallback default.' },
   ],
   'Detection Tuning': [
     { key: 'anomaly_th', label: 'Anomaly Score Threshold', value: 0.25, type: 'number', min: 0.05, max: 5.0, step: 0.05, desc: 'Agent flagged anomalous when deviation score exceeds this value.' },
@@ -32,7 +31,6 @@ const PARAMS: Record<Section, Param[]> = {
 
 const DEFAULTS: Record<string, string | number> = {
   seeds: '42,43,44',
-  episodes: 200,
   fdi_rate: 0.10,
   dos_rate: 0.05,
   mitm_rate: 0.03,
@@ -71,7 +69,6 @@ export function SettingsConfigurationPanel() {
         }
 
         assign('seeds', values?.seeds ?? runtimeEnv?.SMARTGRID_SEEDS)
-        assign('episodes', values?.episodes)
         assign('fdi_rate', values?.fdi_rate ?? runtimeEnv?.SMARTGRID_FDI_RATE)
         assign('dos_rate', values?.dos_rate ?? runtimeEnv?.SMARTGRID_DOS_RATE)
         assign('mitm_rate', values?.mitm_rate ?? runtimeEnv?.SMARTGRID_MITM_RATE)

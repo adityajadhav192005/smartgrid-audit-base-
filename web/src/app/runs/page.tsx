@@ -33,6 +33,8 @@ export default function RunsPage() {
   const [lambdaAttack, setLambdaAttack] = useState('5.0')
   const [optimizationProfile, setOptimizationProfile] = useState<'ROBUST' | 'BALANCED' | 'COST'>('ROBUST')
   const [ablationMode, setAblationMode] = useState<'HYBRID' | 'RL_ONLY' | 'GRADIENT_ONLY'>('HYBRID')
+  const [runMode, setRunMode] = useState<'protected' | 'evaluation'>('protected')
+  const [mitmRate, setMitmRate] = useState('3')
   const [hasLocalDraft, setHasLocalDraft] = useState(false)
 
   const [isLaunching, setIsLaunching] = useState(false)
@@ -184,6 +186,8 @@ export default function RunsPage() {
       const safeFdiRate = clampPercent(fdiRate, 10) / 100
       const safeDosRate = clampPercent(dosRate, 5) / 100
       const safeChainRate = clampPercent(chainRate, 20) / 100
+      const safeMitmRate = clampPercent(mitmRate, 3) / 100
+      const safeProtectionWindow = runMode === 'protected' ? 24 : 0
       const safeLambdaAudit = Math.max(0, Number(lambdaAudit) || 0.2)
       const safeLambdaAttack = Math.max(0, Number(lambdaAttack) || 5.0)
       const selectedAttacks = attacks.length ? attacks : ['FDI', 'DoS']
@@ -205,14 +209,17 @@ export default function RunsPage() {
           attack_rates: {
             fdi_rate: safeFdiRate,
             dos_rate: safeDosRate,
+            mitm_rate: safeMitmRate,
             chain_rate: safeChainRate,
           },
           fdi_rate: safeFdiRate,
           dos_rate: safeDosRate,
+          mitm_rate: safeMitmRate,
           chain_rate: safeChainRate,
+          audit_protection_window: safeProtectionWindow,
           lambda_audit: safeLambdaAudit,
           lambda_attack: safeLambdaAttack,
-          notes: `preset=${preset}; mode=${ablationMode}; profile=${optimizationProfile}; attacks=${selectedAttacks.join(',')}; episodes=${safeEpisodes}; fdi=${safeFdiRate}; dos=${safeDosRate}; chain=${safeChainRate}`,
+          notes: `preset=${preset}; runMode=${runMode}; window=${safeProtectionWindow}; mode=${ablationMode}; profile=${optimizationProfile}; attacks=${selectedAttacks.join(',')}; fdi=${safeFdiRate}; dos=${safeDosRate}; mitm=${safeMitmRate}; chain=${safeChainRate}`,
         }),
       })
       const payload = await response.json()
@@ -391,25 +398,17 @@ export default function RunsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* N agents */}
-            <div>
-              <label className="text-xs text-slate-500 block mb-1.5 font-medium">Number of Agents (N) · 1 to 500</label>
-              <input
-                type="number"
-                value={n}
-                min={1}
-                max={500}
-                onChange={e => setN(String(Math.max(1, Math.min(500, Number(e.target.value) || 1))))}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400"
-              />
-            </div>
-            {/* Training episodes */}
-            <div>
-              <label className="text-xs text-slate-500 block mb-1.5 font-medium">Training Episodes</label>
-              <input type="number" value={episodes} onChange={e => setEpisodes(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400" />
-            </div>
+          {/* N agents */}
+          <div>
+            <label className="text-xs text-slate-500 block mb-1.5 font-medium">Number of Agents (N) · 1 to 500</label>
+            <input
+              type="number"
+              value={n}
+              min={1}
+              max={500}
+              onChange={e => setN(String(Math.max(1, Math.min(500, Number(e.target.value) || 1))))}
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400"
+            />
           </div>
 
           <div>
@@ -424,11 +423,34 @@ export default function RunsPage() {
             />
           </div>
 
+          {/* Run mode: audit protection window */}
+          <div>
+            <label className="text-xs text-slate-500 mb-2 block font-medium uppercase tracking-wider">Run Mode</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([['protected', 'Protected', 'window=24 · reported prod numbers'], ['evaluation', 'Evaluation', 'window=0 · raw detection, high FPR']] as const).map(([id, title, sub]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setRunMode(id)}
+                  className={`px-3 py-2 rounded-lg text-xs border transition-colors text-left ${
+                    runMode === id
+                      ? 'bg-emerald-500/10 border-emerald-400/60 text-emerald-700'
+                      : 'border-slate-200 text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <div className="font-semibold">{title}</div>
+                  <div className="text-[10px] mt-0.5 leading-tight">{sub}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1.5">Protected mode applies the 24-step audit shield and reproduces the reported metrics. Evaluation mode turns the shield off to show raw detector behaviour (higher false-positive rate by design).</p>
+          </div>
+
           {/* Attack types */}
           <div>
             <label className="text-xs text-slate-500 mb-2 block font-medium uppercase tracking-wider">Attack Scenarios</label>
             <div className="flex flex-wrap gap-2">
-              {['FDI', 'DoS', 'Jamming', 'Coordinated', 'MITM', 'Replay'].map(a => (
+              {['FDI', 'DoS', 'MITM', 'Coordinated'].map(a => (
                 <button key={a} onClick={() => toggle(a)}
                   className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${attacks.includes(a) ? 'bg-red-500/10 border-red-500/60 text-red-700 font-medium' : 'border-slate-200 text-slate-500 hover:text-slate-700'}`}>
                   {a}
@@ -437,7 +459,7 @@ export default function RunsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div>
               <label className="text-xs text-slate-500 block mb-1.5 font-medium">FDI (%)</label>
               <input
@@ -457,6 +479,17 @@ export default function RunsPage() {
                 max={100}
                 value={dosRate}
                 onChange={e => setDosRate(String(clampPercent(e.target.value, 5)))}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 block mb-1.5 font-medium">MITM (%)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={mitmRate}
+                onChange={e => setMitmRate(String(clampPercent(e.target.value, 3)))}
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
               />
             </div>
