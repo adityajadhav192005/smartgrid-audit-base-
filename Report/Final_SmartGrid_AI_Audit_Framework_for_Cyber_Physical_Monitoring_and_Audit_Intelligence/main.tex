@@ -1,0 +1,135 @@
+\documentclass[12pt]{report}
+\usepackage{caption}
+\captionsetup{font=normalsize}
+
+\usepackage{algorithm}
+
+
+% Add additional packages here
+\usepackage[backend=biber]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{listings}
+\usepackage{ amssymb }
+\usepackage{array}
+\usepackage{wrapfig}
+\usepackage{wrapfig}
+\usepackage{algorithmicx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{tabu}
+\usepackage{longtable}
+\usepackage[nottoc]{tocbibind}
+\usepackage{tabularx}
+% Include any extra LaTeX packages required
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{times}
+
+
+
+\nocite{*}
+\makeatletter
+\DeclareRobustCommand{\textsupsub}[2]{{%
+  \m@th\ensuremath{%
+    ^{\mbox{\fontsize\sf@size\z@#1}}%
+    _{\mbox{\fontsize\sf@size\z@#2}}%
+  }%
+}}
+\makeatother
+\newbibmacro*{volume+number}{%
+  \printfield{volume}%
+  \setunit*{(}{}
+  \printfield{number}%
+  \setunit*{)}{}
+}\usepackage{float}
+\begin{document}
+\pagenumbering{roman}
+
+\begin{titlepage}
+\input{titilepage}
+
+\end{titlepage}
+\newpage
+
+%Declaration part(Second Page)
+\input{Declaration}
+
+%Certificate part(Third Page)
+\begin{titlepage}
+\input{certificate}
+\end{titlepage}
+\newpage
+
+%Appproval
+
+\begin{titlepage}
+\input{Approval List}
+\end{titlepage}
+\newpage
+
+
+%Acknowledgement part(Fourth Page)
+
+
+
+\input{Acknowledgement}
+% End of the Acknowledgements
+%% ----------------------------------------------------------------
+\chapter*{\centering Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Modern smart grids operate as complex cyber-physical systems where electrical infrastructure, communication networks, and control mechanisms are tightly integrated. This integration improves efficiency and observability but also increases exposure to coordinated cyber-physical attacks. Static threshold monitoring and periodic audits cannot address the dynamic, distributed nature of such environments. This project presents a SmartGrid AI Audit Framework that provides continuous monitoring, explainable anomaly detection, and intelligent audit decision support within a single operational platform.
+
+\par \vspace{0.35cm}
+The system runs in two workspaces: \textit{Experiment Running} for simulation and benchmarking, and \textit{Rapid SCADA Live} for real-time monitoring over a 100-agent grid of generators, substations, PMUs, and breakers. A PowerShell bridge acquires SCADA telemetry through the Web API and forwards it to a FastAPI backend. The detection pipeline combines statistical deviation scoring with a dual-branch LSTM temporal detector, pre-trained on the UCI Electrical Grid Stability Dataset (physical branch) and the UNSW-NB15 Network Intrusion Dataset (cyber branch), using a two-stage fusion: Stage~1 fuses the physical and cyber LSTM branches ($w_{\text{grid}}=0.58$, $w_{\text{network}}=0.42$); Stage~2 fuses the LSTM output with deviation scoring ($w_{\text{dev}}=0.48$, $w_{\text{prob}}=0.52$). A multi-layer detector architecture adds a calibrated threshold layer, a temporal accumulator, and four attack-specific detectors for FDI (CUSUM with shape gate, $k=0.50$, $h=15.0$), DoS (weighted rule), MITM (integrity-jump), and physical faults (signature template), combined by an OR-with-precedence rule and a cross-layer corroboration gate. A hybrid audit scheduler combining Q-learning over a 4D state space (300 states) with gradient-based cost optimisation determines escalation actions, and a per-feature XAI module provides operator-facing explanations.
+
+\par \vspace{0.35cm}
+At N=100, in the system level configuration with audit protection active, the framework achieves 93.85\% detection accuracy, 6.18\% false positive rate, 98.24\% recall, 57.28\% cost efficiency, and 100\% audit coverage, averaged across five seeds. Measured at the detector level in evaluation mode, the per attack true positive rates are 99.0\% for FDI, 78.8\% for DoS, 72.6\% for MITM, and 98.4\% for physical faults at N=100, where the fault class was raised from 8.1\% by the new signature detector. Multi-seed evaluation (seeds 42 to 46) shows a standard deviation of 0.33\% in accuracy, confirming result stability. Scalability experiments at N=200 and N=500 show that detection accuracy and false positive rate stay nearly constant while the audit budget becomes the limiting resource at the largest size. The SCADA pipeline is fully operational; current telemetry uses Rapid SCADA calculated channels rather than physical field devices.
+
+\par \vspace{0.35cm}
+\textit{Keywords: Smart Grid, Cyber-Physical Systems, Anomaly Detection, Audit Intelligence, Rapid SCADA, Explainable AI, Multi-Layer Detection, LSTM, CUSUM, Q-Learning, Hybrid Scheduling, UCI Dataset, UNSW-NB15, Cybersecurity}
+
+%Contents part(Page 5)
+\tableofcontents
+
+\listoffigures
+\listoftables
+\newpage
+%Introduction part(Page 6)
+\pagenumbering{arabic}
+
+\chapter{Introduction}
+\input{Chapter1}
+
+\chapter{Literature Survey}
+ \input{Chapter2}
+
+\chapter{Proposed System Architecture \& Design}
+ \input{Chapter3}
+
+\chapter{Implementations }
+\input{Chapter4}
+
+\chapter{Base Paper And Its Limitation}
+\input{Chapter5}
+
+\chapter{Testing}
+\input{Chapter6}
+
+\chapter{Result \&  Analysis}
+\input{Chapter7}
+
+\chapter*{Conclusion}
+\input{Conclusion}
+
+ \chapter*{Project Scheduling and Planning}
+ \input{Chart}
+
+\printbibliography
+\end{document}

@@ -1,0 +1,75 @@
+% ----------------------------------------------------------------
+%  Chapter 1 — Introduction
+% ----------------------------------------------------------------
+
+\section{Background}
+
+Modern power grids have grown from simple radial networks into large-scale cyber-physical systems where electrical infrastructure, digital communication, and supervisory control are tightly coupled. A present-day smart grid typically comprises generators that convert primary energy into alternating current, substations that step voltage levels and route power across transmission and distribution corridors, phasor measurement units (PMUs) that sample voltage and current phasors at high frequency for state estimation, and circuit breakers that open or close circuits for fault isolation and protection. These assets are interconnected through SCADA (Supervisory Control and Data Acquisition) networks, wide-area measurement systems, and increasingly through IP-based communication channels that expose the grid to cyber threats alongside its traditional physical vulnerabilities \cite{achaal2024study, sharma2024survey}.
+
+Adding information technology to power system operations has improved observability and control flexibility, but it has also opened up a joint attack surface that spans both the physical and cyber domains. An adversary may inject false data into generator voltage readings while simultaneously degrading communication integrity on the same segment, producing a coordinated cyber-physical disturbance that single-layer monitoring cannot reliably detect \cite{liu2009false, yan2020false}. Traditional protection schemes based on static thresholds and periodic manual audits are poorly suited to this environment because they examine individual metrics in isolation and allocate audit resources uniformly regardless of the current threat landscape \cite{priyadarsini2025enhancing}.
+
+Multi-agent system modelling offers a natural abstraction for distributed grid monitoring. Each physical asset, a generator, substation, PMU, or breaker, can be represented as a semi-autonomous agent that maintains local state, observes local conditions, and contributes to system-wide anomaly and risk assessment. Farid noted that multi-agent architectures improve decentralisation in power systems but often do not fully address resilience under adversarial conditions \cite{farid2014multi}. This gap points to the need for a monitoring framework that treats multi-agent resilience, anomaly detection, and audit scheduling as one connected problem rather than as separate research concerns.
+
+This project addresses that gap by building a SmartGrid AI Audit Framework that monitors 100 agents across four asset types (generators, substations, PMUs, and breakers), detects anomalies through a multi-layer detection pipeline, schedules audit resources adaptively using a hybrid reinforcement learning and optimisation approach, and explains every detection decision at the feature level.
+
+
+\section{Motivation}
+
+Three practical costs drove this work, each affecting smart-grid operations when monitoring and auditing are handled by conventional methods.
+
+\begin{itemize}
+    \item \textbf{Audit and monitoring cost.} Fixed-interval auditing assigns equal resources to all assets regardless of their current risk. A generator that has exhibited anomalous readings for the past several hours receives the same audit frequency as one with a consistently clean record. This wastes limited audit budgets and reduces cost efficiency.
+
+    \item \textbf{Missed-attack cost.} Under-auditing high-risk assets during evolving attacks creates blind spots. False data injection attacks on generators can produce readings within normal range while subtly corrupting state estimation. Denial-of-service attacks on substations can delay fault detection by flooding communication channels. Man-in-the-middle attacks can tamper with PMU messages while maintaining superficially plausible values. If the monitoring system examines only one signal layer at a time, these coordinated attacks go undetected until physical consequences materialise \cite{liu2009false, hu2023detection, korba2020anomaly}.
+
+    \item \textbf{False-positive cost.} Conversely, a detector that is too sensitive generates excessive false alarms. Operators subjected to persistent false positives develop alert fatigue and begin ignoring warnings, which defeats the purpose of the monitoring system. The false-positive cost is therefore not merely computational; it directly undermines operator trust and operational safety.
+\end{itemize}
+
+Single-modality detection methods, whether pure threshold rules, standalone LSTM models, or unsupervised anomaly detectors such as Isolation Forest and One-Class SVM, each suffer from at least one of these costs. Deviation scoring alone produces high false-positive rates (9.06\% in evaluation) because physical noise is indistinguishable from small attacks without temporal context. LSTM-only detection achieves very low false-positive rates but misses the majority of attacks (recall of only 22.67\%) because the model is conservatively calibrated. Unsupervised baselines such as Isolation Forest and One-Class SVM lack domain knowledge about specific attack types and either over-flag (59.99\% FPR for One-Class SVM) or under-detect (53.92\% recall for Isolation Forest).
+
+A further motivation was the absence of live SCADA integration in the existing literature on smart-grid audit frameworks. The base paper by Priyadarsini et al. \cite{priyadarsini2025enhancing} proposed anomaly-coupled dynamic audit scheduling as a concept but evaluated it only through offline simulation with no operational telemetry path. Closing this gap between a conceptual framework and a working SCADA-integrated prototype was a central driver of this project.
+
+
+\section{Aim}
+
+The aim of this project was to design and validate an explainable SmartGrid AI audit framework that puts together multi-layer cyber-physical anomaly detection, adaptive audit scheduling under budget constraints, and live Rapid SCADA telemetry acquisition into a single working platform, while keeping transparency, reproducibility, and honest characterisation of the system's deployment scope.
+
+
+\section{Research Objectives}
+
+The specific research objectives of this project were:
+
+\begin{enumerate}
+    \item \textbf{Design a multi-layer cyber-physical anomaly detection pipeline} combining statistical deviation scoring ($S_i(t) = w_i(d_x + d_y)$) with a dual-branch LSTM temporal detector in a weighted ensemble (deviation weight 0.48, LSTM probability weight 0.52), augmented by a multi-detector module comprising a calibrated LSTM threshold, a temporal accumulator for sustained anomalies, and four specialised sub-detectors for false data injection (CUSUM with shape gate), denial of service (weighted rule), man-in-the-middle (integrity and jump), and physical faults (signature template).
+
+    \item \textbf{Implement explainable anomaly scoring with per-feature contribution ranking} so that every detection decision is accompanied by a ranked explanation of which physical and cyber features contributed most, supporting operator trust and auditability.
+
+    \item \textbf{Develop a hybrid audit scheduler} combining Q-learning for discrete audit action selection with gradient-based cost optimisation for continuous frequency refinement, operating under explicit per-agent and global budget constraints.
+
+    \item \textbf{Integrate Rapid SCADA as a live telemetry source} for a 100-agent smart-grid model comprising generators, substations, PMUs, and breakers, using a PowerShell-based bridge for batch data acquisition through the SCADA Web API.
+
+    \item \textbf{Separate experiment evaluation from live operational monitoring} by implementing two distinct workspaces, Experiment Running (for simulation, benchmarking, and comparative studies) and Rapid SCADA Live (for real-time monitoring and operational decision support), so that experimental results and live telemetry are never mixed up.
+
+    \item \textbf{Validate the framework through multi-scale testing and comparative study,} testing system performance at $N = 100$, $N = 200$, and $N = 500$ agent configurations, and conducting a five-method comparative study against deviation-only, LSTM-only, Isolation Forest, and One-Class SVM baselines on identical evaluation data.
+\end{enumerate}
+
+
+\section{Roadmap of the Research}
+
+The remainder of this report is organised as follows.
+
+\begin{itemize}
+    \item \textbf{Chapter 2: Literature Survey.} Reviews relevant literature across five research themes: smart-grid anomaly detection, cybersecurity architecture, multi-agent resilience, false data injection and SCADA-aware detection, and reinforcement learning for CPS security. The chapter identifies research gaps and formulates the problem statement addressed by this work.
+
+    \item \textbf{Chapter 3: Proposed System Architecture and Design.} Presents the overall system architecture, including the dual-workspace design, the end-to-end SCADA data flow, the multi-layer detection pipeline, the hybrid audit scheduler, the explainability module, and per-agent-type baseline profiles.
+
+    \item \textbf{Chapter 4: Implementation.} Describes the software stack, runtime environment, Rapid SCADA engineering, PowerShell bridge implementation, backend API structure, and frontend dashboard composition. Clarifies what is real versus simulated in the current deployment.
+
+    \item \textbf{Chapter 5: Base Paper and Its Limitations.} Analyses the base paper by Priyadarsini et al. \cite{priyadarsini2025enhancing} in detail, identifies its architectural and methodological limitations, and maps each limitation to the corresponding extension implemented in this project.
+
+    \item \textbf{Chapter 6: Testing.} Describes the verification approach at three levels, code-level checks, run-summary analysis from experiment logs, and live SCADA path verification, including the resolution of earlier integration failures.
+
+    \item \textbf{Chapter 7: Results and Analysis.} Reports the thesis-primary results ($N = 100$, system level: 93.85\% accuracy, 6.18\% FPR, 98.24\% recall, 93.66\% risk mitigation, 57.28\% cost efficiency, 100\% audit coverage), the per attack true positive rates measured at the detector level (FDI 99.0\%, DoS 78.8\%, MITM 72.6\%, FAULT 98.4\% at $N=100$), the effect of the audit protection window across the zero, two hour, and twenty four hour settings, multi-scale evaluation at $N = 200$ and $N = 500$, and an honest discussion of limitations including the use of calculated SCADA channels rather than physical field devices.
+
+    \item \textbf{Conclusion.} Summarises the contributions, states the limitations, and identifies directions for future work including adaptive baselines, physical device integration, and IDS/SIEM integration for real cyber metric measurement.
+\end{itemize}

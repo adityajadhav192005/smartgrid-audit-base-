@@ -1,0 +1,126 @@
+% ----------------------------------------------------------------
+%  Chapter 2 — Literature Survey
+% ----------------------------------------------------------------
+
+The literature on smart-grid anomaly detection, cyber-physical security, and audit-oriented monitoring shows a shift from static protection mechanisms toward more adaptive and data-driven frameworks. This chapter reviews fifteen relevant works grouped into five research themes, summarises them in a comparative table, identifies research gaps, and formulates the problem statement that this project addresses.
+
+\section{Survey of Research Works}
+
+The relevant literature was grouped into five connected themes. Each theme is discussed below, followed by a summary of individual paper contributions.
+
+\subsection{Smart-Grid Anomaly Detection and Review Literature}
+
+Recent reviews show that anomaly detection in smart grids is moving toward hybrid, AI-supported, and framework-based approaches rather than isolated threshold rules. Sarker et al. \cite{sarker2026review} presented a broad review of artificial intelligence techniques applied to anomaly detection in smart grids, covering supervised, unsupervised, and hybrid methods across multiple grid layers. The review highlighted that most existing approaches focus on a single detection modality and rarely integrate audit policy or operator response into the detection pipeline. Burgos et al. \cite{burgos2024review} conducted a complementary review of smart-grid anomaly detection with a focus on AI-driven approaches, confirming the trend toward hybrid frameworks and noting that end-to-end implementations connecting detection to operational decision support remain scarce.
+
+\subsection{Smart-Grid Cybersecurity Architecture and Communication Security}
+
+Smart-grid cybersecurity depends heavily on communication design, protocol trust, and architectural separation. Achaal et al. \cite{achaal2024study} carried out a broad study of smart-grid cyber-security covering architectures, communication networks, cyber-attacks, and countermeasure techniques, showing that attack surfaces span HAN, NAN, WAN, AMI, SCADA, PMU, and edge-control layers. Sharma \cite{sharma2024survey} surveyed secure communication technologies for smart-grid cyber-physical systems, emphasising that secure communication is central to resilient CPS operation. Sadeghi et al. \cite{sadeghi2015security} also stressed that industrial cyber-physical systems need layered defences rather than single-point controls, a principle that shaped the multi-layer detection design in this project.
+
+\subsection{Multi-Agent Resilience in Power Systems}
+
+Farid \cite{farid2014multi} studied multi-agent system design principles for resilient coordination and control of future power systems. The work framed resilience as an architectural property rather than merely a local algorithmic feature, arguing that multi-agent systems for power grids should be designed with explicit resilience constraints from the outset. This perspective supported the decision in the present project to treat the grid as an interacting agent ecosystem rather than a flat telemetry table, and to model each asset as a semi-autonomous agent with type-specific baseline profiles.
+
+\subsection{False Data Injection, PMU Integrity, and SCADA-Aware Attack Detection}
+
+The false data injection literature is foundational to smart-grid security research. Liu et al. \cite{liu2009false} showed that attackers can alter state estimation results in electric power grids while evading conventional bad-data detection, which laid the theoretical basis for integrity-aware monitoring. Giani et al. \cite{giani2014phasor} studied the role of PMU placement in recognising unobservable integrity attacks, showing that strategic sensor positioning is essential but not sufficient for full detection. Yan et al. \cite{yan2020false} extended the analysis to scenarios involving multiple cooperative attackers injecting false data simultaneously, showing that coordinated attacks are harder to detect than isolated ones. Hu et al. \cite{hu2023detection} proposed an expectation-maximisation-based approach for detecting false data injection attacks in smart grids, achieving improved detection under noisy conditions but limiting the scope to a single attack type. Bountakas et al. \cite{bountakas2023defense} reviewed defence methods against false data injection attacks on smart grids, cataloguing both detection and mitigation strategies and noting that most methods are evaluated in isolation without integration into an audit or response workflow.
+
+These studies back the decision in this project to combine electrical and cyber indicators rather than trusting a single telemetry stream, and on implementing attack-type-specific sub-detectors (CUSUM for FDI, rule-based for DoS, integrity-plus-temporal-jump for MITM) rather than relying on a single generic anomaly score.
+
+\subsection{Intrusion Detection and Reinforcement Learning for CPS Security}
+
+Korba et al. \cite{korba2020anomaly} presented an anomaly-based framework for detecting power overloading cyberattacks in smart-grid AMI (Advanced Metering Infrastructure), showing that anomaly-based defence works in operational metering contexts. Martinelli et al. \cite{martinelli2022method} proposed a method for intrusion detection in smart grids using SCADA-derived logs, showing that SCADA data can serve as a useful input for security analysis even when the SCADA system was not originally designed for that purpose. Ibrahim and Elhafiz \cite{ibrahim2023security} explored the use of reinforcement learning for security analysis of cyber-physical systems, showing that RL-based policies can adapt to changing threat conditions but noting that the approach was not integrated into a full operational audit framework. Yin et al. \cite{yin2024event} applied machine learning to PMU data for event detection and classification in the Western US power system, providing evidence that learned models can distinguish operational events from anomalies on real PMU data.
+
+Taken together, these works suggest that operational protection for smart grids needs both detection and adaptation, but many prior systems stop at classification and do not go further into audit allocation, cost optimisation, or dashboard-visible operator decision support.
+
+\subsection{Base Paper}
+
+Priyadarsini et al. \cite{priyadarsini2025enhancing} proposed an AI-driven approach to regular audits for enhancing security of distributed multi-agent systems in smart grids. The paper introduced a deviation-based anomaly scoring formula $S_i(t) = w_i(d_x + d_y)$ and a Q-learning-based dynamic audit scheduling concept evaluated through simulation at $N = 100$ agents. The work provided a valuable conceptual foundation, it framed anomaly detection and audit scheduling as a joint optimisation problem within a multi-agent smart-grid context. However, the implementation was limited to single-layer deviation scoring without temporal analysis, machine learning, or behavioural signature detection. There was no live SCADA integration, no explainability mechanism, no tamper-evident audit record, no multi-layer detection architecture, and no comparative evaluation against alternative detection methods. The present project takes this conceptual framework as its starting point and extends it into a complete operational implementation.
+
+\vspace{0.5cm}
+
+\subsection{Comparative Literature Summary}
+
+Table~\ref{tab:lit_survey} summarises the fifteen reviewed works along with the base paper, indicating each work's main contribution, its relevance to the present project, and its primary limitation relative to the scope of this work.
+
+\begin{longtable}{|p{0.6cm}|p{3.8cm}|p{4.0cm}|p{4.5cm}|}
+\hline
+\textbf{Ref.} & \textbf{Main Contribution} & \textbf{Relevance to This Project} & \textbf{Main Limitation Relative to This Project} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Ref.} & \textbf{Main Contribution} & \textbf{Relevance to This Project} & \textbf{Main Limitation Relative to This Project} \\
+\hline
+\endhead
+\hline
+\endfoot
+
+\cite{achaal2024study} & Smart-grid cybersecurity architecture review & Supports protocol and threat modelling for multi-layer design & Not an operational audit engine \\
+\hline
+\cite{sharma2024survey} & Secure communication survey for SG-CPS & Supports communication layer security choices & Not focused on audit decisioning or anomaly detection \\
+\hline
+\cite{liu2009false} & Foundational FDI attack model against state estimation & Motivates integrity-aware monitoring and CUSUM sub-detector & Attack-focused; not operator workflow focused \\
+\hline
+\cite{yan2020false} & Coordinated FDI analysis with multiple attackers & Motivates multi-attacker threat model & No audit optimisation; single attack type \\
+\hline
+\cite{priyadarsini2025enhancing} & Anomaly-coupled dynamic audit scheduling concept for MAS in smart grids & Conceptual foundation; deviation scoring formula and Q-learning scheduling & Single-layer detection only; no live SCADA integration; no explainability; no multi-layer detection \\
+\hline
+\cite{farid2014multi} & MAS design principles for resilient power systems & Supports agent-based framing and resilience-first design & Not an anomaly-to-audit pipeline \\
+\hline
+\cite{hu2023detection} & EM-based FDI detection in smart grids & Relevant statistical detection method & Narrower attack scope; no scheduling integration \\
+\hline
+\cite{korba2020anomaly} & Anomaly-based AMI overload attack detection & Relevant anomaly-based defence approach & AMI-centric; no multi-agent audit framework \\
+\hline
+\cite{sarker2026review} & Broad AI anomaly detection review for smart grids & Supports hybrid detection framing and multi-modality rationale & Review paper; not a deployed system \\
+\hline
+\cite{burgos2024review} & Smart-grid anomaly detection review with AI focus & Confirms trend toward hybrid frameworks & No live SCADA integration; no audit scheduling \\
+\hline
+\cite{sadeghi2015security} & Security and privacy challenges in Industrial IoT & Supports layered defence architecture & Industrial IoT-centric; not smart-grid-specific \\
+\hline
+\cite{giani2014phasor} & PMU placement for integrity attack detection & Motivates PMU-aware monitoring design & Device-placement oriented; no audit optimisation \\
+\hline
+\cite{bountakas2023defense} & Review of FDI defence methods for smart grids & Catalogues detection and mitigation strategies & Review only; no end-to-end implementation \\
+\hline
+\cite{martinelli2022method} & SCADA log-based intrusion detection for smart grids & Relevant to SCADA integration design & Detection only; no audit scheduling or XAI \\
+\hline
+\cite{ibrahim2023security} & RL for CPS security analysis & Supports adaptive policy thinking for audit scheduling & Not a full smart-grid dashboard framework \\
+\hline
+\cite{yin2024event} & ML-based PMU event detection on real data & Supports operational event analysis feasibility & Focused on PMU event classification only \\
+\hline
+
+\caption{Comparative summary of reviewed literature}
+\label{tab:lit_survey}
+\end{longtable}
+
+
+\section{Research Gaps}
+
+The literature review pointed to the following practical gaps that this project set out to address:
+
+\begin{enumerate}
+    \item \textbf{Detection without audit intelligence.} Many papers detect anomalies but do not optimise or explain audit decisions. The detection output is a binary flag or a score, but there is no mechanism for translating detection confidence into adaptive audit resource allocation under budget constraints.
+
+    \item \textbf{Architectural surveys without end-to-end implementations.} Several surveys discuss smart-grid security architectures in detail, but the number of works that present a complete, working, end-to-end implementation, from data acquisition through detection, scheduling, explainability, and operator dashboard, remains very limited.
+
+    \item \textbf{Offline or dataset-only evaluation without live SCADA integration.} Many smart-grid security studies remain offline or dataset-only, without a live SCADA path that shows operational viability. The base paper itself evaluates only through offline simulation with no supervisory telemetry source.
+
+    \item \textbf{No separation of experiment analytics from live operational views.} Few systems clearly separate experiment-mode analytics (where benchmarking and comparative studies are conducted) from live operational views (where real-time telemetry drives the display). Conflating the two can mislead operators and undermines the credibility of the monitoring platform.
+
+    \item \textbf{Absence of unified temporal and statistical detection.} Few studies combine temporal sequence-based detection (such as LSTM) with statistical deviation scoring in a unified pipeline for smart-grid monitoring. Most existing approaches employ either statistical methods or learned temporal models in isolation, without showing how the two can complement each other, especially when integrated with live SCADA telemetry. The base paper uses only single-layer deviation scoring with no temporal analysis component, and no prior work has shown a combined temporal-statistical detection pipeline operating on live SCADA data within an audit-oriented framework.
+\end{enumerate}
+
+This project tackled all five gaps by combining experiment evaluation, live Rapid SCADA integration, multi-layer detection with both statistical and temporal parts, explainable scoring, adaptive audit scheduling, and workspace separation for technical correctness.
+
+
+\section{Problem Statement}
+
+Smart grids represent critical national infrastructure whose failure can cascade into widespread power outages, economic disruption, and public safety emergencies. As smart grids integrate digital communication, SCADA systems, smart meters, and distributed energy resources, the attack surface expands significantly.
+
+The security audit problem in smart grids has two interconnected dimensions:
+
+\begin{itemize}
+    \item \textbf{Detection dimension.} Multi-point cyber-physical attacks are designed to be stealthy. A false data injection attack on a generator may produce a voltage reading within normal range while simultaneously degrading communication integrity in a way that becomes suspicious only when analysed across both physical and cyber channels together. Single-modality detectors, pure threshold rules or isolated machine learning models, fail to catch this because they examine either the physical layer or the cyber layer, but not both simultaneously with temporal awareness.
+
+    \item \textbf{Scheduling dimension.} With 100 or more distributed agents and a finite audit budget, it is impossible to audit every agent at the same rate. Static periodic auditing wastes budget on low-risk assets and creates predictable blind spots that sophisticated adversaries can exploit. The need is for a system that dynamically allocates audit attention to the agents most likely to be under attack, at the time they are most likely to be attacked, without exceeding operational budget constraints.
+\end{itemize}
+
+The base paper by Priyadarsini et al. \cite{priyadarsini2025enhancing} proposed a framework to address both dimensions through deviation-based anomaly scoring and Q-learning-based audit scheduling. However, it left the following gaps unaddressed: no live SCADA integration, no multi-layer or temporal detection, no explainability mechanism, no tamper-evident audit record, no comparative evaluation against alternative detection methods, and no implementation beyond a simulation runner with single-layer deviation scoring. This project filled these gaps by extending the base paper's conceptual framework into a complete operational implementation with multi-layer detection, hybrid audit scheduling, feature-level explainability, live Rapid SCADA integration, and rigorous multi-method comparative evaluation.

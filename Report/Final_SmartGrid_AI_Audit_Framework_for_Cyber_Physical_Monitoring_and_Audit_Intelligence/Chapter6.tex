@@ -1,0 +1,139 @@
+%%% Chapter 6 — Testing %%%
+
+\section{Implementation Test Cases}
+
+Twelve test cases were designed and run to verify the functional correctness, integration integrity, and runtime stability of the proposed system. Each test case targets a specific component or capability of the framework, ranging from baseline behaviour validation through multi-layer detection verification to hybrid audit scheduling convergence. Table~\ref{tab:test_cases} presents the complete test case inventory along with descriptions, expected outcomes, and results.
+
+\begin{longtable}{|c|p{3cm}|p{4.5cm}|p{3.5cm}|c|}
+\caption{Implementation test cases and results.}
+\label{tab:test_cases} \\
+\hline
+\textbf{ID} & \textbf{Test Case} & \textbf{Description} & \textbf{Expected Outcome} & \textbf{Result} \\ \hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Test Case} & \textbf{Description} & \textbf{Expected Outcome} & \textbf{Result} \\ \hline
+\endhead
+\hline
+\endfoot
+
+TC-01 & Baseline behaviour validation & Normal 100-agent profile executed under standard operating conditions & Stable monitoring with no false escalations & Pass \\ \hline
+
+TC-02 & Anomaly scoring validation & Injected deviation into agent measurements & Elevated anomaly score above baseline threshold & Pass \\ \hline
+
+TC-03 & Audit escalation logic & Agent score exceeds escalation threshold & Audit action escalates from routine to priority or critical & Pass \\ \hline
+
+TC-04 & Rapid SCADA integration & Web API + PowerShell bridge + FastAPI backend chain tested & Live telemetry ingested and processed successfully & Pass \\ \hline
+
+TC-05 & Batched SCADA ingest & 100-agent bulk payload submitted to backend in single batch & All agent payloads accepted without failure or data loss & Pass \\ \hline
+
+TC-06 & Dashboard correctness & Anomaly scores, audit actions, and analytical views rendered on frontend & All values displayed correctly and updated in real time & Pass \\ \hline
+
+TC-07 & Explainability output & Explainability module invoked for flagged agents & Top-$k$ feature importance rankings generated correctly & Pass \\ \hline
+
+TC-08 & Runtime stability & 100-agent system operated over sustained period & No pipeline collapse, memory leaks, or unhandled exceptions & Pass \\ \hline
+
+TC-09 & LSTM temporal detection & Dual-branch LSTM inference executed on live streaming data & Anomaly probabilities computed correctly for each agent & Pass \\ \hline
+
+TC-10 & Multi-layer detection validation & FDI, DoS, MITM, and physical fault patterns injected into agent data & Each category classified by its detection layer (CUSUM with shape gate, weighted rule, integrity jump, signature template) & Pass \\ \hline
+
+TC-11 & Hybrid audit scheduling & RL Q-learning combined with gradient-based cost optimisation under budget constraints & Scheduling converges to valid audit allocation within budget & Pass \\ \hline
+
+TC-12 & Five-method comparison & All five detection methods (deviation-only, LSTM-only, Isolation Forest, One-Class SVM, proposed multi-layer) evaluated on identical data & Results consistent with reported metrics across all methods & Pass \\ \hline
+
+\end{longtable}
+
+\par \vspace{0.35cm}
+
+\noindent
+All twelve test cases passed successfully. The test suite covers the full pipeline from data ingestion through detection and scheduling to visualisation and explainability, confirming that each component works correctly on its own and when connected to the rest of the system.
+
+
+\section{Worked Attack Detection Test Case: Project versus Base Paper}
+\label{sec:worked_attack}
+
+The twelve functional test cases confirm that each component fires, but they do not show what the proposed pipeline adds over the base paper on a concrete attack. This section traces one real injected instance of each attack category from a single run ($N=100$, seed 42, evaluation mode) and places the base paper's deviation-only behaviour next to the proposed pipeline's behaviour. Every value in Table~\ref{tab:worked_attack} is taken directly from the run; nothing is hand chosen beyond selecting the first clean instance of each category after the warmup period at timestep 41.
+
+\par \vspace{0.25cm}
+\noindent
+The base paper computes a single deviation score $S_i(t) = w_i(d_x + d_y)$ and flags the agent when that score exceeds its threshold. It produces a binary flag and nothing more. The proposed pipeline computes the same deviation score, but then routes the event through the Layer C sub-detectors to assign an attack type with a confidence value. The threshold used for the deviation-only column is the same score threshold (3.60) used by the proposed pipeline, so the comparison is on equal footing.
+
+\begin{table}[H]
+\centering
+\caption{Worked attack instances: base paper deviation-only versus the proposed pipeline (real values, $N=100$, seed 42, timestep 41).}
+\label{tab:worked_attack}
+\begin{tabular}{|l|p{3.6cm}|c|p{3.8cm}|}
+\hline
+\textbf{Attack (agent)} & \textbf{Injected signature (observed vs baseline)} & \textbf{Base paper (deviation-only)} & \textbf{Proposed pipeline} \\ \hline
+FDI (GEN-06) & $x = [6.54, 5.81, 4.63]$ vs $[1,1,1]$; cyber near baseline. Score 41.42 & Flag, no type & Flag, typed \textbf{FDI}, conf 1.00, C-1 CUSUM fired \\ \hline
+DoS (PMU-54) & $y = [19.2, 0.43, 0.27, 67.6]$ vs $[10, 0.01, 0.99, 100]$. Score 10.38 & Flag, no type & Flag, typed \textbf{DoS}, conf 0.92, C-2 rule fired \\ \hline
+MITM (BRK-91) & integrity $y[2] = 0.51$ vs $0.99$, latency mildly raised. Score 13.62 & Flag, no type & Flag, typed \textbf{MITM}, conf 1.00, C-3 integrity jump fired \\ \hline
+Fault (GEN-07) & $x = [1.17, 1.21, 2.97]$ vs $[1.05, 1.05, 1.07]$, cyber quiet. Score 34.24 & Flag, no type (looks like FDI) & Flag, typed \textbf{FAULT}, conf 1.00, both C-1 and C-4 fired, C-4 took precedence \\ \hline
+\end{tabular}
+\end{table}
+
+\noindent
+Two points stand out. First, for every one of the four instances the deviation-only scorer does cross its threshold, so the base paper would correctly flag each as anomalous; the gap is that it cannot say which attack occurred, which is the information an operator needs to respond. The proposed pipeline assigns the correct type in every case with high confidence. Second, the fault instance (GEN-07) is the clearest illustration of the new Layer C-4 contribution. Its deviation score of 34.24 and its raised physical features look like a false data injection, and the CUSUM detector (C-1) does fire with full confidence. A detector that relied on CUSUM alone would therefore mistype this physical fault as FDI. Because the fault signature detector (C-4) also fires and takes precedence when one physical feature dominates while the cyber channels stay quiet, the proposed pipeline types it correctly as a fault. This is exactly the case that lifted the FAULT class true positive rate from 8.1\% to 98.6\% in Chapter~7.
+
+\par \vspace{0.35cm}
+
+\section{Verification Procedures}
+
+Beyond the functional test cases described above, the following verification procedures were applied to confirm system-level correctness, type safety, and operational readiness.
+
+\subsection{Python Backend Compilation and Module Verification}
+
+The FastAPI backend was verified for correct compilation and module resolution. All Python source files were checked for syntax correctness, import resolution, and dependency availability. The backend application was started and confirmed to accept API requests on the designated port without errors. The LSTM model loading, deviation scoring module, multi-layer detection pipeline, hybrid scheduler, and explainability engine were each verified to initialise correctly at startup.
+
+\subsection{Frontend Type Checking}
+
+The Next.js frontend was subjected to TypeScript compilation to verify type correctness across all components, pages, and API route handlers. No type errors were present at the time of final verification. The build process completed successfully, and all dashboard views rendered correctly in the browser.
+
+\subsection{Live SCADA Verification}
+
+The Rapid SCADA integration was verified end-to-end by confirming the following:
+
+\begin{itemize}
+    \item The PowerShell bridge successfully retrieved telemetry from the Rapid SCADA Web API for all 100 agents.
+    \item The bridge correctly formatted and forwarded the telemetry payloads to the FastAPI backend.
+    \item The backend ingested the payloads, executed the full detection pipeline, and updated the operational state.
+    \item The frontend dashboard reflected the live SCADA data in all relevant views.
+\end{itemize}
+
+\noindent
+Table~\ref{tab:live_verification} summarises the agent deployment status at the time of verification.
+
+\begin{table}[H]
+\centering
+\caption{Live SCADA deployment verification summary.}
+\label{tab:live_verification}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Parameter} & \textbf{Value} \\ \hline
+Total configured agents & 100 \\ \hline
+Live agents (Rapid SCADA) & 100 \\ \hline
+Non-live agents & 0 \\ \hline
+SCADA Web API connectivity & Verified \\ \hline
+Bridge-to-backend pipeline & Verified \\ \hline
+Dashboard rendering & Verified \\ \hline
+\end{tabular}
+\end{table}
+
+
+\section{Integration Testing}
+
+Integration testing was performed to verify the correct interaction between the major system components. The following integration paths were validated:
+
+\begin{enumerate}
+    \item \textbf{SCADA $\rightarrow$ Bridge $\rightarrow$ Backend:} Telemetry data flows from Rapid SCADA through the PowerShell bridge to the FastAPI backend without data loss or format corruption. The 100-agent batch payload is correctly parsed and each agent's measurements are routed to the detection pipeline.
+
+    \item \textbf{Detection Pipeline $\rightarrow$ Scheduler $\rightarrow$ Dashboard:} Anomaly scores produced by the multi-layer detection pipeline are consumed by the hybrid audit scheduler, which generates escalation decisions. These decisions are propagated to the frontend dashboard and rendered in the audit trail, risk analytics, and operations overview views.
+
+    \item \textbf{Detection $\rightarrow$ Explainability $\rightarrow$ Dashboard:} For agents flagged as anomalous, the explainability module generates per-feature importance rankings. These rankings are transmitted to the frontend and displayed in the decision explainability view, so operators can inspect the reasoning behind each anomaly assessment.
+
+    \item \textbf{Dual Workspace Isolation:} The experiment workspace and the Rapid SCADA live workspace were verified to operate independently. Configurations, data sources, and dashboard states in one workspace do not affect the other, which keeps experimental evaluation cleanly separated from operational monitoring.
+\end{enumerate}
+
+\par \vspace{0.35cm}
+
+\noindent
+All integration paths were validated successfully, confirming that the system components interact correctly across the full data flow from telemetry acquisition through detection, scheduling, and visualisation.

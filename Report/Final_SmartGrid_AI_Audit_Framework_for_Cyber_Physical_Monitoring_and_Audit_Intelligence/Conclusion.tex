@@ -1,0 +1,70 @@
+%%% Conclusion %%%
+
+\addcontentsline{toc}{chapter}{Conclusion}
+
+This project presented the SmartGrid AI Audit Framework, a cyber-physical monitoring and audit intelligence platform built for continuous anomaly detection, intelligent audit scheduling, and operator-facing decision support in multi-agent smart grid environments. The system was developed as a direct extension of the baseline work by Priyadarsini \textit{et al.}~\cite{priyadarsini2025}, addressing its key limitations through multi-layer detection, hybrid scheduling, live SCADA integration, explainability, and dual workspace separation.
+
+\par \vspace{0.35cm}
+
+\noindent
+The detection architecture extends the base paper's single-layer deviation scoring to a multi-layer pipeline comprising statistical deviation scoring, LSTM-based temporal anomaly detection, weighted ensemble fusion (deviation weight 0.48, LSTM probability weight 0.52), and a multi-detector module with four specialised Layer~C sub-detectors: CUSUM-based false data injection detection with a shape gate, weighted-rule denial of service detection, integrity-and-jump man-in-the-middle detection, and a signature template detector for physical faults. This multi-layer approach lets the system catch both instantaneous statistical anomalies and temporally correlated attack patterns, while the attack-specific detectors classify distinct cyber-physical threat categories. A cross-layer corroboration gate suppresses deviation-only flags that no detector and the LSTM both fail to support, which lowers the false positive rate without reducing recall.
+
+\par \vspace{0.35cm}
+
+\noindent
+The LSTM temporal detector was pre-trained using two public benchmark datasets before fine-tuning on synthetic grid data: the UCI Electrical Grid Stability Dataset initialises the physical branch with knowledge of power-flow instability dynamics, and the UNSW-NB15 Network Intrusion Dataset initialises the cyber branch using four engineered composite features (latency-like, loss-like, integrity-like, frequency-like) that map directly onto the simulation's cyber feature space. Focal Loss ($\gamma=2.0$, $\alpha=0.65$) and a WeightedRandomSampler handle class imbalance during training, and post-training temperature calibration ensures that output probabilities are well-calibrated for ensemble fusion.
+
+\par \vspace{0.35cm}
+
+\noindent
+The audit scheduling component was extended from Q-learning alone to a hybrid approach combining reinforcement learning for discrete escalation decisions with gradient-based continuous optimisation for budget-constrained cost allocation. The Q-learning component uses a four-dimensional state space (risk bucket, LSTM probability bucket, K-Means behavioural cluster, audit capacity bucket) producing up to 300 reachable states, supported by an experience replay buffer and risk-sensitive reward options including CVaR and exponential utility objectives. This hybrid mechanism improves cost efficiency from 42.5\% (base paper) to 57.28\% while maintaining 93.66\% risk mitigation and 100\% audit coverage in the validated N=100 configuration.
+
+\par \vspace{0.35cm}
+
+\noindent
+The validated thesis-primary configuration for the 100-agent system, measured at the system level with audit protection active and averaged across five seeds, achieves 93.85\% detection accuracy, 6.18\% false positive rate, 98.24\% recall, 93.66\% risk mitigation, 57.28\% cost efficiency, 100\% audit coverage, and a cross-layer stability index of 90.62\%. Measured at the detector level in evaluation mode, the per attack true positive rates are 99.0\% for FDI, 78.8\% for DoS, 72.6\% for MITM, and 98.4\% for physical faults, where the fault class was raised from 8.1\% by the new Layer~C-4 signature detector. The system exceeds the base paper on risk mitigation, cost efficiency, and audit coverage, and adds per attack typing, live SCADA integration, and explainability that the base paper does not provide.
+
+\par \vspace{0.35cm}
+
+\noindent
+The Rapid SCADA integration sets up a complete data pipeline from supervisory telemetry acquisition through a PowerShell bridge to the FastAPI backend for 100 agents. While this integration is fully operational and validates the end-to-end system architecture, the current telemetry values are generated within Rapid SCADA using calculated channels rather than coming from physical field devices. The system is therefore characterised as a strong operational prototype rather than a field-deployed solution.
+
+\par \vspace{0.35cm}
+
+\noindent
+Scalability tests at N=200 and N=500 show that the detection profile is stable with scale. Detection accuracy stays within a fifth of a percentage point of 93.7\% and the false positive rate near 6.3\% at all three sizes, and risk mitigation holds near 94\%. Audit coverage stays at 100\% to N=200 and falls to 91.44\% at N=500, while cost efficiency rises from 57.28\% (N=100) to 89.95\% (N=500) as the fixed budget ratio conserves a larger share of audits. End-to-end latency increases from 55.04~ms (N=100) to 254.69~ms (N=500). These numbers indicate that the per step detection scales cleanly, with the audit budget and inference batching being the resources that need attention for larger deployments.
+
+\par \vspace{0.35cm}
+
+\noindent
+A lightweight temporal signature classifier running alongside the multi-layer detectors analyses the shape of each anomaly's deviation trajectory over a five-timestep window and classifies it as STEP, RAMP, OSCILLATORY, or STABLE. This signature feeds a five-class attack typer that assigns each flagged agent one of: FDI, DoS, MITM, Physical Fault, or Coordinated Chain Attack, giving operators a more specific and actionable characterisation of each event than a binary anomaly flag alone. Multi-seed testing across seeds 42 to 46, where each seed attacks a different set of agents and uses a different noise pattern, confirms that the N=100 results are stable, with a standard deviation of 0.33 percentage points in detection accuracy and 0.33 percentage points in false positive rate around the reported means.
+
+\par \vspace{0.35cm}
+
+\noindent
+The system includes an explainability module that generates per-agent, per-feature importance rankings for each anomaly assessment, letting operators see which measurement dimensions contributed most to a given risk score. The Next.js dashboard provides real-time views of operations, monitoring, audit trails, risk analytics, threat events, decision explainability, system health, and asset topology, keeping operators informed at every stage of the detection and audit process.
+
+\par \vspace{0.35cm}
+
+\noindent
+\textbf{Future Work.}
+Several directions are identified for extending this work:
+
+\begin{enumerate}
+    \item \textbf{Real Field Device Integration.} Replacing the current calculated SCADA channels with telemetry from physical grid devices (RTUs, IEDs, PMUs) to validate the framework under real-world operational conditions with genuine measurement noise, device faults, and environmental variability.
+
+    \item \textbf{Adaptive Baselines.} Implementing dynamic baseline models that adjust to seasonal load variations, equipment ageing, and topology changes, reducing the dependence on static reference profiles and improving long-term detection accuracy.
+
+    \item \textbf{IDS/SIEM Integration.} Connecting the audit framework with established intrusion detection systems and security information and event management platforms to enable coordinated threat response and to use existing organisational security infrastructure.
+
+    \item \textbf{Scalability Optimisation.} Investigating pipeline parallelism, model compression, and distributed inference architectures to extend effective deployment to grid sizes of 1,000 or more agents while maintaining sub-second latency guarantees.
+
+    \item \textbf{Adversarial Robustness.} Evaluating the detection pipeline against adversarial attack strategies that are specifically designed to evade multi-layer detection, including coordinated attacks that target the weaknesses of individual detection components simultaneously.
+
+    \item \textbf{Extended Attack Typology.} Adding injection models and detection sub-detectors for replay attacks, load redistribution attacks, and ramp-metering attacks, which fall outside the current five-class typology. Each new attack type would require a dedicated temporal signature profile and a corresponding Layer~C sub-detector, following the same design pattern as the existing FDI, DoS, MITM, and fault detectors.
+\end{enumerate}
+
+\par \vspace{0.35cm}
+
+\noindent
+To sum up, the SmartGrid AI Audit Framework shows that multi-layer anomaly detection, hybrid audit intelligence, SCADA integration, and explainable decision support can work together in a single platform that delivers solid detection performance, full audit coverage, and practical operator-facing functionality. The system is a clear step forward from single-layer detection approaches and lays out a path toward field-deployed cyber-physical audit intelligence in operational smart grid environments.
