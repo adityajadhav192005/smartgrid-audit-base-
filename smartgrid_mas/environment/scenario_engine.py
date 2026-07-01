@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Set
 import numpy as np
@@ -8,14 +9,23 @@ from smartgrid_mas.agents.types import AgentType
 from smartgrid_mas.data.cyber_attacks import AttackType
 from smartgrid_mas.data.synthetic_faults import FaultType
 
+
+def _env_int(key: str, default: int) -> int:
+    try:
+        return int(os.environ.get(key, default))
+    except Exception:
+        return default
+
+
 @dataclass
 class ScenarioConfig:
     seed: int = 42
     fdi_rate: float = 0.10
     dos_rate: float = 0.05
-    mitm_rate: float = 0.00
+    mitm_rate: float = 0.03
     chain_rate: float = 0.05  # fraction of breakers involved in chain
     fault_rate: float = 0.05  # fraction with physical faults at a time
+    audit_protection_window: int = 24  # 0 = eval mode (no protection)
     fault_types: Tuple[FaultType, ...] = (
         FaultType.VOLTAGE_SAG,
         FaultType.OVERCURRENT,
@@ -48,7 +58,9 @@ class ScenarioEngine:
         
         # Track audited agents to prevent re-attack
         self.audited_agents: Dict[str, int] = {}  # agent_id → timestep of audit
-        self.audit_protection_window = 24  # hours of protection after successful audit
+        self.audit_protection_window = _env_int(
+            "SMARTGRID_AUDIT_PROTECTION_WINDOW", cfg.audit_protection_window
+        )
 
     def _sample_set(self, ids: List[str], rate: float) -> Set[str]:
         k = int(round(rate * len(ids)))

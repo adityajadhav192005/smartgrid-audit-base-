@@ -48,8 +48,12 @@ def run_fixed_audit_24h(
     # Scenario rates (match dynamic for fair comparison)
     scenario_fdi_rate: float = 0.40,
     scenario_dos_rate: float = 0.20,
+    scenario_mitm_rate: float = 0.03,
     scenario_chain_rate: float = 0.20,
     scenario_fault_rate: float = 0.20,
+    audit_protection_window: int = 24,
+    # Scenario placement seed (kept identical to the dynamic run for a fair comparison)
+    scenario_seed: int = 42,
     attack_cfg: AttackConfig | None = None,
     fault_cfg: FaultConfig | None = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], float, float, Dict[str, Any]]:
@@ -75,14 +79,16 @@ def run_fixed_audit_24h(
     scenario = ScenarioEngine(
         agents,
         ScenarioConfig(
-            seed=42,
+            seed=scenario_seed,
             fdi_rate=scenario_fdi_rate,
             dos_rate=scenario_dos_rate,
+            mitm_rate=scenario_mitm_rate,
             chain_rate=scenario_chain_rate,
             fault_rate=scenario_fault_rate,
+            audit_protection_window=audit_protection_window,
         ),
     )
-    env = GridEnvironment(agents, GridEnvConfig(seed=42), scenario=scenario, attack_cfg=attack_cfg, fault_cfg=fault_cfg)
+    env = GridEnvironment(agents, GridEnvConfig(seed=scenario_seed), scenario=scenario, attack_cfg=attack_cfg, fault_cfg=fault_cfg)
     
     metrics = MetricsLogger()
     event_log: List[Dict[str, Any]] = []

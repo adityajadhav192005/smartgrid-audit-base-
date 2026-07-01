@@ -10,8 +10,10 @@ from smartgrid_mas.agents.types import AgentType
 from smartgrid_mas.behavior_analysis.deviation_score import deviation_score
 from smartgrid_mas.detection.network_attack_evidence import infer_network_attack_evidence
 from smartgrid_mas.detection.multilayer_detection import (
+    DetectionLayerResult,
     combine_layers,
     cusum_fdi_detector,
+    fault_signature_detector,
     integrity_mitm_detector,
     network_dos_detector,
     sustained_suspicion,
@@ -212,17 +214,17 @@ def _is_explicit_fdi_signature(agent: BaseAgent, voltage: float, frequency: floa
 
 def _is_explicit_dos_signature(latency: float, packet_loss: float, comm_freq: float, network_prob: float) -> bool:
     return (
-        network_prob >= 0.72
-        and packet_loss >= 0.80
+        packet_loss >= 0.80
         and (latency >= 0.85 or comm_freq >= 0.80)
+        and (network_prob >= 0.40 or (packet_loss >= 2.0 and latency >= 1.5))
     )
 
 
 def _is_explicit_mitm_signature(latency: float, packet_loss: float, integrity: float, network_prob: float) -> bool:
     return (
-        network_prob >= 0.70
-        and integrity >= 1.05
-        and (latency >= 0.55 or packet_loss >= 0.45)
+        integrity >= 0.85
+        and (latency >= 0.40 or packet_loss >= 0.30)
+        and (network_prob >= 0.35 or integrity >= 1.50)
     )
 
 
@@ -258,6 +260,7 @@ def _classify_attack_type(agent: BaseAgent, st: AgentState) -> tuple[str, float]
 
     physical_only = phys_peak >= 0.95 and cyber_peak < 0.75
     cyber_only = cyber_peak >= 0.95 and phys_peak < 0.75
+    cyber_dominant = cyber_peak >= 1.50 and cyber_peak >= 2.0 * phys_peak
     cross_layer = phys_peak >= 0.95 and cyber_peak >= 0.95
 
     # ---- Temporal signature (Gemini #3): step/ramp/oscillation discriminator ----
@@ -287,8 +290,18 @@ def _classify_attack_type(agent: BaseAgent, st: AgentState) -> tuple[str, float]
     explicit_fdi_signature = _is_explicit_fdi_signature(agent, voltage, frequency, current, power, response)
     explicit_dos_signature = _is_explicit_dos_signature(latency, packet_loss, comm_freq, network_prob)
     explicit_mitm_signature = _is_explicit_mitm_signature(latency, packet_loss, integrity, network_prob)
+
+    if cyber_dominant and explicit_dos_signature and explicit_mitm_signature:
+        if integrity >= max(latency, packet_loss, comm_freq):
+            return "MITM", min(1.0, max(0.55, mitm_score / 4.0))
+        return "DOS", min(1.0, max(0.55, dos_score / 4.0))
+    if cyber_dominant and explicit_dos_signature:
+        return "DOS", min(1.0, max(0.55, dos_score / 4.0))
+    if cyber_dominant and explicit_mitm_signature:
+        return "MITM", min(1.0, max(0.55, mitm_score / 4.0))
+
     physical_override = explicit_fault_signature or (
-        phys_peak >= 1.10 and max(fdi_score, fault_score) >= (1.05 * max(dos_score, mitm_score, 1e-6))
+        phys_peak >= 1.10 and not cyber_dominant and max(fdi_score, fault_score) >= (1.05 * max(dos_score, mitm_score, 1e-6))
     )
     if physical_override:
         if response >= max(0.8, voltage * 0.55) or agent.agent_type.name in {"BREAKER", "SUBSTATION"}:
@@ -395,20 +408,21 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     floor_x = np.maximum(k_sigma * sigma_x, 1e-6)
     floor_y = np.maximum(k_sigma * sigma_y, 1e-6)
 
-    agent.thx = np.maximum(agent.thx, floor_x)
-    agent.thy = np.maximum(agent.thy, floor_y)
+    # Store sigma floors for the threshold_update step (applied as a
+    # minimum during normal operation).  Do NOT inflate the thresholds
+    # used for scoring — the behavior pipeline freezes agent.thx/thy
+    # during suspected attacks, and the sigma floor (computed from a
+    # history window that may contain attack samples) would undo that.
     st.sigma_floor_x = floor_x
     st.sigma_floor_y = floor_y
+    eff_thx = np.maximum(np.asarray(agent.thx, dtype=float), 1e-6)
+    eff_thy = np.maximum(np.asarray(agent.thy, dtype=float), 1e-6)
 
     # EWMA-style mean drift compensation (Gemini #2):
-    # If the rolling mean of recent observations has drifted away from baseline,
-    # subtract that drift from the deviation calculation. This stops "natural
-    # grid breathing" (load cycles, weather drift) from being scored as anomalies.
     try:
         if hx.size and hx.shape[0] >= 4:
             mean_x_recent = np.mean(hx, axis=0)
             mean_y_recent = np.mean(hy, axis=0)
-            # 30% trust in drift correction (conservative — we don't want to mask attacks)
             ewma_alpha = float(os.environ.get("SMARTGRID_EWMA_ALPHA", "0.30"))
             agent.bx_drift = ewma_alpha * (mean_x_recent - agent.bx)
             agent.by_drift = ewma_alpha * (mean_y_recent - agent.by)
@@ -424,10 +438,10 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     s = deviation_score(
         x_phys=st.x_phys,
         bx=agent.bx,
-        thx=agent.thx,
+        thx=eff_thx,
         y_cyber=st.y_cyber,
         by=agent.by,
-        thy=agent.thy,
+        thy=eff_thy,
         w_i=agent.criticality.weight,
     )
 
@@ -438,11 +452,14 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     # Tightened defaults (Apr 2026, round 3): aim for accuracy ~93-95%.
     # We now also raise min_strong_features to 3 in ROBUST and require the
     # severe_deviation gate to be at the new score_threshold floor.
-    score_threshold_base = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 0.25, 0.35, 0.50)
-    prob_threshold_base = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.43, 0.45, 0.48)
-    # Approach 3: adjust thresholds per agent type
+    score_threshold_base = _profile_default_float("SMARTGRID_SCORE_THRESHOLD", 3.60, 3.85, 4.10)
+    prob_threshold_base = _profile_default_float("SMARTGRID_ANOMALY_PROB_THRESHOLD", 0.55, 0.65, 0.80)
+    # Approach 3: adjust thresholds per agent type AND criticality weight.
+    # The deviation score includes w_i, so the threshold must scale with it
+    # to give equal detection sensitivity to low-weight agents (e.g. PMUs).
     atype = getattr(agent, "agent_type", None)
-    score_threshold = score_threshold_base * _AGENT_TYPE_SCORE_MULT.get(atype, 1.0)
+    w_i = max(0.01, float(agent.criticality.weight))
+    score_threshold = score_threshold_base * _AGENT_TYPE_SCORE_MULT.get(atype, 1.0) * w_i
     prob_threshold = min(0.98, prob_threshold_base * _AGENT_TYPE_PROB_MULT.get(atype, 1.0))
 
     prior_risk_component = float(getattr(st, "risk_score", agent.risk_score))
@@ -457,7 +474,7 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     low_risk_prob_floor = _profile_default_float("SMARTGRID_LOW_RISK_PROB_FLOOR", 0.82, 0.85, 0.88)
     disagreement_penalty = _profile_default_float("SMARTGRID_DETECTION_DISAGREEMENT_PENALTY", 0.13, 0.16, 0.18)
     feature_peak_min = _profile_default_float("SMARTGRID_DETECTION_FEATURE_PEAK_MIN", 1.50, 1.60, 1.70)
-    min_signal_strength = _profile_default_float("SMARTGRID_DETECTION_MIN_SIGNAL_STRENGTH", 0.38, 0.44, 0.50)
+    min_signal_strength = _profile_default_float("SMARTGRID_DETECTION_MIN_SIGNAL_STRENGTH", 0.25, 0.32, 0.40)
     min_strong_features = max(1, _env_int("SMARTGRID_DETECTION_MIN_STRONG_FEATURES", 3))
 
     prev_flag = int(agent.anomaly_flag_history[-1]) if agent.anomaly_flag_history else 0
@@ -492,8 +509,8 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
 
     w_dev = _env_float("SMARTGRID_HYBRID_W_DEV", 0.48)
     w_prob = _env_float("SMARTGRID_HYBRID_W_PROB", 0.52)
-    phys_norm = _safe_norm_delta(st.x_phys, agent.bx, agent.thx)
-    cyber_norm = _safe_norm_delta(st.y_cyber, agent.by, agent.thy)
+    phys_norm = _safe_norm_delta(st.x_phys, agent.bx, eff_thx)
+    cyber_norm = _safe_norm_delta(st.y_cyber, agent.by, eff_thy)
     peak_norm_dev = float(max(np.max(phys_norm) if phys_norm.size else 0.0, np.max(cyber_norm) if cyber_norm.size else 0.0))
     strong_feature_count = int(np.sum(phys_norm >= feature_peak_min) + np.sum(cyber_norm >= feature_peak_min))
     voltage, frequency, current, power, response = _extract_phys_signature_features(phys_norm)
@@ -651,7 +668,7 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     evidence = infer_network_attack_evidence(
         y_cyber=st.y_cyber,
         by=agent.by,
-        thy=agent.thy,
+        thy=eff_thy,
         network_prob=float(getattr(st, "network_intrusion_prob", 0.0) or 0.0),
     )
     st.network_attack_label = evidence.label
@@ -680,15 +697,15 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
         explicit_fault_signature or explicit_fdi_signature
         or explicit_dos_signature or explicit_mitm_signature
     )
-    if a == 1:
+    if a == 1 and not severe_deviation:
         # Tier-A suppression: marginal score with weak supporting evidence.
         # Suppress if score is marginal AND at least 3 of 4 weakness indicators hold.
-        marginal_score = score_ratio < 4.50
-        weak_lstm = float(getattr(st, "anomaly_prob_lstm", 0.0) or 0.0) < 0.75
-        weak_network = float(getattr(st, "network_intrusion_prob", 0.0) or 0.0) < 0.65
-        no_hybrid = float(hybrid_conf) < 1.18
-        weakness_count = int(no_signature) + int(weak_lstm) + int(weak_network) + int(no_hybrid)
-        if marginal_score and weakness_count >= 3:
+        # Never suppress severe_deviation — the deviation alone is strong evidence.
+        marginal_score = score_ratio < 3.50
+        weak_lstm = float(getattr(st, "anomaly_prob_lstm", 0.0) or 0.0) < 0.60
+        weak_network = float(getattr(st, "network_intrusion_prob", 0.0) or 0.0) < 0.55
+        no_hybrid = float(hybrid_conf) < 1.05
+        if marginal_score and no_signature and weak_lstm and weak_network and no_hybrid:
             a = 0
             st.anomaly_flag = a
             st.risk_score = agent.update_risk_score_from_flag(a)
@@ -734,18 +751,68 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
 
     # ---- Multi-layer detection (Options B + C) ----
     multilayer_enabled = _env_int("SMARTGRID_MULTILAYER_ENABLED", 1) == 1
+    # Granular ablation toggles (default on; only used to reproduce the ablation study)
+    fault_c4_enabled = _env_int("SMARTGRID_FAULT_C4_ENABLED", 1) == 1
+    severe_corrob_enabled = _env_int("SMARTGRID_SEVERE_CORROB", 1) == 1
     multilayer_label = "NONE"
     multilayer_conf = 0.0
     multilayer_reason = ""
     was_suppressed = int(getattr(st, "fp_suppressed", 0) or 0) > 0
+
+    layer_c1_fdi = cusum_fdi_detector(agent.x_history, agent.bx, scale=eff_thx) if multilayer_enabled else DetectionLayerResult(False, "NONE", 0.0, "")
+    layer_c2_dos = network_dos_detector(st.y_cyber, agent.by) if multilayer_enabled else DetectionLayerResult(False, "NONE", 0.0, "")
+    layer_c3_mitm = integrity_mitm_detector(st.y_cyber, agent.by, y_history=agent.y_history) if multilayer_enabled else DetectionLayerResult(False, "NONE", 0.0, "")
+    layer_c4_fault = fault_signature_detector(
+        st.x_phys, agent.bx,
+        y_cyber=st.y_cyber, baseline_y=agent.by,
+        scale=eff_thx,
+    ) if (multilayer_enabled and fault_c4_enabled) else DetectionLayerResult(False, "NONE", 0.0, "")
+
+    # Cross-layer corroboration: a flag raised purely by deviation magnitude
+    # (severe_dev) with low LSTM confidence and no Layer-C signature agreement
+    # is the dominant FP pattern - noise spike pushes the score over threshold
+    # but no detector identifies a coherent attack signal. Demote these to 0.
+    if (
+        multilayer_enabled
+        and severe_corrob_enabled
+        and a == 1
+        and _trigger == "severe_dev"
+        and prob_conf < 0.45
+        and not (layer_c1_fdi.fired or layer_c2_dos.fired or layer_c3_mitm.fired or layer_c4_fault.fired)
+    ):
+        a = 0
+        st.anomaly_flag = a
+        st.fp_suppressed = 1
+        _trigger = "severe_dev_uncorroborated"
+        st.trigger_path = _trigger
+
+    if multilayer_enabled and a == 0 and layer_c2_dos.fired:
+        a = 1
+        st.anomaly_flag = a
+        st.fp_suppressed = 0
+        multilayer_label = layer_c2_dos.label
+        multilayer_conf = layer_c2_dos.confidence
+        multilayer_reason = layer_c2_dos.reason
+
+    if multilayer_enabled and a == 0 and layer_c3_mitm.fired:
+        a = 1
+        st.anomaly_flag = a
+        st.fp_suppressed = 0
+        multilayer_label = layer_c3_mitm.label
+        multilayer_conf = layer_c3_mitm.confidence
+        multilayer_reason = layer_c3_mitm.reason
+
+    if multilayer_enabled and a == 0 and layer_c4_fault.fired:
+        a = 1
+        st.anomaly_flag = a
+        st.fp_suppressed = 0
+        multilayer_label = layer_c4_fault.label
+        multilayer_conf = layer_c4_fault.confidence
+        multilayer_reason = layer_c4_fault.reason
+
     if multilayer_enabled and a == 0 and not was_suppressed:
         layer_b = sustained_suspicion(agent.anomaly_prob_history)
-        layer_c1 = cusum_fdi_detector(agent.x_history, agent.bx, scale=agent.thx)
-        layer_c2 = network_dos_detector(st.y_cyber, agent.by)
-        layer_c3 = integrity_mitm_detector(
-            st.y_cyber, agent.by, y_history=agent.y_history
-        )
-        winner = combine_layers(layer_b, layer_c1, layer_c2, layer_c3)
+        winner = combine_layers(layer_b, layer_c1_fdi, layer_c2_dos, layer_c3_mitm, layer_c4_fault)
         if winner.fired:
             a = 1
             st.anomaly_flag = a
@@ -758,8 +825,34 @@ def compute_score_and_flag(agent: BaseAgent, st: AgentState) -> AgentState:
     st.multilayer_reason = multilayer_reason
 
     if a == 1:
-        attack_type, attack_confidence = _classify_attack_type(agent, st)
-        if multilayer_label not in ("NONE", "SUSTAINED") and multilayer_conf >= attack_confidence:
+        phys_dominant = (
+            explicit_fault_signature
+            or explicit_fdi_signature
+            or (peak_phys >= 1.10 and peak_phys >= 2.0 * peak_cyber)
+        )
+
+        fired_layers = []
+        # Layer C-4 fires only when one physical feature strongly dominates and
+        # cyber channels stay quiet - this is direct evidence against FDI, so
+        # when C-4 fires it takes precedence over C-1 on the same agent/step.
+        if layer_c4_fault.fired:
+            fired_layers.append(layer_c4_fault)
+        else:
+            if layer_c1_fdi.fired:
+                fired_layers.append(layer_c1_fdi)
+        if not phys_dominant and layer_c2_dos.fired:
+            fired_layers.append(layer_c2_dos)
+        if layer_c3_mitm.fired:
+            fired_layers.append(layer_c3_mitm)
+
+        if fired_layers:
+            best = max(fired_layers, key=lambda r: r.confidence)
+            attack_type = best.label
+            attack_confidence = best.confidence
+        else:
+            attack_type, attack_confidence = _classify_attack_type(agent, st)
+
+        if multilayer_label not in ("NONE", "SUSTAINED") and multilayer_conf > attack_confidence:
             attack_type = multilayer_label
             attack_confidence = multilayer_conf
         st.attack_type = attack_type

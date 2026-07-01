@@ -696,7 +696,9 @@ class RunStartRequest(BaseModel):
     notes: str = ""
     fdi_rate: Optional[float] = None
     dos_rate: Optional[float] = None
+    mitm_rate: Optional[float] = None
     chain_rate: Optional[float] = None
+    audit_protection_window: Optional[int] = None
     lambda_audit: Optional[float] = None
     lambda_attack: Optional[float] = None
     attack_rates: Optional[Dict[str, float]] = None
@@ -774,7 +776,9 @@ def _simulate_run_lifecycle(run_id: str) -> None:
             optimization_profile = "ROBUST"
         fdi_rate = float(params.get("fdi_rate", 0.10))
         dos_rate = float(params.get("dos_rate", 0.05))
+        mitm_rate = float(params.get("mitm_rate", 0.03))
         chain_rate = float(params.get("chain_rate", 0.20))
+        audit_protection_window = int(params.get("audit_protection_window", 0))
         lambda_audit = params.get("lambda_audit")
         lambda_attack = params.get("lambda_attack")
 
@@ -788,7 +792,7 @@ def _simulate_run_lifecycle(run_id: str) -> None:
 
         _append_run_log(run_id, "Run accepted by scheduler")
         _append_run_log(run_id, f"Config: N={num_agents}, episodes={episodes}, mode={ablation_mode}, profile={optimization_profile}, cycle_hours={cycle_hours}")
-        _append_run_log(run_id, f"Attack rates: fdi={fdi_rate:.4f}, dos={dos_rate:.4f}, chain={chain_rate:.4f}")
+        _append_run_log(run_id, f"Attack rates: fdi={fdi_rate:.4f}, dos={dos_rate:.4f}, mitm={mitm_rate:.4f}, chain={chain_rate:.4f}")
         if lambda_audit is not None or lambda_attack is not None:
             _append_run_log(run_id, f"Reward weights: lambda_audit={lambda_audit}, lambda_attack={lambda_attack}")
         _append_run_log(run_id, f"Seed(s): {seeds_env}")
@@ -801,7 +805,9 @@ def _simulate_run_lifecycle(run_id: str) -> None:
         env["SMARTGRID_OPTIMIZATION_PROFILE"] = optimization_profile
         env["SMARTGRID_FDI_RATE"] = str(fdi_rate)
         env["SMARTGRID_DOS_RATE"] = str(dos_rate)
+        env["SMARTGRID_MITM_RATE"] = str(mitm_rate)
         env["SMARTGRID_CHAIN_RATE"] = str(chain_rate)
+        env["SMARTGRID_AUDIT_PROTECTION_WINDOW"] = str(audit_protection_window)
         env["SMARTGRID_SEEDS"] = seeds_env
         if lambda_audit is not None:
             env["SMARTGRID_RW_AUDIT"] = str(float(lambda_audit))
@@ -2238,7 +2244,9 @@ def runs_start(payload: RunStartRequest, _: str = Depends(_security_guard)) -> D
             "attack_profile": payload.attack_profile,
             "fdi_rate": float(payload.fdi_rate if payload.fdi_rate is not None else rates.get("fdi_rate", 0.10)),
             "dos_rate": float(payload.dos_rate if payload.dos_rate is not None else rates.get("dos_rate", 0.05)),
+            "mitm_rate": float(payload.mitm_rate if payload.mitm_rate is not None else rates.get("mitm_rate", 0.03)),
             "chain_rate": float(payload.chain_rate if payload.chain_rate is not None else rates.get("chain_rate", 0.20)),
+            "audit_protection_window": int(payload.audit_protection_window if payload.audit_protection_window is not None else rates.get("audit_protection_window", 0)),
             "lambda_audit": float(payload.lambda_audit) if payload.lambda_audit is not None else None,
             "lambda_attack": float(payload.lambda_attack) if payload.lambda_attack is not None else None,
             "notes": payload.notes,

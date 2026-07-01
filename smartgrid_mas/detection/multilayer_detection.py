@@ -136,7 +136,7 @@ def cusum_fdi_detector(
     but is less robust against noise.
     """
     k = drift_k if drift_k is not None else _env_float("SMARTGRID_CUSUM_K", 0.50)
-    h = alarm_h if alarm_h is not None else _env_float("SMARTGRID_CUSUM_H", 4.00)
+    h = alarm_h if alarm_h is not None else _env_float("SMARTGRID_CUSUM_H", 15.00)
     win = window if window is not None else _env_int("SMARTGRID_CUSUM_WINDOW", 8)
 
     hist = list(phys_history)[-win:]
@@ -178,6 +178,17 @@ def cusum_fdi_detector(
     if peak < h:
         return _NULL_RESULT
 
+    # FDI signature gate: real FDI has a coherent multi-feature signature at the
+    # most recent step (x[0] rises, x[1] rises, x[2] drops). CUSUM accumulates
+    # over windows so it can fire on noise that happened to drift positive.
+    # Demand that the latest step still matches the FDI shape - this filters
+    # the noise-driven fires without hurting true FDI recall.
+    if _env_int("SMARTGRID_CUSUM_SHAPE_GATE", 1) == 1 and seq.shape[0] >= 1 and z.shape[1] >= 3:
+        latest_z = z[-1]
+        shape_votes = int(latest_z[0] > 0.5) + int(latest_z[1] > 0.5) + int(latest_z[2] < -0.5)
+        if shape_votes < 2:
+            return _NULL_RESULT
+
     confidence = float(min(1.0, (peak - h) / max(1.0, h)))
     return DetectionLayerResult(
         fired=True,
@@ -199,14 +210,12 @@ def network_dos_detector(
     comm_drop_frac: Optional[float] = None,
 ) -> DetectionLayerResult:
     """
-    Layer C-2: explicit rule check for DoS network signature.
+    Layer C-2: weighted-score DoS detector across all four cyber features.
 
-    DoS leaves an unmistakable network fingerprint:
-      - latency >> baseline (flooded channel)
-      - packet loss elevated
-      - comm frequency drops (agent stops responding normally)
-
-    Two of three conditions must hold to flag (precision over recall).
+    DoS affects multiple cyber channels simultaneously: elevated latency,
+    increased packet loss, degraded integrity, and reduced comm frequency.
+    A weighted score combines normalised contributions from each feature
+    so that strong signals on any subset can compensate for weaker ones.
     """
     if y_cyber is None or baseline_y is None:
         return _NULL_RESULT
@@ -215,40 +224,40 @@ def network_dos_detector(
     if y.size < 4 or by.size < 4:
         return _NULL_RESULT
 
-    lat_mult = latency_mult if latency_mult is not None else _env_float(
-        "SMARTGRID_DOS_LATENCY_MULT", 3.0
-    )
-    pl_min = packet_loss_min if packet_loss_min is not None else _env_float(
-        "SMARTGRID_DOS_PACKETLOSS_MIN", 0.15
-    )
-    cf_drop = comm_drop_frac if comm_drop_frac is not None else _env_float(
-        "SMARTGRID_DOS_COMM_DROP", 0.40
-    )
-
     base_lat = max(1e-3, float(by[0]))
     latency_ratio = float(y[0]) / base_lat
     packet_loss = float(y[1])
+    base_integrity = max(1e-3, float(by[2]))
+    integrity_drop = max(0.0, (base_integrity - float(y[2])) / base_integrity)
     base_cf = max(1e-3, float(by[3]))
     comm_drop = max(0.0, 1.0 - (float(y[3]) / base_cf))
 
-    cond_lat = latency_ratio >= lat_mult
-    cond_loss = packet_loss >= pl_min
-    cond_drop = comm_drop >= cf_drop
+    score_lat = min(1.0, max(0.0, (latency_ratio - 1.0) / 1.5))
+    score_loss = min(1.0, packet_loss / 0.10)
+    score_integrity = min(1.0, integrity_drop / 0.30)
+    score_comm = min(1.0, comm_drop / 0.20)
 
-    fired_count = int(cond_lat) + int(cond_loss) + int(cond_drop)
-    if fired_count < 2:
+    weighted_score = (
+        0.20 * score_lat
+        + 0.30 * score_loss
+        + 0.30 * score_integrity
+        + 0.20 * score_comm
+    )
+
+    dos_threshold = _env_float("SMARTGRID_DOS_WEIGHTED_THRESHOLD", 0.45)
+
+    if weighted_score < dos_threshold:
         return _NULL_RESULT
 
-    severity = (
-        min(1.0, latency_ratio / max(1.0, lat_mult * 2.0)) * 0.4
-        + min(1.0, packet_loss / max(0.05, pl_min * 2.0)) * 0.3
-        + min(1.0, comm_drop / max(0.05, cf_drop * 2.0)) * 0.3
-    )
+    # Guard: if integrity dominates but latency+loss are weak, this is MITM not DoS
+    if score_integrity >= max(score_lat, score_loss) and latency_ratio < 1.3 and packet_loss < 0.15:
+        return _NULL_RESULT
+
     return DetectionLayerResult(
         fired=True,
         label="DOS",
-        confidence=max(0.55, float(severity)),
-        reason=f"dos_signals={fired_count}/3 (lat={latency_ratio:.1f}x, loss={packet_loss:.2f}, drop={comm_drop:.2f})",
+        confidence=max(0.82, float(min(1.0, weighted_score))),
+        reason=f"dos_score={weighted_score:.2f} (lat={latency_ratio:.1f}x, loss={packet_loss:.2f}, integ_drop={integrity_drop:.2f}, comm_drop={comm_drop:.2f})",
     )
 
 
@@ -294,18 +303,24 @@ def integrity_mitm_detector(
     if not integrity_drop:
         return _NULL_RESULT
 
-    # Temporal consistency: how many sigmas is the current vector from history mean?
-    if y_history is None:
+    # Guard: if latency and packet_loss are both strongly elevated, this is DoS
+    base_lat = max(1e-3, float(by[0]))
+    latency_ratio = float(y[0]) / base_lat
+    packet_loss = float(y[1])
+    if latency_ratio > 1.5 and packet_loss > 0.20:
         return _NULL_RESULT
-    hist = list(y_history)[-8:]
-    if len(hist) < 4:
-        return _NULL_RESULT
-    arr = np.stack([np.asarray(h, dtype=float) for h in hist], axis=0)
-    mu = arr.mean(axis=0)
-    sd = arr.std(axis=0)
-    sd = np.where(sd < 1e-3, 1.0, sd)
-    z = np.abs(y - mu) / sd
-    peak_z = float(np.max(z))
+
+    # Baseline deviation: how far is current observation from known-good baseline?
+    # Persistent MITM shifts all history, so comparing against baseline (not
+    # history mean) catches sustained tampering that a temporal-jump test misses.
+    thy = np.ones_like(by)
+    if y_history is not None:
+        hist = list(y_history)[-8:]
+        if len(hist) >= 4:
+            arr = np.stack([np.asarray(h, dtype=float) for h in hist], axis=0)
+            thy = np.maximum(arr.std(axis=0), 1e-3)
+    baseline_z = np.abs(y - by) / np.maximum(thy, 1e-3)
+    peak_z = float(np.max(baseline_z))
     if peak_z < z_thresh:
         return _NULL_RESULT
 
@@ -317,7 +332,97 @@ def integrity_mitm_detector(
         fired=True,
         label="MITM",
         confidence=max(0.55, confidence),
-        reason=f"integrity_drop={(1.0 - integrity_ratio):.2f}, jump_z={peak_z:.1f}",
+        reason=f"integrity_drop={(1.0 - integrity_ratio):.2f}, baseline_z={peak_z:.1f}",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Layer C-4: Physical fault signature detector
+# ---------------------------------------------------------------------------
+def fault_signature_detector(
+    x_phys: np.ndarray,
+    baseline_x: np.ndarray,
+    *,
+    y_cyber: Optional[np.ndarray] = None,
+    baseline_y: Optional[np.ndarray] = None,
+    scale: Optional[np.ndarray] = None,
+    dominance: Optional[float] = None,
+    primary_min_z: Optional[float] = None,
+    cyber_guard_z: Optional[float] = None,
+) -> DetectionLayerResult:
+    """
+    Layer C-4: template-match the physical residual against the three documented
+    fault signatures (voltage_sag, overcurrent, freq_dev).
+
+    Faults have two distinguishing properties versus cyber attacks:
+      1. Physical-side dominance - one primary feature deviates strongly, others
+         deviate only mildly. FDI, by contrast, perturbs multiple physical
+         features simultaneously with comparable magnitudes.
+      2. Quiet cyber channels - faults do not bias latency, packet_loss or
+         integrity beyond baseline noise. DoS and MITM do.
+
+    Signed templates:
+      voltage_sag : x[0] negative residual dominates
+      overcurrent : x[1] positive residual dominates
+      freq_dev    : x[2] positive residual dominates
+    """
+    if x_phys is None or baseline_x is None:
+        return _NULL_RESULT
+    x = np.asarray(x_phys, dtype=float)
+    bx = np.asarray(baseline_x, dtype=float)
+    if x.size < 3 or bx.size < 3 or x.shape != bx.shape:
+        return _NULL_RESULT
+
+    dom = dominance if dominance is not None else _env_float("SMARTGRID_FAULT_DOMINANCE", 2.0)
+    pmin = primary_min_z if primary_min_z is not None else _env_float("SMARTGRID_FAULT_PRIMARY_Z", 2.2)
+    cyb_guard = cyber_guard_z if cyber_guard_z is not None else _env_float("SMARTGRID_FAULT_CYBER_GUARD_Z", 2.5)
+
+    if scale is not None:
+        sc = np.asarray(scale, dtype=float)
+        if sc.shape != bx.shape:
+            sc = np.ones_like(bx)
+        sc = np.maximum(sc, 1e-3)
+    else:
+        sc = np.ones_like(bx)
+
+    residual = x - bx
+    z = residual / sc
+
+    z_sag = -z[0]
+    z_oc = z[1] if x.size > 1 else 0.0
+    z_fd = z[2] if x.size > 2 else 0.0
+
+    templates = (
+        ("VOLTAGE_SAG", float(z_sag), 0),
+        ("OVERCURRENT", float(z_oc), 1),
+        ("FREQ_DEV", float(z_fd), 2),
+    )
+    name, primary_z, primary_idx = max(templates, key=lambda t: t[1])
+
+    if primary_z < pmin:
+        return _NULL_RESULT
+
+    others = np.delete(np.abs(z), primary_idx)
+    other_peak = float(np.max(others)) if others.size else 0.0
+    if primary_z < dom * max(other_peak, 1e-3):
+        return _NULL_RESULT
+
+    if y_cyber is not None and baseline_y is not None:
+        y = np.asarray(y_cyber, dtype=float)
+        by = np.asarray(baseline_y, dtype=float)
+        if y.size and by.size and y.shape == by.shape:
+            cyber_scale = np.maximum(np.abs(by), 1e-3)
+            cyber_z = np.abs(y - by) / cyber_scale
+            if float(np.max(cyber_z)) >= cyb_guard:
+                return _NULL_RESULT
+
+    confidence = float(min(1.0, (primary_z - pmin) / max(1.0, pmin) + 0.55))
+    confidence = max(0.55, min(1.0, confidence))
+    return DetectionLayerResult(
+        fired=True,
+        label="FAULT",
+        confidence=confidence,
+        reason=f"fault_template={name} primary_z={primary_z:.2f} other_peak_z={other_peak:.2f}",
     )
 
 
@@ -350,5 +455,6 @@ __all__ = [
     "cusum_fdi_detector",
     "network_dos_detector",
     "integrity_mitm_detector",
+    "fault_signature_detector",
     "combine_layers",
 ]

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
 import { ViewModeBanner } from '@/components/ui/ViewModeBanner'
 import { useDashboard } from '@/lib/dashboardContext'
-import { Code2, Link2, FileBarChart2, Database, Plug2, ArrowUpRight } from 'lucide-react'
+import { Code2, FileBarChart2, Database, Plug2, ArrowUpRight } from 'lucide-react'
 
 const TOOLS = [
   {
@@ -13,13 +13,6 @@ const TOOLS = [
     description: 'Inspect and test backend endpoints from one place.',
     icon: Code2,
     tag: 'Developer',
-  },
-  {
-    href: '/blockchain',
-    title: 'Blockchain Ledger',
-    description: 'Review chain integrity and anchored audit events.',
-    icon: Link2,
-    tag: 'Integrity',
   },
   {
     href: '/reports',

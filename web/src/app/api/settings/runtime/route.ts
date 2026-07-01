@@ -52,6 +52,7 @@ function buildRuntimeEnv(payload: SettingsPayload): Record<string, string> {
     SMARTGRID_TRAIN_EPISODES: String(toNumber(payload.episodes, 200)),
     SMARTGRID_FDI_RATE: String(toRatio(payload.fdi_rate, 0.10)),
     SMARTGRID_DOS_RATE: String(toRatio(payload.dos_rate, 0.05)),
+    SMARTGRID_MITM_RATE: String(toRatio(payload.mitm_rate, 0.03)),
     SMARTGRID_CHAIN_RATE: String(toRatio(payload.chain_rate, 0.20)),
     SMARTGRID_FAULT_RATE: String(toRatio(payload.fault_rate, 0.20)),
     SMARTGRID_SCORE_THRESHOLD: String(toNumber(payload.anomaly_th, 0.25)),
@@ -85,6 +86,7 @@ function buildRuntimeEnv(payload: SettingsPayload): Record<string, string> {
     SMARTGRID_SCADA_INDEPENDENT_RATE_PRESET: 'Realistic',
     SMARTGRID_SCADA_ANOMALY_CYCLE_SECONDS: '150',
     SMARTGRID_SCADA_ANOMALY_INTENSITY: '1.0',
+    SMARTGRID_AUDIT_PROTECTION_WINDOW: String(toNumber(payload.audit_protection_window, 0)),
   }
 }
 

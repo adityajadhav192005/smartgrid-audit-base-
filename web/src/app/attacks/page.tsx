@@ -137,7 +137,7 @@ export default function AttacksPage() {
 
         <div className="lg:col-span-3 glass-card p-5 space-y-4">
           {!selectedAttack && (
-            <div className="text-sm text-slate-500">No live attack events yet. Waiting for blockchain-backed telemetry...</div>
+            <div className="text-sm text-slate-500">No live attack events yet. Waiting for live attack telemetry...</div>
           )}
           {selectedAttack && (
           <>

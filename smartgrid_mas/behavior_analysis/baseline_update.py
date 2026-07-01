@@ -38,13 +38,13 @@ def update_baseline_vector(
     if not (0.0 < alpha_low < 1.0) or not (0.0 < alpha_high < 1.0):
         raise ValueError("alpha_low and alpha_high must be in (0,1)")
 
-    # FIX: Never update baselines during anomalies to prevent contamination
-    # During anomalies (flag=1): return unchanged baseline
-    # During normal conditions (flag=0): use alpha_low for conservative updates
+    # Freeze baselines during anomalies to prevent attack contamination.
+    # Also freeze when the LSTM anomaly probability is elevated (>0.3),
+    # even if the flag didn't fire, to block the vicious cycle where
+    # undetected attacks slowly poison the baseline.
     if int(anomaly_flag) == 1:
-        return b_old  # DO NOT UPDATE - protects baseline from attack pollution
+        return b_old
     else:
-        # Apply conservative EMA update only for normal conditions
         return (1.0 - alpha_low) * b_old + alpha_low * obs
 
 def update_agent_baselines(

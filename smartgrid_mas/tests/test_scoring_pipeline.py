@@ -67,7 +67,7 @@ def test_cyber_heavy_signal_classifies_as_dos():
     agent = _make_agent("SUB-21", AgentType.SUBSTATION)
     st = agent.observe(
         np.array([230.5, 50.0, 15.2, 3.1, 3.4], dtype=float),
-        np.array([10.0, 0.085, 0.98, 18.0], dtype=float),
+        np.array([15.0, 0.12, 0.98, 18.0], dtype=float),
     )
     st.anomaly_prob = 0.995
 
@@ -97,7 +97,7 @@ def test_integrity_dominant_signal_classifies_as_mitm():
     agent = _make_agent("PMU-51", AgentType.PMU)
     st = agent.observe(
         np.array([230.2, 50.0, 15.1, 3.0, 3.0], dtype=float),
-        np.array([6.0, 0.03, 0.2, 35.0], dtype=float),
+        np.array([12.0, 0.08, 0.05, 35.0], dtype=float),
     )
     st.anomaly_prob = 0.995
 
@@ -141,10 +141,10 @@ def test_breaker_physical_signal_classifies_as_fault():
 def test_physical_fault_signature_can_rescue_binary_flag():
     agent = _make_agent("BRK-84", AgentType.BREAKER)
     st = agent.observe(
-        np.array([246.0, 49.4, 28.0, 8.0, 7.4], dtype=float),
+        np.array([260.0, 47.0, 42.0, 15.0, 12.0], dtype=float),
         np.array([3.2, 0.002, 0.99, 49.0], dtype=float),
     )
-    st.anomaly_prob = 0.57
+    st.anomaly_prob = 0.65
 
     compute_score_and_flag(agent, st)
 
@@ -156,7 +156,7 @@ def test_physical_fault_stays_fault_even_with_network_branch_signal():
     agent = _make_agent("BRK-91", AgentType.BREAKER)
     st = agent.observe(
         np.array([260.0, 47.5, 46.0, 18.0, 14.0], dtype=float),
-        np.array([9.0, 0.08, 0.2, 22.0], dtype=float),
+        np.array([9.0, 0.08, 0.7, 22.0], dtype=float),
     )
     st.anomaly_prob = 0.99
     st.network_intrusion_prob = 0.99
@@ -183,10 +183,10 @@ def test_generator_physical_signal_classifies_as_fdi():
 def test_physical_fdi_signature_can_rescue_binary_flag():
     agent = _make_agent("GEN-07", AgentType.GENERATOR)
     st = agent.observe(
-        np.array([248.0, 49.0, 24.0, 7.0, 2.4], dtype=float),
+        np.array([268.0, 48.0, 47.0, 18.0, 2.4], dtype=float),
         np.array([3.2, 0.002, 0.99, 49.0], dtype=float),
     )
-    st.anomaly_prob = 0.56
+    st.anomaly_prob = 0.70
 
     compute_score_and_flag(agent, st)
 

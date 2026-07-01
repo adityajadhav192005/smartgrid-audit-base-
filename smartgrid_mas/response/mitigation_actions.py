@@ -96,6 +96,18 @@ def apply_mitigation(
         mitigation_delay = 0
     mitigation_delay = max(0, mitigation_delay)
 
+    # Evaluation mode: when audit_protection_window=0 the experiment is measuring
+    # detector performance across the full attack timeline. Isolating/shutting down
+    # agents zeroes their data signal, hiding subsequent attacks from the LSTM and
+    # collapsing per-attack ground truth. In this mode, demote HIGH/CRITICAL to
+    # logging so every attack step remains observable. Production runs (window>0)
+    # keep full mitigation semantics.
+    try:
+        _eval_window = int(os.environ.get("SMARTGRID_AUDIT_PROTECTION_WINDOW", "24"))
+    except Exception:
+        _eval_window = 24
+    eval_mode = (_eval_window == 0)
+
     # Apply action based on severity
     if level == SeverityLevel.LOW:
         # Passive monitoring - no structural changes
@@ -118,6 +130,11 @@ def apply_mitigation(
         event["new_frequency"] = agent.audit_frequency
     
     elif level == SeverityLevel.HIGH:
+        if eval_mode:
+            m.notes = "Eval mode: HIGH severity logged without isolation."
+            event["action"] = "LOG_EVAL"
+            event["eval_mode"] = True
+            return event
         # Audit may miss (stochastic realism)
         audit_success = random.random() < audit_success_prob
         event["audit_success"] = bool(audit_success)
@@ -140,6 +157,11 @@ def apply_mitigation(
             event["action"] = "ISOLATE_NOTIFY"
     
     elif level == SeverityLevel.CRITICAL:
+        if eval_mode:
+            m.notes = "Eval mode: CRITICAL severity logged without shutdown."
+            event["action"] = "LOG_EVAL"
+            event["eval_mode"] = True
+            return event
         # Audit may miss (stochastic realism)
         audit_success = random.random() < audit_success_prob
         event["audit_success"] = bool(audit_success)

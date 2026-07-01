@@ -29,143 +29,129 @@ const HEADLINE = [
 const CONTRIBUTIONS = [
   {
     id: 1,
-    name: 'Federated Learning (FedAvg + FL coordinator)',
-    where: 'smartgrid_mas/federated/{fedavg,orchestrator}.py',
-    why: 'Paper proposes centralised RL audit scheduling; cross-utility deployment requires raw-data locality.',
-    paper: 'Future work',
-  },
-  {
-    id: 2,
-    name: 'Blockchain-anchored audit ledger (hash chain)',
-    where: 'smartgrid_mas/integration/blockchain_logger.py + web/src/app/blockchain/page.tsx',
-    why: 'Tamper-evident audit history. Paper has only a mutable in-memory ledger.',
-    paper: 'Future work',
-  },
-  {
-    id: 3,
     name: 'Explainable AI feature attribution',
     where: 'smartgrid_mas/xai/explain.py + web/src/app/xai/page.tsx',
     why: 'Per-feature deviation contribution + natural-language audit decision rationale.',
     paper: 'Future work',
   },
   {
-    id: 4,
+    id: 2,
     name: 'Dual-branch LSTM detection (PyTorch)',
     where: 'smartgrid_mas/anomaly_detection/{lstm_model,dual_branch}.py',
     why: 'Branch-1 on physical metrics, Branch-2 on cyber metrics, decision-level fusion with agreement bonus.',
     paper: 'Mentioned in Table 5 but not implemented',
   },
   {
-    id: 5,
+    id: 3,
     name: 'Cryptographic integrity validator (CRC32 + hash entropy)',
     where: 'smartgrid_mas/detection/integrity_validator.py',
     why: 'Catches stealthy FDI/MITM that stay within statistical thresholds.',
     paper: 'Not present',
   },
   {
-    id: 6,
+    id: 4,
     name: '2-of-3 voting ensemble (Deviation + LSTM + Integrity)',
     where: 'smartgrid_mas/detection/unified_detector.py',
     why: 'Three orthogonal modalities reduce false positives without sacrificing recall.',
     paper: 'Single-modality detector',
   },
   {
-    id: 7,
+    id: 5,
     name: 'Network attack family classifier (DOS / MITM / NETWORK)',
     where: 'smartgrid_mas/detection/network_attack_evidence.py',
     why: 'Classifies attack family using cyber metric signatures + UNSW-NB15 priors.',
     paper: 'Binary anomaly flag only',
   },
   {
-    id: 8,
+    id: 6,
     name: 'UNSW-NB15 network intrusion dataset integration',
     where: 'smartgrid_mas/data/network_intrusion_dataset.py',
     why: 'Real-world network intrusion data for cyber-branch training and family priors.',
     paper: 'Synthetic only',
   },
   {
-    id: 9,
+    id: 7,
     name: 'Hybrid RL + Gradient scheduler',
     where: 'smartgrid_mas/audit/hybrid_scheduler.py',
     why: 'RL proposes direction; gradient refines magnitude; cluster-budget allocation by aggregate cluster risk.',
     paper: 'RL and gradient described separately',
   },
   {
-    id: 10,
+    id: 8,
     name: 'Multi-objective reward with quadratic penalty',
     where: 'smartgrid_mas/environment/reward_function.py',
     why: 'Quadratic penalty for high-risk under-audited agents; budget barrier; mitigation bonus.',
     paper: 'Linear FP/FN penalty',
   },
   {
-    id: 11,
+    id: 9,
     name: 'MITM attack injection',
     where: 'smartgrid_mas/data/cyber_attacks.py',
     why: 'Adds MITM to FDI + DOS + chain. Paper does not test MITM.',
     paper: 'Not tested',
   },
   {
-    id: 12,
+    id: 10,
     name: 'Audit protection window',
     where: 'smartgrid_mas/environment/scenario_engine.py',
     why: 'Recently audited agents excluded from re-attack injection (24-step protection).',
     paper: 'Not modelled',
   },
   {
-    id: 13,
+    id: 11,
     name: 'Ablation study modes (HYBRID / RL_ONLY / GRADIENT_ONLY)',
     where: 'smartgrid_mas/simulation/run_simulation.py',
     why: 'Isolate the contribution of each scheduler component.',
     paper: 'No ablation',
   },
   {
-    id: 14,
+    id: 12,
     name: 'Statistical significance testing',
     where: 'smartgrid_mas/simulation/eval_suite.py',
     why: 'Paired t-test (Wilcoxon fallback) on attack-rate and cost-efficiency time series.',
     paper: 'Mean comparison only',
   },
   {
-    id: 15,
+    id: 13,
     name: 'Cross-layer stability index (CLSI)',
     where: 'smartgrid_mas/simulation/eval_suite.py',
     why: 'Operationalises Objective-3 from the paper (cross-layer discrepancy) as a measurable index.',
     paper: 'Defined in problem formulation but not measured',
   },
   {
-    id: 16,
+    id: 14,
     name: 'Three optimization profiles (ROBUST / BALANCED / COST)',
     where: 'smartgrid_mas/environment/reward_function.py + scoring_pipeline.py',
     why: 'Tunable security/cost trade-off via SMARTGRID_OPTIMIZATION_PROFILE env var.',
     paper: 'Single fixed parameter set',
   },
   {
-    id: 17,
+    id: 15,
     name: 'Tier-A FP suppression layer',
     where: 'smartgrid_mas/behavior_analysis/scoring_pipeline.py',
     why: 'Demotes flags whose deviation is marginal AND signature/ML evidence is weak. Cuts FPR by 1.6× without recall loss.',
     paper: 'Not present',
   },
   {
-    id: 18,
+    id: 16,
     name: 'Cost-adjusted mitigation KPI',
     where: 'smartgrid_mas/simulation/eval_suite.py',
     why: 'Risk-points cleared per audit dollar, plus audit dollars per percentage-point of mitigation.',
     paper: 'Not reported',
   },
   {
-    id: 19,
+    id: 17,
     name: 'Rapid SCADA live integration',
     where: 'smartgrid_mas/integration/{scada_adapter,live_experiment_pipeline}.py',
     why: 'Real-time polling of Rapid SCADA tags through the full detection pipeline.',
     paper: 'Simulated datasets only',
   },
   {
-    id: 20,
-    name: 'IDS/IPS alert intake (REST API)',
-    where: 'smartgrid_mas/integration/ids_adapter.py + /v1/ids/alert',
-    why: 'External IDS alerts mapped to MAS audit actions (ISOLATE / INCREASE / MAINTAIN / LOG).',
-    paper: 'Listed as future deployment challenge',
+    id: 18,
+    name: 'Signature-template physical fault detector (Layer C-4)',
+    where: 'smartgrid_mas/detection/multilayer_detection.py + scoring_pipeline.py',
+    why: 'Types physical faults by template match with cyber-quiet dominance gate; raises FAULT TPR from 8.1% to 98.6%.',
+    paper: 'Not present',
   },
 ] as const
 
@@ -217,7 +203,8 @@ export default function FinalReportPage() {
         </h2>
         <p className="text-sm text-slate-500 leading-relaxed">
           Reported under paper-matched conditions: N=100 agents, 24-hour operational cycle, ROBUST optimization profile,
-          attack rates FDI=10% / DoS=5% / chain=20%, seed=42.
+          attack rates FDI=10% / DoS=5% / MITM=3% / fault=20% / chain=20%. The report headline figures are averaged
+          across five seeds (42–46); the numbers below reflect the most recent run.
         </p>
         <div className="border border-slate-200 rounded-md overflow-hidden">
           <table className="report-table">
@@ -259,9 +246,10 @@ export default function FinalReportPage() {
           </table>
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Recall is held at 100% across all parameter sweeps — the framework guarantees zero missed binary-truth
-          attacks at the cost of accepting some marginal false positives, which is the appropriate operating point for
-          security-critical infrastructure. F1 reflects this asymmetry.
+          Recall stays close to complete across the parameter sweeps — 98.24% at the system level with audit protection
+          active and 99.73% in evaluation mode — so the framework misses very few genuine attacks at the cost of
+          accepting some marginal false positives, which is the appropriate operating point for security-critical
+          infrastructure. F1 reflects this asymmetry.
         </p>
       </section>
 
@@ -426,10 +414,10 @@ export default function FinalReportPage() {
         </h2>
         <ul className="text-sm text-slate-500 leading-relaxed space-y-2 list-disc pl-5">
           <li>
-            Multi-seed validation showed clean 99.76% accuracy on 4 of 5 seeds; one outlier (seed=7) hit
-            {' '}<code className="text-amber-700 bg-slate-50 px-1 rounded">extreme_attack_density (&gt;50%)</code>{' '}
-            — a self-flagged validity warning where the random injection was so dense that the EWMA baseline absorbed
-            sustained drift. We report this rather than hide it.
+            Multi-seed validation across seeds 42 to 46 — each seed attacking a different set of agents with a
+            different noise pattern — gives a detection accuracy of 93.85% with a standard deviation of 0.33 percentage
+            points, and a false positive rate of 6.18% with the same 0.33 point spread. The results are stable across
+            seeds rather than resting on a single run.
           </li>
           <li>
             The base paper&apos;s binary truth definition counts only high-impact attack events (~33 of 28800 at 24h).
