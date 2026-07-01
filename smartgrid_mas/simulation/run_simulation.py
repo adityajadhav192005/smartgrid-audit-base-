@@ -80,8 +80,12 @@ def run_simulation_24h(
     # Scenario rates
     scenario_fdi_rate: float = 0.10,
     scenario_dos_rate: float = 0.05,
+    scenario_mitm_rate: float = 0.03,
     scenario_chain_rate: float = 0.05,
     scenario_fault_rate: float = 0.05,
+    audit_protection_window: int = 24,
+    # Scenario placement seed (controls which agents are attacked each run)
+    scenario_seed: int = 42,
     # Attack/fault magnitude configs
     attack_cfg: AttackConfig | None = None,
     fault_cfg: FaultConfig | None = None,
@@ -129,11 +133,13 @@ def run_simulation_24h(
     scenario = ScenarioEngine(
         agents,
         ScenarioConfig(
-            seed=42,
+            seed=scenario_seed,
             fdi_rate=scenario_fdi_rate,
             dos_rate=scenario_dos_rate,
+            mitm_rate=scenario_mitm_rate,
             chain_rate=scenario_chain_rate,
             fault_rate=scenario_fault_rate,
+            audit_protection_window=audit_protection_window,
         ),
     )
     
@@ -184,8 +190,8 @@ def run_simulation_24h(
         audit_cost_per_audit=audit_cost_per_audit,
     )
     
-    # Environment
-    env_cfg = GridEnvConfig(seed=42)
+    # Environment (same seed as scenario placement so each run is a distinct realisation)
+    env_cfg = GridEnvConfig(seed=scenario_seed)
     env = GridEnvironment(agents, env_cfg, scenario=scenario, attack_cfg=attack_cfg, fault_cfg=fault_cfg)
 
     # Respect LSTM training window if available
@@ -274,23 +280,27 @@ def run_simulation_24h(
             # NOTE: CHAIN is tracked separately via convergence_info; chain members
             # still carry their underlying attack type (MITM/FDI) for class metrics.
             atk_type = "NONE"
-            if env.last_attacks:
-                at = env.last_attacks.get(a.agent_id)
-                if at is not None:
-                    try:
-                        raw = str(getattr(at, "name", getattr(at, "value", str(at)))).upper()
-                    except Exception:
-                        raw = str(at).upper()
-                    if raw in {"FDI", "DOS", "MITM"}:
-                        atk_type = raw
+            # Only count attacks that actually applied (binary truth==1). Isolated/shutdown
+            # agents have last_attacks populated but their data was zeroed in grid_env.step,
+            # so the detector cannot see an attack signature on a clean signal.
+            if ground_truth == 1:
+                if env.last_attacks:
+                    at = env.last_attacks.get(a.agent_id)
+                    if at is not None:
+                        try:
+                            raw = str(getattr(at, "name", getattr(at, "value", str(at)))).upper()
+                        except Exception:
+                            raw = str(at).upper()
+                        if raw in {"FDI", "DOS", "MITM"}:
+                            atk_type = raw
 
-            has_fault = bool(
-                env.last_faults
-                and env.last_faults.get(a.agent_id)
-                and env.last_faults.get(a.agent_id) != FaultType.NONE
-            )
-            if atk_type == "NONE" and has_fault:
-                atk_type = "FAULT"
+                has_fault = bool(
+                    env.last_faults
+                    and env.last_faults.get(a.agent_id)
+                    and env.last_faults.get(a.agent_id) != FaultType.NONE
+                )
+                if atk_type == "NONE" and has_fault:
+                    atk_type = "FAULT"
             y_true_types.append(atk_type)
         
         # === STEP 4: Baseline + Threshold Updates (Behavior Analysis) ===
@@ -572,8 +582,10 @@ def run_simulation_24h(
             "grad_lr": grad_lr,
             "scenario_fdi_rate": scenario_fdi_rate,
             "scenario_dos_rate": scenario_dos_rate,
+            "scenario_mitm_rate": scenario_mitm_rate,
             "scenario_chain_rate": scenario_chain_rate,
             "scenario_fault_rate": scenario_fault_rate,
+            "audit_protection_window": audit_protection_window,
         },
     }
     

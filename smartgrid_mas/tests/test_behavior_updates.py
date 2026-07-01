@@ -26,17 +26,17 @@ def test_baseline_zero_change_no_anomaly():
     assert np.all(np.abs(delta) < 0.02), f"Expected small change, got {delta}"
 
 def test_threshold_increases_with_deviation():
-    """Threshold should increase proportionally to deviation."""
-    th = np.array([1.0, 1.0])
+    """Threshold should move toward observed deviation (mean-reverting EMA)."""
+    th = np.array([0.1, 0.1])
     obs = np.array([5.0, 1.0])
     base = np.array([1.0, 1.0])
 
     th_new = update_threshold_vector(th, obs, base, beta=0.5, th_min=1e-3, th_max=100.0)
-    
-    # First element has large deviation, should increase
+
+    # First element has large deviation (4.0), threshold should increase toward it
     assert th_new[0] > th[0], f"Expected th_new[0] > th[0], got {th_new[0]} vs {th[0]}"
-    # Second element has no deviation, should remain unchanged
-    assert th_new[1] == th[1], f"Expected th_new[1] == th[1], got {th_new[1]} vs {th[1]}"
+    # Second element has zero deviation, threshold should shrink toward th_min
+    assert th_new[1] < th[1], f"Expected th_new[1] < th[1], got {th_new[1]} vs {th[1]}"
 
 def test_threshold_respects_bounds():
     """Threshold must be bounded and strictly positive."""

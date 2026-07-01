@@ -142,7 +142,7 @@ def run_comparison(
 
     scenario_full = ScenarioEngine(
         agents_full,
-        ScenarioConfig(seed=seed, fdi_rate=0.10, dos_rate=0.05, chain_rate=0.05, fault_rate=0.05),
+        ScenarioConfig(seed=seed, fdi_rate=0.10, dos_rate=0.05, mitm_rate=0.03, chain_rate=0.05, fault_rate=0.05, audit_protection_window=0),
     )
     env_full = GridEnvironment(
         agents_full, GridEnvConfig(seed=seed),

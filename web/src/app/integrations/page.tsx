@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useDashboard } from '@/lib/dashboardContext'
 import { useLatestRun } from '@/lib/latestRun'
 import { cn } from '@/lib/utils'
-import { Activity, CheckCircle2, Clock, ExternalLink, Link2, MonitorPlay, Wifi, WifiOff } from 'lucide-react'
+import { Activity, CheckCircle2, Clock, ExternalLink, MonitorPlay, Wifi, WifiOff } from 'lucide-react'
 
 type GridStatusPayload = {
   rapid_scada?: {
@@ -186,10 +186,6 @@ export default function IntegrationsPage() {
               <MonitorPlay size={11} />
               Open Rapid SCADA Grid
               <ExternalLink size={9} className="opacity-60" />
-            </Link>
-            <Link href="/blockchain" className="flex items-center gap-1.5 text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded transition-colors">
-              <Link2 size={11} />
-              Review Blockchain Events
             </Link>
           </div>
         </div>

@@ -73,7 +73,7 @@ SEED = 42
 CONFIG_PATH = os.environ.get('SMARTGRID_CONFIG', "smartgrid_mas/config/global_config.yaml")
 LSTM_MODEL_PATH = "smartgrid_mas/data/anomaly_inputs/lstm.pt"
 NETWORK_LSTM_MODEL_PATH = "smartgrid_mas/data/anomaly_inputs/lstm_network.pt"
-LOGS_DIR = Path("logs")
+LOGS_DIR = Path(os.environ.get("SMARTGRID_LOGS_DIR", "logs"))
 DATA_DIR = Path("smartgrid_mas/data")
 
 # Paper parameters (non-negotiable)
@@ -144,8 +144,10 @@ LSTM_WINDOW = _env_int("SMARTGRID_LSTM_WINDOW", 24)
 # Attack scenario parameters (env-overridable for stress testing)
 FDI_RATE = _env_float("SMARTGRID_FDI_RATE", 0.10)
 DOS_RATE = _env_float("SMARTGRID_DOS_RATE", 0.05)
+MITM_RATE = _env_float("SMARTGRID_MITM_RATE", 0.03)
 CHAIN_RATE = _env_float("SMARTGRID_CHAIN_RATE", 0.20)
 FAULT_RATE = _env_float("SMARTGRID_FAULT_RATE", 0.20)
+AUDIT_PROTECTION_WINDOW = _env_int("SMARTGRID_AUDIT_PROTECTION_WINDOW", 0)
 
 # Agent distribution (paper-faithful)
 GEN_RATIO = 0.20
@@ -760,6 +762,7 @@ def run_all_simulations(
     ablation_mode: str = 'HYBRID',
     n_specific_budget_ratio: float | None = None,
     n_agents: int | None = None,
+    scenario_seed: int = SEED,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[int], List[int], List[str], List[str], float, float, Dict[str, Any]]:
     """
     Run both dynamic (RL+gradient) and baseline (f=1) simulations.
@@ -843,8 +846,11 @@ def run_all_simulations(
         ablation_mode=ablation_mode,
         scenario_fdi_rate=FDI_RATE,
         scenario_dos_rate=DOS_RATE,
+        scenario_mitm_rate=MITM_RATE,
         scenario_chain_rate=CHAIN_RATE,
         scenario_fault_rate=FAULT_RATE,
+        audit_protection_window=AUDIT_PROTECTION_WINDOW,
+        scenario_seed=scenario_seed,
         attack_cfg=attack_cfg,
         fault_cfg=fault_cfg,
     )
@@ -868,8 +874,11 @@ def run_all_simulations(
         beta=BETA,
         scenario_fdi_rate=FDI_RATE,
         scenario_dos_rate=DOS_RATE,
+        scenario_mitm_rate=MITM_RATE,
         scenario_chain_rate=CHAIN_RATE,
         scenario_fault_rate=FAULT_RATE,
+        audit_protection_window=AUDIT_PROTECTION_WINDOW,
+        scenario_seed=scenario_seed,
         attack_cfg=attack_cfg,
         fault_cfg=fault_cfg,
     )
@@ -1311,8 +1320,10 @@ def main() -> None:
                 logger.info("="*70)
                 logger.info(f"✓ FDI rate: {FDI_RATE:.0%}")
                 logger.info(f"✓ DoS rate: {DOS_RATE:.0%}")
+                logger.info(f"✓ MITM rate: {MITM_RATE:.0%}")
                 logger.info(f"✓ Chain attack rate: {CHAIN_RATE:.0%}")
                 logger.info(f"✓ Fault rate: {FAULT_RATE:.0%}")
+                logger.info(f"✓ Audit protection window: {AUDIT_PROTECTION_WINDOW} (0=eval mode)")
 
                 # Step 6.5: N-specific parameter overrides (env var > config file > default)
                 budget_per_n = config.get("audit", {}).get("budget_per_n", {})
@@ -1340,8 +1351,8 @@ def main() -> None:
                 for ablation_mode in ablation_modes:
                     logger.info(f"\n  → Ablation mode: {ablation_mode}")
                     dyn_metrics, dyn_events, base_metrics, base_events, y_true_dyn, y_pred_dyn, y_pred_types_dyn, y_true_types_dyn, initial_risk_dyn, final_risk_dyn, conv_info_dyn = run_all_simulations(
-                        agents_dyn, agents_base, lstm_infer, network_lstm_infer, config, logger, ablation_mode=ablation_mode, 
-                        n_specific_budget_ratio=n_specific_budget_ratio, n_agents=n_agents
+                        agents_dyn, agents_base, lstm_infer, network_lstm_infer, config, logger, ablation_mode=ablation_mode,
+                        n_specific_budget_ratio=n_specific_budget_ratio, n_agents=n_agents, scenario_seed=current_seed
                     )
                     ablation_results[ablation_mode] = {
                         'dyn_metrics': dyn_metrics, 'dyn_events': dyn_events,
