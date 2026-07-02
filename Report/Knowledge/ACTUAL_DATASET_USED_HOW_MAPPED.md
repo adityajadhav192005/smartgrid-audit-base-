@@ -178,8 +178,8 @@ Total observations: 10,000
     │ truth (known attack labels)       │
     │                                   │
     │ Output metrics:                   │
-    │ ├─ Detection Rate (DR): 99.76%    │
-    │ ├─ False Positive Rate: 0.24%     │
+    │ ├─ Detection Rate (DR): 94.23%    │
+    │ ├─ False Positive Rate: 1.81%     │
     │ ├─ F1 Score: 82.25%               │
     │ ├─ Precision: 89.95%              │
     │ └─ Recall: 75.76%                 │
@@ -457,9 +457,9 @@ accuracy = (y_pred == y_true).mean()
 dr = recall_score(y_true, y_pred)  # Detection Rate
 fpr = false_positive_rate(y_true, y_pred)
 
-print(f"Accuracy: 99.76%")
-print(f"DR: 99.76%")
-print(f"FPR: 0.24%")
+print(f"Accuracy: 94.23%")
+print(f"DR: 94.23%")
+print(f"FPR: 1.81%")
 ```
 
 ---
@@ -513,7 +513,7 @@ UCI Grid Stability Dataset (Real World)
         │ Report metrics
         │
         ▼
-   Results: 99.76% DR, 0.24% FPR, 82.25% F1
+   Results: 94.23% DR, 1.81% FPR, 82.25% F1
 ```
 
 ---

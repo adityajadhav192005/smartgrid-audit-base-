@@ -508,8 +508,8 @@ fused = 0.568 + 0.024 - 0.020 + 0 = 0.572 < 0.715
 │                                                                 │
 │  Compare predictions vs ground truth                            │
 │       │                                                        │
-│       ├─ Detection Rate (DR): 99.76%                           │
-│       ├─ False Positive Rate (FPR): 0.24%                      │
+│       ├─ Detection Rate (DR): 94.23%                           │
+│       ├─ False Positive Rate (FPR): 1.81%                      │
 │       ├─ Precision: 89.95%                                     │
 │       ├─ Recall: 75.76%                                        │
 │       └─ F1 Score: 82.25%                                      │

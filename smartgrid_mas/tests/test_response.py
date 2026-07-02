@@ -108,8 +108,15 @@ def test_likelihood_from_history():
     print(f"✓ Likelihood: all={likelihood1:.1f}, none={likelihood2:.1f}, half={likelihood3:.1f}")
 
 
-def test_mitigation_actions():
+def test_mitigation_actions(monkeypatch):
     """Test mitigation actions for each severity level."""
+    # Pin the stochastic and mode-dependent inputs so the test is deterministic:
+    # audit always succeeds (no random AUDIT_MISS), protected mode (not LOG_EVAL),
+    # and no actuation delay (immediate ISOLATE/SHUTDOWN rather than PENDING).
+    monkeypatch.setenv("SMARTGRID_AUDIT_SUCCESS_PROB", "1.0")
+    monkeypatch.setenv("SMARTGRID_AUDIT_PROTECTION_WINDOW", "24")
+    monkeypatch.setenv("SMARTGRID_MITIGATION_DELAY", "0")
+
     agent = make_test_agent("A0", AgentType.GENERATOR)
     
     # LOW: Log and monitor

@@ -273,4 +273,4 @@ The specialists (Layer C) catch **subtle, domain-specific patterns** that the en
 
 The suppression gate **kills false positives** by checking: "Is this small? No specialists fired? Low LSTM confidence? → It's noise, suppress it."
 
-Together: **High recall (catch real attacks) + Low FPR (few false alarms) = 0.39% FPR, 75.76% recall.**
+Together: **High recall (catch real attacks) + Low FPR (few false alarms) = 1.81% FPR, 75.76% recall** in the five-method comparative study.
