@@ -2,45 +2,38 @@
 
 import { Badge } from '@/components/ui/Badge'
 import { KPIStatCard } from '@/components/ui/KPIStatCard'
-import { Brain, SlidersHorizontal, Shield, Sigma, Layers, Cpu, Hash, GitMerge, Activity } from 'lucide-react'
+import { Brain, SlidersHorizontal, Shield, Sigma, Layers, Cpu, Activity } from 'lucide-react'
 import { useExperimentTelemetry } from '@/lib/experimentTelemetry'
 import { PerAttackBarChart } from '@/components/charts'
 
 const DETECTION_LAYERS = [
   {
-    label: 'Layer 1 - Deviation Scoring',
+    label: 'Layer A - Deviation Scoring',
     icon: SlidersHorizontal,
     color: 'text-cyan-400',
     formula: 's_i = sqrt( Sigma_j w_j * ((x_j - b_j) / theta_j)^2 )',
     desc: 'Paper Eq. (9). Statistical drift from baseline normalised by per-metric thresholds. Adaptive theta is sigma-floored (k=3.5/4.0/5.0 per profile) and the baseline auto-corrects for slow drift via EWMA (alpha=0.30).',
   },
   {
-    label: 'Layer 2 - LSTM Dual-Branch',
+    label: 'Layer B - LSTM Dual-Branch',
     icon: Cpu,
     color: 'text-purple-400',
     formula: 'p_fused = w_g*p_grid + w_n*p_net + agreement_bonus',
     desc: 'Two PyTorch LSTMs in parallel: Branch-1 on physical metrics (V, I, f, P), Branch-2 on cyber metrics (latency, loss, integrity, freq). Decision-level fusion with agreement bonus.',
   },
   {
-    label: 'Layer 3 - Cryptographic Integrity',
-    icon: Hash,
+    label: 'Layer C - Attack & Fault Specific Detectors',
+    icon: Layers,
     color: 'text-amber-600',
-    formula: 'CRC32(payload) + H_entropy(window)',
-    desc: 'CRC32 checksums + hash entropy + cross-field correlation. Catches stealthy FDI/MITM attacks crafted to evade statistical scoring.',
+    formula: 'C-1 CUSUM FDI | C-2 DoS rules | C-3 MITM integrity-jump | C-4 FAULT signature',
+    desc: 'Four specialised sub-detectors: C-1 CUSUM drift for FDI (h=4.0, shape gate); C-2 two-of-three rule for DoS (latency, loss, comm triggers); C-3 integrity-drop + jump-z for MITM (drop>35%, z>2.5σ); C-4 signature template for physical faults (voltage sag/overcurrent/freq deviation, z_floor=2.2, dominance=2.0, cyber guard=2.5). Outputs merged by OR-with-precedence combiner.',
   },
   {
-    label: 'Layer 4 - 2-of-3 Voting Ensemble',
-    icon: GitMerge,
-    color: 'text-emerald-600',
-    formula: 'flag = (1[s>theta_dev] + 1[p>theta_lstm] + 1[integrity_low]) >= 2',
-    desc: 'Unified detector flags an agent when any 2 of the 3 modalities agree, balancing recall against false alarm rate.',
-  },
-  {
-    label: 'Layer 5 - Tier-A FP Suppression',
+    label: 'FP Suppression Gate',
     icon: Shield,
     color: 'text-rose-400',
     formula: 'suppress if score_ratio<3.5 AND no_signature AND p_lstm<0.6 AND p_net<0.55',
-    desc: 'Final-stage gate that demotes flags whose deviation is marginal AND whose corroborating evidence is weak (no signature firing, both ML branches uncertain). Preserves 100% recall; drops FPR by 1.6x. Augmented by step/ramp/oscillation temporal signatures (Gemini #3).',
+    desc: 'Final-stage gate that demotes flags whose deviation is marginal AND whose corroborating evidence is weak (no signature firing, both ML branches uncertain). Preserves 100% recall; drops FPR by 1.6x. Augmented by step/ramp/oscillation temporal signatures.',
   },
 ]
 
@@ -98,7 +91,7 @@ export default function ExperimentMethodologyPage() {
       <div>
         <h1 className="section-header">Methodology - Detection Architecture</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Five-layer hybrid detection pipeline plus RL+Gradient audit scheduling. Ablation: <span className="text-cyber-blue font-mono">{ablation}</span>, profile: <span className="text-cyber-blue font-mono">{profile}</span>.
+          Four-layer hybrid detection pipeline (A/B/C + FP gate) plus RL+Gradient audit scheduling. Ablation: <span className="text-cyber-blue font-mono">{ablation}</span>, profile: <span className="text-cyber-blue font-mono">{profile}</span>.
         </p>
       </div>
 
@@ -113,7 +106,7 @@ export default function ExperimentMethodologyPage() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyber-blue" />
-            Five-Layer Detection Pipeline
+            Four-Layer Detection Pipeline
           </h3>
           <Badge variant="info">Hybrid Ensemble</Badge>
         </div>
@@ -165,7 +158,7 @@ export default function ExperimentMethodologyPage() {
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed">
-              Attack family classifier (DOS / MITM / NETWORK) operates on Branch-2 cyber metrics and UNSW-NB15 priors. The base paper does not classify attack family, only flags anomalous/not.
+              Attack family classifier (FDI / DOS / MITM / FAULT) uses Layer C sub-detectors for type-specific identification. The base paper does not classify attack family, only flags anomalous/not.
             </div>
           </div>
         </div>
@@ -295,7 +288,7 @@ export default function ExperimentMethodologyPage() {
           <Badge variant="info">Latest-run telemetry</Badge>
           <Badge variant="healthy">Explainable (XAI)</Badge>
           <Badge variant="auditing">Audit-aware feedback</Badge>
-          <Badge variant="high">5-layer hybrid detection</Badge>
+          <Badge variant="high">4-layer hybrid detection (A/B/C + FP gate)</Badge>
           <Badge variant="info">RL + Gradient + Cluster Budget</Badge>
           <Badge variant="info">UNSW-NB15 priors</Badge>
           <Badge variant="info">Audit Protection Window</Badge>
