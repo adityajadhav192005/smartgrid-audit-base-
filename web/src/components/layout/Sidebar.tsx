@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Activity, Shield, Zap, BarChart3, Brain,
   FlaskConical, History, AlertTriangle, ChevronRight,
   Cpu, MonitorPlay, Boxes, Plug2, Eye, SlidersHorizontal, Clock3, HeartPulse,
-  Microscope, FileText, GitCompareArrows,
+  Microscope, FileText, GitCompareArrows, Workflow,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDashboard } from '@/lib/dashboardContext'
@@ -28,6 +28,7 @@ const navGroups = [
       { href: '/experiment/monitor', label: 'Experiment Monitor', icon: Activity },
       { href: '/experiment/control', label: 'Experiment Control', icon: FlaskConical },
       { href: '/experiment/scalability', label: 'Scalability Comparison', icon: GitCompareArrows },
+      { href: '/experiment/workflow', label: 'Detection Workflow', icon: Workflow },
       { href: '/experiment/history', label: 'Experiment History', icon: History },
     ],
   },
