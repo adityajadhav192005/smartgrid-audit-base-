@@ -39,11 +39,11 @@ const FALLBACK = {
   ],
   rlAction: 'AUDIT NOW',
   severity: 'CRITICAL',
-  detection: 92.65,
-  f1: 82.25,
-  precision: 89.95,
-  recall: 75.76,
-  fpr: 1.81,
+  detection: 87.70,
+  f1: 84.36,
+  precision: 73.13,
+  recall: 99.69,
+  fpr: 18.28,
 }
 
 /* ------------------------------------------------------------------ */
